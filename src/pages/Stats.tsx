@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { motion } from "framer-motion";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { AnimatedPage } from "@/components/layout/AnimatedPage";
@@ -7,6 +7,8 @@ import { FilterChips } from "@/components/common/FilterChips";
 import { StatCard } from "@/components/stats/StatCard";
 import { AdherenceChart } from "@/components/stats/AdherenceChart";
 import { Target, Clock, Zap, AlertTriangle, Smartphone, RefreshCw, Moon, Watch } from "lucide-react";
+import { useMedication } from "@/contexts/MedicationContext";
+import { subDays, subMonths, subYears, format, eachDayOfInterval } from "date-fns";
 
 const timeFilters = [
   { value: "7d", label: "7D" },
@@ -15,18 +17,66 @@ const timeFilters = [
   { value: "1y", label: "1Y" },
 ];
 
-const weeklyData = [
-  { day: "Mon", adherence: 100 },
-  { day: "Tue", adherence: 80 },
-  { day: "Wed", adherence: 100 },
-  { day: "Thu", adherence: 60 },
-  { day: "Fri", adherence: 100 },
-  { day: "Sat", adherence: 100 },
-  { day: "Sun", adherence: 80 },
-];
-
 export default function Stats() {
   const [timeFilter, setTimeFilter] = useState("7d");
+  const { calculateAdherenceRate, calculateOnTimeRate, getCurrentStreak, getAverageDelay, getScheduledDosesForDate, doseLogs } = useMedication();
+
+  const dateRange = useMemo(() => {
+    const endDate = new Date();
+    let startDate: Date;
+    
+    switch (timeFilter) {
+      case "7d":
+        startDate = subDays(endDate, 7);
+        break;
+      case "30d":
+        startDate = subDays(endDate, 30);
+        break;
+      case "90d":
+        startDate = subMonths(endDate, 3);
+        break;
+      case "1y":
+        startDate = subYears(endDate, 1);
+        break;
+      default:
+        startDate = subDays(endDate, 7);
+    }
+    
+    return { startDate, endDate };
+  }, [timeFilter]);
+
+  const adherenceRate = calculateAdherenceRate(dateRange.startDate, dateRange.endDate);
+  const onTimeRate = calculateOnTimeRate(dateRange.startDate, dateRange.endDate);
+  const currentStreak = getCurrentStreak();
+  const avgDelay = getAverageDelay(dateRange.startDate, dateRange.endDate);
+
+  // Calculate weekly chart data
+  const weeklyData = useMemo(() => {
+    const days = eachDayOfInterval({ 
+      start: subDays(new Date(), 6), 
+      end: new Date() 
+    });
+    
+    return days.map(day => {
+      const doses = getScheduledDosesForDate(day);
+      const takenCount = doses.filter(d => d.displayStatus === 'taken' || d.displayStatus === 'late').length;
+      const totalCount = doses.filter(d => d.displayStatus !== 'skipped' && d.displayStatus !== 'pending').length;
+      const adherence = totalCount > 0 ? Math.round((takenCount / totalCount) * 100) : 100;
+      
+      return {
+        day: format(day, 'EEE'),
+        adherence,
+      };
+    });
+  }, [getScheduledDosesForDate]);
+
+  // Calculate case detection rate
+  const caseDetectionRate = useMemo(() => {
+    const takenLogs = doseLogs.filter(l => l.eventType === 'taken');
+    if (takenLogs.length === 0) return 0;
+    const caseCount = takenLogs.filter(l => l.source === 'case').length;
+    return Math.round((caseCount / takenLogs.length) * 100);
+  }, [doseLogs]);
 
   return (
     <AnimatedPage>
@@ -46,41 +96,41 @@ export default function Stats() {
             <StaggerItem>
               <StatCard
                 title="Adherence Rate"
-                value="89%"
+                value={`${adherenceRate}%`}
                 subtitle="doses taken"
                 icon={<Target className="h-5 w-5 text-primary" />}
-                trend="up"
-                trendValue="+5%"
+                trend={adherenceRate >= 80 ? "up" : "down"}
+                trendValue={adherenceRate >= 80 ? "Good" : "Needs work"}
               />
             </StaggerItem>
             <StaggerItem>
               <StatCard
                 title="On-time Rate"
-                value="76%"
+                value={`${onTimeRate}%`}
                 subtitle="within window"
                 icon={<Clock className="h-5 w-5 text-primary" />}
-                trend="neutral"
-                trendValue="same"
+                trend={onTimeRate >= 70 ? "up" : "neutral"}
+                trendValue={onTimeRate >= 70 ? "Great" : "Improve"}
               />
             </StaggerItem>
             <StaggerItem>
               <StatCard
                 title="Current Streak"
-                value="12"
+                value={`${currentStreak}`}
                 subtitle="days"
                 icon={<Zap className="h-5 w-5 text-primary" />}
                 trend="up"
-                trendValue="best yet!"
+                trendValue={currentStreak > 7 ? "Best yet!" : "Keep going"}
               />
             </StaggerItem>
             <StaggerItem>
               <StatCard
                 title="Avg. Delay"
-                value="8m"
+                value={`${avgDelay}m`}
                 subtitle="minutes late"
                 icon={<AlertTriangle className="h-5 w-5 text-primary" />}
-                trend="down"
-                trendValue="-3m"
+                trend={avgDelay <= 10 ? "down" : "up"}
+                trendValue={avgDelay <= 10 ? "On track" : "Late"}
               />
             </StaggerItem>
           </StaggerContainer>
@@ -93,7 +143,7 @@ export default function Stats() {
             <StaggerItem>
               <StatCard
                 title="Case Detection"
-                value="94%"
+                value={`${caseDetectionRate}%`}
                 subtitle="auto-detected"
                 icon={<Smartphone className="h-5 w-5 text-primary" />}
               />
