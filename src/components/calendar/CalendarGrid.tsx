@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 
 interface DoseMarker {
   id: string;
-  status: "taken" | "missed" | "late" | "pending";
+  status: "taken" | "missed" | "late" | "pending" | "skipped";
 }
 
 interface CalendarGridProps {
