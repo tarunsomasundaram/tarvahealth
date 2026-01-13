@@ -1,7 +1,7 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Pill, Bell, Package, ChevronLeft, ChevronRight } from "lucide-react";
+import { Pill, Bell, Smartphone, ChevronLeft, ChevronRight } from "lucide-react";
 import { triggerHaptic } from "@/hooks/use-haptics";
 import tarvaLogo from "@/assets/tarva-logo.png";
 
@@ -12,7 +12,7 @@ const carouselData = [
     body: "Reminders that fit your routine.",
   },
   {
-    icon: Package,
+    icon: Smartphone,
     title: "Automatic tracking with the TARVA case",
     body: "When you take a dose from the case, TARVA logs it for you.",
   },
@@ -58,7 +58,7 @@ export default function Welcome() {
         <img 
           src={tarvaLogo} 
           alt="TARVA" 
-          className="h-8 w-auto object-contain invert dark:invert-0"
+          className="h-24 w-auto object-contain invert dark:invert-0"
         />
       </div>
 
