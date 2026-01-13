@@ -33,9 +33,9 @@ export interface MedicationSchedule {
   endDate?: string;
 }
 
-export type DoseEventType = 'taken' | 'skipped' | 'missed' | 'snoozed';
+export type DoseEventType = 'taken' | 'skipped' | 'missed';
 export type DoseStatus = 'on_time' | 'late';
-export type DoseSource = 'case' | 'manual' | 'elsewhere';
+export type DoseSource = 'case' | 'manual';
 
 export interface DoseLog {
   id: string;
@@ -46,8 +46,6 @@ export interface DoseLog {
   status?: DoseStatus; // Only for taken doses
   source: DoseSource;
   notes?: string;
-  snoozedUntil?: string; // For snoozed doses
-  snoozeCount?: number; // Number of times snoozed
 }
 
 // Display-ready dose for UI
@@ -57,10 +55,9 @@ export interface ScheduledDose {
   medication: Medication;
   scheduledTime: string; // Display time like "8:00 AM"
   scheduledDatetime: string; // ISO datetime
-  displayStatus: 'pending' | 'taken' | 'skipped' | 'missed' | 'late' | 'snoozed';
+  displayStatus: 'pending' | 'taken' | 'skipped' | 'missed' | 'late';
   takenTime?: string;
   skippedTime?: string;
-  snoozedUntil?: string;
   source?: DoseSource;
   onTimeWindowMinutes: number;
 }
@@ -83,10 +80,7 @@ interface MedicationContextType {
   
   // Dose actions
   markDoseTaken: (scheduledDose: ScheduledDose) => void;
-  markDoseTakenFromCase: (scheduledDose: ScheduledDose) => void;
-  markDoseTakenElsewhere: (scheduledDose: ScheduledDose) => void;
   markDoseSkipped: (scheduledDose: ScheduledDose) => void;
-  markDoseSnoozed: (scheduledDose: ScheduledDose, minutes: number) => void;
   
   // Computed data
   getScheduledDosesForDate: (date: Date) => ScheduledDose[];
@@ -102,7 +96,7 @@ interface MedicationContextType {
   getAverageDelay: (startDate: Date, endDate: Date) => number;
   
   // For calendar
-  getDoseMarkersForMonth: (year: number, month: number) => Record<string, { id: string; status: 'taken' | 'missed' | 'late' | 'pending' | 'skipped' | 'snoozed' }[]>;
+  getDoseMarkersForMonth: (year: number, month: number) => Record<string, { id: string; status: 'taken' | 'missed' | 'late' | 'pending' | 'skipped' }[]>;
 }
 
 // ==================== DEFAULT/MOCK DATA ====================
@@ -401,59 +395,12 @@ export function MedicationProvider({ children }: { children: ReactNode }) {
     
     setDoseLogs(prev => [...prev, newLog]);
     
-    // Decrement remaining doses if stored in case (manual from home still decrements by default)
+    // Decrement remaining doses if stored in case
     const med = medications.find(m => m.id === scheduledDose.medicationId);
     if (med && med.storedInCase && med.remainingDoses > 0) {
       updateMedication(med.id, { remainingDoses: med.remainingDoses - 1 });
     }
   }, [medications, updateMedication]);
-
-  // Mark dose taken from case - always decrements inventory
-  const markDoseTakenFromCase = useCallback((scheduledDose: ScheduledDose) => {
-    const now = new Date();
-    const scheduledTime = parseISO(scheduledDose.scheduledDatetime);
-    const windowEnd = addMinutes(scheduledTime, scheduledDose.onTimeWindowMinutes);
-    const isLate = isAfter(now, windowEnd);
-    
-    const newLog: DoseLog = {
-      id: generateId(),
-      medicationId: scheduledDose.medicationId,
-      scheduledDatetime: scheduledDose.scheduledDatetime,
-      eventType: 'taken',
-      eventDatetime: now.toISOString(),
-      status: isLate ? 'late' : 'on_time',
-      source: 'case',
-    };
-    
-    setDoseLogs(prev => [...prev, newLog]);
-    
-    // Always decrement if stored in case
-    const med = medications.find(m => m.id === scheduledDose.medicationId);
-    if (med && med.storedInCase && med.remainingDoses > 0) {
-      updateMedication(med.id, { remainingDoses: med.remainingDoses - 1 });
-    }
-  }, [medications, updateMedication]);
-
-  // Mark dose taken elsewhere - does NOT decrement case inventory
-  const markDoseTakenElsewhere = useCallback((scheduledDose: ScheduledDose) => {
-    const now = new Date();
-    const scheduledTime = parseISO(scheduledDose.scheduledDatetime);
-    const windowEnd = addMinutes(scheduledTime, scheduledDose.onTimeWindowMinutes);
-    const isLate = isAfter(now, windowEnd);
-    
-    const newLog: DoseLog = {
-      id: generateId(),
-      medicationId: scheduledDose.medicationId,
-      scheduledDatetime: scheduledDose.scheduledDatetime,
-      eventType: 'taken',
-      eventDatetime: now.toISOString(),
-      status: isLate ? 'late' : 'on_time',
-      source: 'elsewhere',
-    };
-    
-    setDoseLogs(prev => [...prev, newLog]);
-    // DO NOT decrement pill count - taken outside of case
-  }, []);
 
   const markDoseSkipped = useCallback((scheduledDose: ScheduledDose) => {
     const now = new Date();
@@ -469,41 +416,6 @@ export function MedicationProvider({ children }: { children: ReactNode }) {
     
     setDoseLogs(prev => [...prev, newLog]);
   }, []);
-
-  // Snooze dose - creates a snoozed log entry
-  const markDoseSnoozed = useCallback((scheduledDose: ScheduledDose, minutes: number) => {
-    const now = new Date();
-    const snoozedUntil = addMinutes(now, minutes);
-    
-    // Find existing snooze count
-    const existingLog = doseLogs.find(
-      l => l.medicationId === scheduledDose.medicationId && 
-           l.scheduledDatetime === scheduledDose.scheduledDatetime &&
-           l.eventType === 'snoozed'
-    );
-    
-    const snoozeCount = (existingLog?.snoozeCount || 0) + 1;
-    
-    // Remove existing snoozed log if any
-    setDoseLogs(prev => prev.filter(
-      l => !(l.medicationId === scheduledDose.medicationId && 
-             l.scheduledDatetime === scheduledDose.scheduledDatetime &&
-             l.eventType === 'snoozed')
-    ));
-    
-    const newLog: DoseLog = {
-      id: generateId(),
-      medicationId: scheduledDose.medicationId,
-      scheduledDatetime: scheduledDose.scheduledDatetime,
-      eventType: 'snoozed',
-      eventDatetime: now.toISOString(),
-      source: 'manual',
-      snoozedUntil: snoozedUntil.toISOString(),
-      snoozeCount,
-    };
-    
-    setDoseLogs(prev => [...prev, newLog]);
-  }, [doseLogs]);
 
   // ==================== COMPUTED DATA ====================
 
@@ -547,7 +459,6 @@ export function MedicationProvider({ children }: { children: ReactNode }) {
         let displayStatus: ScheduledDose['displayStatus'] = 'pending';
         let takenTime: string | undefined;
         let skippedTime: string | undefined;
-        let snoozedUntil: string | undefined;
         let source: DoseSource | undefined;
         
         if (log) {
@@ -561,20 +472,12 @@ export function MedicationProvider({ children }: { children: ReactNode }) {
             source = log.source;
           } else if (log.eventType === 'missed') {
             displayStatus = 'missed';
-          } else if (log.eventType === 'snoozed') {
-            // Check if snooze is still active
-            if (log.snoozedUntil && isAfter(parseISO(log.snoozedUntil), new Date())) {
-              displayStatus = 'snoozed';
-              snoozedUntil = format(parseISO(log.snoozedUntil), 'h:mm a');
-            } else {
-              // Snooze expired, back to pending
-              displayStatus = 'pending';
-            }
           }
         } else {
           // Check if the scheduled time has passed (auto-mark as pending or could be missed)
           const scheduledTime = parseISO(scheduledDatetime);
           const now = new Date();
+          const windowEnd = addMinutes(scheduledTime, schedule.onTimeWindowMinutes);
           
           // If it's a past date and no log exists, mark as missed
           if (!isToday(date) && isBefore(date, startOfDay(now))) {
@@ -591,7 +494,6 @@ export function MedicationProvider({ children }: { children: ReactNode }) {
           displayStatus,
           takenTime,
           skippedTime,
-          snoozedUntil,
           source,
           onTimeWindowMinutes: schedule.onTimeWindowMinutes,
         });
@@ -692,8 +594,8 @@ export function MedicationProvider({ children }: { children: ReactNode }) {
 
   // ==================== CALENDAR HELPERS ====================
 
-  const getDoseMarkersForMonth = useCallback((year: number, month: number): Record<string, { id: string; status: 'taken' | 'missed' | 'late' | 'pending' | 'skipped' | 'snoozed' }[]> => {
-    const result: Record<string, { id: string; status: 'taken' | 'missed' | 'late' | 'pending' | 'skipped' | 'snoozed' }[]> = {};
+  const getDoseMarkersForMonth = useCallback((year: number, month: number): Record<string, { id: string; status: 'taken' | 'missed' | 'late' | 'pending' | 'skipped' }[]> => {
+    const result: Record<string, { id: string; status: 'taken' | 'missed' | 'late' | 'pending' | 'skipped' }[]> = {};
     
     const startDate = new Date(year, month, 1);
     const endDate = new Date(year, month + 1, 0);
@@ -722,10 +624,7 @@ export function MedicationProvider({ children }: { children: ReactNode }) {
     removeMedication,
     updateSchedule,
     markDoseTaken,
-    markDoseTakenFromCase,
-    markDoseTakenElsewhere,
     markDoseSkipped,
-    markDoseSnoozed,
     getScheduledDosesForDate,
     getDoseLogsForDateRange,
     getUpcomingDoses,
@@ -745,10 +644,7 @@ export function MedicationProvider({ children }: { children: ReactNode }) {
     removeMedication,
     updateSchedule,
     markDoseTaken,
-    markDoseTakenFromCase,
-    markDoseTakenElsewhere,
     markDoseSkipped,
-    markDoseSnoozed,
     getScheduledDosesForDate,
     getDoseLogsForDateRange,
     getUpcomingDoses,

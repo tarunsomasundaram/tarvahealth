@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 
 interface DoseMarker {
   id: string;
-  status: "taken" | "missed" | "late" | "pending" | "skipped" | "snoozed";
+  status: "taken" | "missed" | "late" | "pending" | "skipped";
 }
 
 interface CalendarGridProps {
@@ -36,7 +36,6 @@ export function CalendarGrid({ selectedDate, onSelectDate, dosesByDate }: Calend
       case "taken": return "bg-success";
       case "missed": return "bg-destructive";
       case "late": return "bg-warning";
-      case "snoozed": return "bg-amber-500";
       default: return "bg-muted-foreground";
     }
   };
