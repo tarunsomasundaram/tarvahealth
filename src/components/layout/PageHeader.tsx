@@ -44,7 +44,7 @@ export function PageHeader({
             <img 
               src={tarvaLogo} 
               alt="TARVA" 
-              className="h-7 w-auto object-contain object-left invert dark:invert-0"
+              className="h-10 w-auto object-contain object-left invert dark:invert-0"
             />
             {subtitle && <p className="text-caption mt-1.5">{subtitle}</p>}
           </div>
