@@ -35,7 +35,7 @@ export default function CaregiverProfile() {
       relationship: relationship || undefined,
     });
 
-    navigate("/onboarding/caregiver/notifications");
+    navigate("/onboarding/caregiver/passcode");
   };
 
   const handleSkip = () => {
@@ -44,7 +44,7 @@ export default function CaregiverProfile() {
       fullName: "Caregiver",
       timezone,
     });
-    navigate("/onboarding/caregiver/notifications");
+    navigate("/onboarding/caregiver/passcode");
   };
 
   return (
