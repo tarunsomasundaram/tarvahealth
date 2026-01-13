@@ -1,0 +1,122 @@
+import { useState } from "react";
+import { PageHeader } from "@/components/layout/PageHeader";
+import { Plus, User, Calendar, AlertTriangle, RefreshCw, Lock, ChevronRight } from "lucide-react";
+import { cn } from "@/lib/utils";
+
+interface Caregiver {
+  id: string;
+  name: string;
+  relationship: string;
+  accessLevel: "full" | "limited";
+  permissions: {
+    calendar: boolean;
+    missedAlerts: boolean;
+    refillAlerts: boolean;
+  };
+}
+
+const mockCaregivers: Caregiver[] = [
+  {
+    id: "1",
+    name: "Michael Johnson",
+    relationship: "Spouse",
+    accessLevel: "full",
+    permissions: { calendar: true, missedAlerts: true, refillAlerts: true },
+  },
+  {
+    id: "2",
+    name: "Dr. Emily Chen",
+    relationship: "Primary Care",
+    accessLevel: "limited",
+    permissions: { calendar: true, missedAlerts: false, refillAlerts: false },
+  },
+];
+
+export default function Caregivers() {
+  const [caregivers] = useState<Caregiver[]>(mockCaregivers);
+
+  const handleAddCaregiver = () => {
+    console.log("Add caregiver");
+  };
+
+  return (
+    <div className="page-padding">
+      <PageHeader title="Caregivers" subtitle="Manage access to your data" />
+
+      <div className="section-gap">
+        <button onClick={handleAddCaregiver} className="btn-primary w-full">
+          <Plus className="h-4 w-4" />
+          Add Caregiver
+        </button>
+
+        <section>
+          <h2 className="text-section text-foreground mb-3">Active Caregivers</h2>
+          <div className="space-y-3">
+            {caregivers.map((caregiver) => (
+              <div key={caregiver.id} className="card-tarva">
+                <div className="flex items-start gap-4">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-accent">
+                    <User className="h-6 w-6 text-primary" />
+                  </div>
+                  <div className="flex-1">
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <h4 className="font-semibold text-foreground">{caregiver.name}</h4>
+                        <p className="text-caption">{caregiver.relationship}</p>
+                      </div>
+                      <span className={cn(
+                        "badge-status",
+                        caregiver.accessLevel === "full" ? "bg-success/15 text-success" : "bg-accent text-accent-foreground"
+                      )}>
+                        {caregiver.accessLevel === "full" ? "Full Access" : "Limited"}
+                      </span>
+                    </div>
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      <span className={cn(
+                        "badge-pill text-xs",
+                        caregiver.permissions.calendar ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"
+                      )}>
+                        <Calendar className="h-3 w-3" />
+                        Calendar
+                      </span>
+                      <span className={cn(
+                        "badge-pill text-xs",
+                        caregiver.permissions.missedAlerts ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"
+                      )}>
+                        <AlertTriangle className="h-3 w-3" />
+                        Missed Alerts
+                      </span>
+                      <span className={cn(
+                        "badge-pill text-xs",
+                        caregiver.permissions.refillAlerts ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"
+                      )}>
+                        <RefreshCw className="h-3 w-3" />
+                        Refill Alerts
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        <div className="card-tarva bg-accent/50">
+          <div className="flex items-start gap-3">
+            <Lock className="h-5 w-5 text-primary mt-0.5" />
+            <div>
+              <p className="font-medium text-foreground">Upgrade for More</p>
+              <p className="text-sm text-muted-foreground mt-1">
+                Free plan allows 1 caregiver. Upgrade to share with unlimited caregivers and unlock advanced sharing options.
+              </p>
+              <button className="btn-secondary mt-3">
+                View Plans
+                <ChevronRight className="h-4 w-4" />
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
