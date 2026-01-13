@@ -42,20 +42,17 @@ export async function generateAdherencePDF(data: ExportData): Promise<Blob> {
   
   // Header
   const header = document.createElement('div');
-  header.style.cssText = 'display: flex; justify-content: space-between; align-items: center; margin-bottom: 32px; border-bottom: 2px solid #8b5cf6; padding-bottom: 16px;';
+  header.style.cssText = 'display: flex; justify-content: space-between; align-items: center; margin-bottom: 32px; border-bottom: 2px solid #8b5cf6; padding-bottom: 20px;';
   header.innerHTML = `
-    <div style="display: flex; align-items: center; gap: 12px;">
-      <img src="${tarvaLogoBase64}" alt="TARVA" style="height: 48px; width: 48px; object-fit: contain;" />
-      <div>
-        <h1 style="font-size: 28px; font-weight: 700; color: #8b5cf6; margin: 0;">TARVA</h1>
-        <p style="color: #6b7280; margin: 4px 0 0 0; font-size: 12px;">Medication Adherence Report</p>
-      </div>
+    <div>
+      <img src="${tarvaLogoBase64}" alt="TARVA" style="height: 72px; object-fit: contain;" />
     </div>
     <div style="text-align: right;">
-      <p style="font-weight: 600; margin: 0;">${patientName}</p>
+      <p style="font-weight: 600; font-size: 16px; margin: 0;">${patientName}</p>
       <p style="color: #6b7280; font-size: 14px; margin: 4px 0 0 0;">
         ${format(startDate, 'MMM d, yyyy')} – ${format(endDate, 'MMM d, yyyy')}
       </p>
+      <p style="color: #9ca3af; font-size: 12px; margin: 4px 0 0 0;">Medication Adherence Report</p>
     </div>
   `;
   doc.appendChild(header);
@@ -272,9 +269,8 @@ export async function generateAdherencePDF(data: ExportData): Promise<Blob> {
   const footer = document.createElement('div');
   footer.style.cssText = 'margin-top: 32px; padding-top: 16px; border-top: 1px solid #e5e7eb; text-align: center;';
   footer.innerHTML = `
-    <div style="display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 8px;">
-      <img src="${tarvaLogoBase64}" alt="TARVA" style="height: 24px; width: 24px; object-fit: contain;" />
-      <span style="font-weight: 600; color: #8b5cf6;">TARVA Health</span>
+    <div style="display: flex; align-items: center; justify-content: center; margin-bottom: 8px;">
+      <img src="${tarvaLogoBase64}" alt="TARVA" style="height: 40px; object-fit: contain;" />
     </div>
     <p style="font-size: 11px; color: #9ca3af; margin: 0;">
       Generated for ${patientName} on ${format(new Date(), 'MMMM d, yyyy \'at\' h:mm a')}
