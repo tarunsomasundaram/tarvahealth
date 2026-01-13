@@ -85,6 +85,11 @@ function AppRoutes() {
           <Route path="/caregiver/profile" element={<CaregiverProfilePage />} />
           <Route path="/notifications" element={<Notifications />} />
           <Route path="/settings" element={<Settings />} />
+          {/* Redirect onboarding routes to home if already completed */}
+          <Route path="/welcome" element={<Navigate to="/caregiver" replace />} />
+          <Route path="/auth" element={<Navigate to="/caregiver" replace />} />
+          <Route path="/role-select" element={<Navigate to="/caregiver" replace />} />
+          <Route path="/onboarding/*" element={<Navigate to="/caregiver" replace />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
         <CaregiverTabBar />
@@ -97,6 +102,7 @@ function AppRoutes() {
     <>
       <Routes>
         <Route path="/" element={<Home />} />
+        <Route path="/home" element={<Home />} />
         <Route path="/case" element={<Case />} />
         <Route path="/add" element={<AddMedication />} />
         <Route path="/stats" element={<Stats />} />
@@ -106,6 +112,11 @@ function AppRoutes() {
         <Route path="/settings" element={<Settings />} />
         <Route path="/notifications" element={<Notifications />} />
         <Route path="/my-medications" element={<MyMedications />} />
+        {/* Redirect onboarding routes to home if already completed */}
+        <Route path="/welcome" element={<Navigate to="/" replace />} />
+        <Route path="/auth" element={<Navigate to="/" replace />} />
+        <Route path="/role-select" element={<Navigate to="/" replace />} />
+        <Route path="/onboarding/*" element={<Navigate to="/" replace />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
       <BottomTabBar />
