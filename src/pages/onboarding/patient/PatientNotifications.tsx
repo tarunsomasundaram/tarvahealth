@@ -1,20 +1,43 @@
 import { motion } from "framer-motion";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Bell, Package, Battery, Check } from "lucide-react";
+import { ArrowLeft, Bell, Clock, Package, Battery, Users, Check } from "lucide-react";
 import { triggerHaptic } from "@/hooks/use-haptics";
 import { useOnboarding } from "@/contexts/OnboardingContext";
+import { cn } from "@/lib/utils";
+
+interface NotificationOption {
+  id: keyof typeof defaultPrefs;
+  icon: typeof Bell;
+  text: string;
+}
+
+const defaultPrefs = {
+  doseReminders: false,
+  lateDoseAlerts: false,
+  refillAlerts: false,
+  lowBatteryAlerts: false,
+  caregiverSharingAlerts: false,
+};
 
 export default function PatientNotifications() {
   const navigate = useNavigate();
-  const { setHasEnabledNotifications } = useOnboarding();
+  const { setHasEnabledNotifications, setNotificationPreferences } = useOnboarding();
+  const [selectedPrefs, setSelectedPrefs] = useState(defaultPrefs);
 
   const handleBack = () => {
     triggerHaptic('light');
-    navigate("/onboarding/patient/profile");
+    navigate("/onboarding/patient/passcode");
+  };
+
+  const handleToggle = (id: keyof typeof defaultPrefs) => {
+    triggerHaptic('light');
+    setSelectedPrefs(prev => ({ ...prev, [id]: !prev[id] }));
   };
 
   const handleEnable = () => {
     triggerHaptic('medium');
+    setNotificationPreferences(selectedPrefs);
     setHasEnabledNotifications(true);
     navigate("/onboarding/patient/case");
   };
@@ -25,10 +48,14 @@ export default function PatientNotifications() {
     navigate("/onboarding/patient/case");
   };
 
-  const features = [
-    { icon: Bell, text: "Dose reminders" },
-    { icon: Package, text: "Refill alerts at 2 doses" },
-    { icon: Battery, text: "Low battery alerts" },
+  const hasAnySelected = Object.values(selectedPrefs).some(v => v);
+
+  const options: NotificationOption[] = [
+    { id: 'doseReminders', icon: Bell, text: "Dose reminders" },
+    { id: 'lateDoseAlerts', icon: Clock, text: "Late dose alerts" },
+    { id: 'refillAlerts', icon: Package, text: "Refill alerts (at 2 doses)" },
+    { id: 'lowBatteryAlerts', icon: Battery, text: "Low battery alerts" },
+    { id: 'caregiverSharingAlerts', icon: Users, text: "Caregiver sharing alerts" },
   ];
 
   return (
@@ -45,11 +72,11 @@ export default function PatientNotifications() {
         
         {/* Progress indicator */}
         <div className="flex gap-1.5">
-          {[0, 1, 2, 3, 4].map((i) => (
+          {[0, 1, 2, 3, 4, 5].map((i) => (
             <div
               key={i}
-              className={`h-1.5 w-6 rounded-full ${
-                i <= 1 ? "bg-primary" : "bg-muted"
+              className={`h-1.5 w-5 rounded-full ${
+                i <= 2 ? "bg-primary" : "bg-muted"
               }`}
             />
           ))}
@@ -74,8 +101,11 @@ export default function PatientNotifications() {
           className="mt-8 text-center"
         >
           <h1 className="text-title-large text-foreground">
-            Enable reminders?
+            Choose your notifications
           </h1>
+          <p className="mt-2 text-body text-muted-foreground">
+            Select the alerts you want to receive
+          </p>
         </motion.div>
 
         <motion.div
@@ -84,33 +114,73 @@ export default function PatientNotifications() {
           transition={{ delay: 0.2 }}
           className="mt-8 w-full space-y-3"
         >
-          {features.map((feature, index) => {
-            const Icon = feature.icon;
+          {options.map((option, index) => {
+            const Icon = option.icon;
+            const isSelected = selectedPrefs[option.id];
             return (
-              <motion.div
-                key={feature.text}
+              <motion.button
+                key={option.id}
+                onClick={() => handleToggle(option.id)}
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.3 + index * 0.1 }}
-                className="flex items-center gap-4 rounded-xl bg-card p-4"
+                transition={{ delay: 0.3 + index * 0.05 }}
+                className={cn(
+                  "flex w-full items-center gap-4 rounded-xl p-4 transition-all",
+                  isSelected 
+                    ? "bg-primary/10 ring-2 ring-primary" 
+                    : "bg-card"
+                )}
+                whileTap={{ scale: 0.98 }}
               >
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-accent">
-                  <Icon className="h-5 w-5 text-primary" />
+                <div className={cn(
+                  "flex h-10 w-10 items-center justify-center rounded-xl transition-colors",
+                  isSelected ? "bg-primary/20" : "bg-accent"
+                )}>
+                  <Icon className={cn(
+                    "h-5 w-5 transition-colors",
+                    isSelected ? "text-primary" : "text-muted-foreground"
+                  )} />
                 </div>
-                <span className="font-medium text-foreground">{feature.text}</span>
-                <Check className="ml-auto h-5 w-5 text-success" />
-              </motion.div>
+                <span className={cn(
+                  "flex-1 text-left font-medium transition-colors",
+                  isSelected ? "text-foreground" : "text-muted-foreground"
+                )}>
+                  {option.text}
+                </span>
+                <div className={cn(
+                  "flex h-6 w-6 items-center justify-center rounded-full border-2 transition-all",
+                  isSelected 
+                    ? "border-primary bg-primary" 
+                    : "border-muted-foreground/30 bg-transparent"
+                )}>
+                  {isSelected && <Check className="h-4 w-4 text-white" />}
+                </div>
+              </motion.button>
             );
           })}
         </motion.div>
+
+        {!hasAnySelected && (
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="mt-4 text-sm text-muted-foreground"
+          >
+            Select at least one to enable notifications
+          </motion.p>
+        )}
       </div>
 
       {/* Bottom buttons */}
       <div className="px-6 pb-10 pt-4">
         <motion.button
           onClick={handleEnable}
-          className="btn-primary w-full py-4"
-          whileTap={{ scale: 0.98 }}
+          disabled={!hasAnySelected}
+          className={cn(
+            "btn-primary w-full py-4 transition-opacity",
+            !hasAnySelected && "opacity-50"
+          )}
+          whileTap={hasAnySelected ? { scale: 0.98 } : undefined}
         >
           Enable notifications
         </motion.button>
