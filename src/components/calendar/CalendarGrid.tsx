@@ -3,9 +3,9 @@ import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSam
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-interface DoseMarker {
+export interface DoseMarker {
   id: string;
-  status: "taken" | "missed" | "late" | "pending" | "skipped";
+  status: "taken" | "missed" | "late" | "pending" | "skipped" | "snoozed";
 }
 
 interface CalendarGridProps {
@@ -36,6 +36,7 @@ export function CalendarGrid({ selectedDate, onSelectDate, dosesByDate }: Calend
       case "taken": return "bg-success";
       case "missed": return "bg-destructive";
       case "late": return "bg-warning";
+      case "snoozed": return "bg-primary/50";
       default: return "bg-muted-foreground";
     }
   };
