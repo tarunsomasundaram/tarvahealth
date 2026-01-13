@@ -1,3 +1,4 @@
+import { motion } from "framer-motion";
 import { Pill, Check, X, Smartphone } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -30,11 +31,19 @@ export function MedicationCard({
   const isPending = status === "pending";
 
   return (
-    <div className="card-tarva animate-slide-up">
+    <motion.div 
+      className="card-tarva"
+      whileTap={{ scale: 0.98 }}
+      layout
+    >
       <div className="flex items-start gap-4">
-        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-accent">
+        <motion.div 
+          className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-accent"
+          whileHover={{ scale: 1.05 }}
+          transition={{ type: "spring", stiffness: 400, damping: 20 }}
+        >
           <Pill className="h-6 w-6 text-primary" />
-        </div>
+        </motion.div>
         <div className="flex-1 min-w-0">
           <div className="flex items-start justify-between gap-2">
             <div>
@@ -48,7 +57,12 @@ export function MedicationCard({
           )}
           
           {status === "taken" && (
-            <div className="mt-2 flex items-center gap-2">
+            <motion.div 
+              className="mt-2 flex items-center gap-2"
+              initial={{ opacity: 0, y: 4 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1 }}
+            >
               <span className="badge-taken">
                 <Check className="h-3 w-3" />
                 Taken at {takenTime}
@@ -59,35 +73,56 @@ export function MedicationCard({
                   Case
                 </span>
               )}
-            </div>
+            </motion.div>
           )}
           
           {status === "late" && (
-            <span className="badge-late mt-2 inline-flex">
+            <motion.span 
+              className="badge-late mt-2 inline-flex"
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+            >
               Late
-            </span>
+            </motion.span>
           )}
           
           {status === "missed" && (
-            <span className="badge-missed mt-2 inline-flex">
+            <motion.span 
+              className="badge-missed mt-2 inline-flex"
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+            >
               Missed
-            </span>
+            </motion.span>
           )}
         </div>
       </div>
 
       {showActions && isPending && (
-        <div className="mt-4 flex gap-3">
-          <button onClick={onSkip} className="btn-secondary flex-1">
+        <motion.div 
+          className="mt-4 flex gap-3"
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.15 }}
+        >
+          <motion.button 
+            onClick={onSkip} 
+            className="btn-secondary flex-1"
+            whileTap={{ scale: 0.95 }}
+          >
             <X className="h-4 w-4" />
             Skip
-          </button>
-          <button onClick={onMarkTaken} className="btn-primary flex-1">
+          </motion.button>
+          <motion.button 
+            onClick={onMarkTaken} 
+            className="btn-primary flex-1"
+            whileTap={{ scale: 0.95 }}
+          >
             <Check className="h-4 w-4" />
             Mark Taken
-          </button>
-        </div>
+          </motion.button>
+        </motion.div>
       )}
-    </div>
+    </motion.div>
   );
 }

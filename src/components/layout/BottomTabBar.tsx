@@ -1,3 +1,4 @@
+import { motion } from "framer-motion";
 import { Home, Box, Plus, BarChart3, User } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
@@ -22,26 +23,44 @@ export function BottomTabBar() {
 
         if (tab.id === "add") {
           return (
-            <button
+            <motion.button
               key={tab.id}
               onClick={() => navigate(tab.path)}
               className="tab-add"
               aria-label={tab.label}
+              whileTap={{ scale: 0.9 }}
+              whileHover={{ scale: 1.05 }}
             >
               <Icon className="h-6 w-6" strokeWidth={2.5} />
-            </button>
+            </motion.button>
           );
         }
 
         return (
-          <button
+          <motion.button
             key={tab.id}
             onClick={() => navigate(tab.path)}
             className={cn("tab-item", isActive && "active")}
+            whileTap={{ scale: 0.9 }}
           >
-            <Icon className="h-6 w-6" strokeWidth={isActive ? 2.5 : 2} />
+            <motion.div
+              animate={{ 
+                scale: isActive ? 1.1 : 1,
+                y: isActive ? -2 : 0
+              }}
+              transition={{ type: "spring", stiffness: 400, damping: 20 }}
+            >
+              <Icon className="h-6 w-6" strokeWidth={isActive ? 2.5 : 2} />
+            </motion.div>
             <span className="text-[11px] font-medium">{tab.label}</span>
-          </button>
+            {isActive && (
+              <motion.div
+                className="absolute -bottom-1 h-1 w-1 rounded-full bg-primary"
+                layoutId="activeTab"
+                transition={{ type: "spring", stiffness: 400, damping: 25 }}
+              />
+            )}
+          </motion.button>
         );
       })}
     </nav>

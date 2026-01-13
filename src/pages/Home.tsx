@@ -1,5 +1,8 @@
 import { useState } from "react";
+import { motion } from "framer-motion";
 import { PageHeader } from "@/components/layout/PageHeader";
+import { AnimatedPage } from "@/components/layout/AnimatedPage";
+import { FadeIn, StaggerContainer, StaggerItem } from "@/components/animations";
 import { WeekPicker } from "@/components/home/WeekPicker";
 import { ProgressCard } from "@/components/home/ProgressCard";
 import { MedicationCard, Medication } from "@/components/home/MedicationCard";
@@ -70,56 +73,70 @@ export default function Home() {
   };
 
   return (
-    <div className="page-padding">
-      <PageHeader
-        title="TARVA"
-        subtitle="Stay on schedule"
-        showNotification
-        showCalendar
-      />
+    <AnimatedPage>
+      <div className="page-padding">
+        <PageHeader
+          title="TARVA"
+          subtitle="Stay on schedule"
+          showNotification
+          showCalendar
+        />
 
-      <div className="section-gap">
-        <div className="mb-2">
-          <p className="text-lg font-semibold text-foreground">
-            {format(selectedDate, "EEEE, MMMM d")}
-          </p>
+        <div className="section-gap">
+          <FadeIn delay={0.1}>
+            <div className="mb-2">
+              <p className="text-lg font-semibold text-foreground">
+                {format(selectedDate, "EEEE, MMMM d")}
+              </p>
+            </div>
+          </FadeIn>
+
+          <FadeIn delay={0.15}>
+            <WeekPicker selectedDate={selectedDate} onSelectDate={setSelectedDate} />
+          </FadeIn>
+
+          <FadeIn delay={0.2}>
+            <ProgressCard taken={takenCount} total={totalCount} />
+          </FadeIn>
+
+          {upcomingMeds.length > 0 && (
+            <section>
+              <FadeIn delay={0.25}>
+                <h2 className="text-section text-foreground mb-3">Upcoming</h2>
+              </FadeIn>
+              <StaggerContainer className="space-y-3">
+                {upcomingMeds.map((med) => (
+                  <StaggerItem key={med.id}>
+                    <MedicationCard
+                      medication={med}
+                      onMarkTaken={() => handleMarkTaken(med.id)}
+                      onSkip={() => handleSkip(med.id)}
+                    />
+                  </StaggerItem>
+                ))}
+              </StaggerContainer>
+            </section>
+          )}
+
+          {completedMeds.length > 0 && (
+            <section>
+              <FadeIn delay={0.3}>
+                <h2 className="text-section text-foreground mb-3">Completed Today</h2>
+              </FadeIn>
+              <StaggerContainer className="space-y-3">
+                {completedMeds.map((med) => (
+                  <StaggerItem key={med.id}>
+                    <MedicationCard
+                      medication={med}
+                      showActions={false}
+                    />
+                  </StaggerItem>
+                ))}
+              </StaggerContainer>
+            </section>
+          )}
         </div>
-
-        <WeekPicker selectedDate={selectedDate} onSelectDate={setSelectedDate} />
-
-        <ProgressCard taken={takenCount} total={totalCount} />
-
-        {upcomingMeds.length > 0 && (
-          <section>
-            <h2 className="text-section text-foreground mb-3">Upcoming</h2>
-            <div className="space-y-3">
-              {upcomingMeds.map((med) => (
-                <MedicationCard
-                  key={med.id}
-                  medication={med}
-                  onMarkTaken={() => handleMarkTaken(med.id)}
-                  onSkip={() => handleSkip(med.id)}
-                />
-              ))}
-            </div>
-          </section>
-        )}
-
-        {completedMeds.length > 0 && (
-          <section>
-            <h2 className="text-section text-foreground mb-3">Completed Today</h2>
-            <div className="space-y-3">
-              {completedMeds.map((med) => (
-                <MedicationCard
-                  key={med.id}
-                  medication={med}
-                  showActions={false}
-                />
-              ))}
-            </div>
-          </section>
-        )}
       </div>
-    </div>
+    </AnimatedPage>
   );
 }
