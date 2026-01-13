@@ -9,6 +9,7 @@ import { PullToRefresh } from "@/components/common/PullToRefresh";
 import { triggerHaptic } from "@/hooks/use-haptics";
 import { format } from "date-fns";
 import { useMedication, ScheduledDose } from "@/contexts/MedicationContext";
+import { useOnboarding } from "@/contexts/OnboardingContext";
 import { Pill, Check, X, Smartphone, Clock } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -124,6 +125,9 @@ function DoseCard({
 export default function Home() {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const { getUpcomingDoses, getCompletedDoses, markDoseTaken, markDoseSkipped, getScheduledDosesForDate } = useMedication();
+  const { patientProfile } = useOnboarding();
+  
+  const firstName = patientProfile?.fullName?.split(' ')[0] || 'User';
 
   const upcomingDoses = getUpcomingDoses(selectedDate);
   const completedDoses = getCompletedDoses(selectedDate);
@@ -153,7 +157,7 @@ export default function Home() {
         <div className="page-padding">
           <PageHeader
             title="TARVA"
-            subtitle="Stay on schedule"
+            subtitle={`Welcome, ${firstName}`}
             showNotification
             showCalendar
           />

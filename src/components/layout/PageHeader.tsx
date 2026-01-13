@@ -4,6 +4,7 @@ import { Bell, Calendar } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useOnboarding } from "@/contexts/OnboardingContext";
 import { triggerHaptic } from "@/hooks/use-haptics";
+import tarvaLogo from "@/assets/tarva-logo.png";
 
 interface PageHeaderProps {
   title: string;
@@ -39,10 +40,12 @@ export function PageHeader({
     <header className="flex items-start justify-between pb-4">
       <div>
         {title === "TARVA" ? (
-          <div className="flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-primary">
-              <span className="text-sm font-bold text-white">T</span>
-            </div>
+          <div className="flex items-center gap-3">
+            <img 
+              src={tarvaLogo} 
+              alt="TARVA Logo" 
+              className="h-10 w-10 object-contain"
+            />
             <div>
               <h1 className="text-title-large text-foreground">{title}</h1>
               {subtitle && <p className="text-caption mt-0.5">{subtitle}</p>}
