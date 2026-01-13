@@ -1,4 +1,5 @@
 import { motion } from "framer-motion";
+import { useNavigate } from "react-router-dom";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { AnimatedPage } from "@/components/layout/AnimatedPage";
 import { FadeIn, StaggerItem } from "@/components/animations";
@@ -88,15 +89,22 @@ function SettingLink({ label, description, icon, onClick }: SettingLinkProps) {
 }
 
 export default function Settings() {
+  const navigate = useNavigate();
   const { theme, setTheme } = useTheme();
-  const { pinEnabled, faceIdEnabled, setFaceIdEnabled } = useOnboarding();
-  const [doseReminders, setDoseReminders] = useState(true);
-  const [refillAlerts, setRefillAlerts] = useState(true);
-  const [lowBatteryAlerts, setLowBatteryAlerts] = useState(true);
+  const { pinEnabled, faceIdEnabled, setFaceIdEnabled, notificationPreferences } = useOnboarding();
   const [batterySaver, setBatterySaver] = useState(false);
   
   const [pinModalOpen, setPinModalOpen] = useState(false);
   const [pinMode, setPinMode] = useState<"setup" | "change" | "disable">("setup");
+
+  // Count enabled notification categories
+  const enabledNotificationCount = [
+    notificationPreferences.doseReminders,
+    notificationPreferences.lateDoseAlerts,
+    notificationPreferences.refillAlerts,
+    notificationPreferences.lowBatteryAlerts,
+    notificationPreferences.caregiverSharingAlerts,
+  ].filter(Boolean).length;
 
   const handleThemeChange = (newTheme: 'light' | 'dark' | 'system') => {
     triggerHaptic('medium');
@@ -162,26 +170,11 @@ export default function Settings() {
             <section className="card-tarva">
               <h3 className="text-section text-foreground mb-2">Notifications</h3>
               <div className="divide-y divide-border">
-                <SettingToggle
-                  label="Dose Reminders"
-                  description="Get notified for each dose"
+                <SettingLink
+                  label="Reminder Preferences"
+                  description={enabledNotificationCount > 0 ? `${enabledNotificationCount} categories enabled` : 'Configure alerts'}
                   icon={<Bell className="h-5 w-5 text-primary" />}
-                  enabled={doseReminders}
-                  onToggle={() => setDoseReminders(!doseReminders)}
-                />
-                <SettingToggle
-                  label="Refill Alerts"
-                  description="When 2 doses remaining"
-                  icon={<Volume2 className="h-5 w-5 text-primary" />}
-                  enabled={refillAlerts}
-                  onToggle={() => setRefillAlerts(!refillAlerts)}
-                />
-                <SettingToggle
-                  label="Low Battery Alerts"
-                  description="Case battery warnings"
-                  icon={<Battery className="h-5 w-5 text-primary" />}
-                  enabled={lowBatteryAlerts}
-                  onToggle={() => setLowBatteryAlerts(!lowBatteryAlerts)}
+                  onClick={() => navigate('/reminder-preferences')}
                 />
               </div>
             </section>
