@@ -3,12 +3,14 @@ import { PageHeader } from "@/components/layout/PageHeader";
 import { AnimatedPage } from "@/components/layout/AnimatedPage";
 import { FadeIn, StaggerItem } from "@/components/animations";
 import { useTheme } from "@/hooks/use-theme";
+import { useOnboarding } from "@/contexts/OnboardingContext";
 import { triggerHaptic } from "@/hooks/use-haptics";
+import { PinSetup } from "@/components/security/PinSetup";
 import { 
   Box, Bell, Download, Link, Shield, 
   Bluetooth, Battery, Sliders, Volume2, 
   FileText, Calendar, Lock, Moon, Sun, Monitor,
-  ChevronRight
+  ChevronRight, Fingerprint
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
@@ -87,15 +89,32 @@ function SettingLink({ label, description, icon, onClick }: SettingLinkProps) {
 
 export default function Settings() {
   const { theme, setTheme } = useTheme();
+  const { pinEnabled, faceIdEnabled, setFaceIdEnabled } = useOnboarding();
   const [doseReminders, setDoseReminders] = useState(true);
   const [refillAlerts, setRefillAlerts] = useState(true);
   const [lowBatteryAlerts, setLowBatteryAlerts] = useState(true);
   const [batterySaver, setBatterySaver] = useState(false);
-  const [faceId, setFaceId] = useState(true);
+  
+  const [pinModalOpen, setPinModalOpen] = useState(false);
+  const [pinMode, setPinMode] = useState<"setup" | "change" | "disable">("setup");
 
   const handleThemeChange = (newTheme: 'light' | 'dark' | 'system') => {
     triggerHaptic('medium');
     setTheme(newTheme);
+  };
+
+  const handlePinSetup = () => {
+    setPinMode(pinEnabled ? "change" : "setup");
+    setPinModalOpen(true);
+  };
+
+  const handleFaceIdToggle = () => {
+    if (!pinEnabled) {
+      setPinMode("setup");
+      setPinModalOpen(true);
+    } else {
+      setFaceIdEnabled(!faceIdEnabled);
+    }
   };
 
   return (
@@ -217,16 +236,16 @@ export default function Settings() {
               <div className="divide-y divide-border">
                 <SettingToggle
                   label="Face ID / Touch ID"
-                  description="Unlock with biometrics"
-                  icon={<Shield className="h-5 w-5 text-primary" />}
-                  enabled={faceId}
-                  onToggle={() => setFaceId(!faceId)}
+                  description={faceIdEnabled ? "Enabled" : "Unlock with biometrics"}
+                  icon={<Fingerprint className="h-5 w-5 text-primary" />}
+                  enabled={faceIdEnabled}
+                  onToggle={handleFaceIdToggle}
                 />
                 <SettingLink
-                  label="Change PIN"
-                  description="Update your security PIN"
+                  label={pinEnabled ? "Change PIN" : "Set up PIN"}
+                  description={pinEnabled ? "Update your 4-digit PIN" : "Lock your app with a PIN"}
                   icon={<Lock className="h-5 w-5 text-primary" />}
-                  onClick={() => console.log("Change PIN")}
+                  onClick={handlePinSetup}
                 />
               </div>
             </section>
@@ -266,6 +285,12 @@ export default function Settings() {
           </FadeIn>
         </div>
       </div>
+
+      <PinSetup
+        isOpen={pinModalOpen}
+        onClose={() => setPinModalOpen(false)}
+        mode={pinMode}
+      />
     </AnimatedPage>
   );
 }
