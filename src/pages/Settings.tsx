@@ -1,15 +1,17 @@
-import { useState } from "react";
 import { motion } from "framer-motion";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { AnimatedPage } from "@/components/layout/AnimatedPage";
-import { FadeIn, StaggerContainer, StaggerItem } from "@/components/animations";
+import { FadeIn, StaggerItem } from "@/components/animations";
+import { useTheme } from "@/hooks/use-theme";
+import { triggerHaptic } from "@/hooks/use-haptics";
 import { 
-  Box, Bell, Download, Link, Shield, Palette, 
+  Box, Bell, Download, Link, Shield, 
   Bluetooth, Battery, Sliders, Volume2, 
   FileText, Calendar, Lock, Moon, Sun, Monitor,
   ChevronRight
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useState } from "react";
 
 interface SettingToggleProps {
   label: string;
@@ -20,9 +22,14 @@ interface SettingToggleProps {
 }
 
 function SettingToggle({ label, description, icon, enabled, onToggle }: SettingToggleProps) {
+  const handleToggle = () => {
+    triggerHaptic('light');
+    onToggle();
+  };
+
   return (
     <motion.button 
-      onClick={onToggle} 
+      onClick={handleToggle} 
       className="flex w-full items-center gap-4 py-3"
       whileTap={{ scale: 0.99 }}
     >
@@ -55,9 +62,14 @@ interface SettingLinkProps {
 }
 
 function SettingLink({ label, description, icon, onClick }: SettingLinkProps) {
+  const handleClick = () => {
+    triggerHaptic('light');
+    onClick();
+  };
+
   return (
     <motion.button 
-      onClick={onClick} 
+      onClick={handleClick} 
       className="flex w-full items-center gap-4 py-3"
       whileTap={{ scale: 0.99 }}
     >
@@ -74,12 +86,17 @@ function SettingLink({ label, description, icon, onClick }: SettingLinkProps) {
 }
 
 export default function Settings() {
+  const { theme, setTheme } = useTheme();
   const [doseReminders, setDoseReminders] = useState(true);
   const [refillAlerts, setRefillAlerts] = useState(true);
   const [lowBatteryAlerts, setLowBatteryAlerts] = useState(true);
   const [batterySaver, setBatterySaver] = useState(false);
   const [faceId, setFaceId] = useState(true);
-  const [appearance, setAppearance] = useState<"light" | "dark" | "system">("system");
+
+  const handleThemeChange = (newTheme: 'light' | 'dark' | 'system') => {
+    triggerHaptic('medium');
+    setTheme(newTheme);
+  };
 
   return (
     <AnimatedPage>
@@ -226,13 +243,14 @@ export default function Settings() {
                   { value: "system" as const, icon: Monitor, label: "System" },
                 ].map((option) => {
                   const Icon = option.icon;
+                  const isActive = theme === option.value;
                   return (
                     <motion.button
                       key={option.value}
-                      onClick={() => setAppearance(option.value)}
+                      onClick={() => handleThemeChange(option.value)}
                       className={cn(
                         "flex flex-1 flex-col items-center gap-2 rounded-xl py-4 transition-all",
-                        appearance === option.value
+                        isActive
                           ? "bg-gradient-primary text-primary-foreground"
                           : "bg-secondary text-secondary-foreground"
                       )}

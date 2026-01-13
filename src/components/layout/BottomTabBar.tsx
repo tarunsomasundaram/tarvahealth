@@ -2,6 +2,7 @@ import { motion } from "framer-motion";
 import { Home, Box, Plus, BarChart3, User } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
+import { triggerHaptic } from "@/hooks/use-haptics";
 
 const tabs = [
   { id: "home", label: "Home", icon: Home, path: "/" },
@@ -25,7 +26,10 @@ export function BottomTabBar() {
           return (
             <motion.button
               key={tab.id}
-              onClick={() => navigate(tab.path)}
+              onClick={() => {
+                triggerHaptic('medium');
+                navigate(tab.path);
+              }}
               className="tab-add"
               aria-label={tab.label}
               whileTap={{ scale: 0.9 }}
@@ -39,7 +43,10 @@ export function BottomTabBar() {
         return (
           <motion.button
             key={tab.id}
-            onClick={() => navigate(tab.path)}
+            onClick={() => {
+              triggerHaptic('light');
+              navigate(tab.path);
+            }}
             className={cn("tab-item", isActive && "active")}
             whileTap={{ scale: 0.9 }}
           >
