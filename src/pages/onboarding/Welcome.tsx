@@ -1,8 +1,9 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Pill, Bell, Package, ChevronLeft, ChevronRight } from "lucide-react";
+import { Bell, Package, Smartphone, ChevronLeft, ChevronRight } from "lucide-react";
 import { triggerHaptic } from "@/hooks/use-haptics";
+import tarvaLogo from "@/assets/tarva-logo.png";
 
 const carouselData = [
   {
@@ -11,12 +12,12 @@ const carouselData = [
     body: "Reminders that fit your routine.",
   },
   {
-    icon: Package,
+    icon: Smartphone,
     title: "Automatic tracking with the TARVA case",
     body: "When you take a dose from the case, TARVA logs it for you.",
   },
   {
-    icon: Pill,
+    icon: Package,
     title: "Refill reminders at the right time",
     body: "Get notified when you're down to your last 2 doses.",
   },
@@ -52,6 +53,15 @@ export default function Welcome() {
 
   return (
     <div className="fixed inset-0 flex flex-col bg-background">
+      {/* TARVA Logo at top */}
+      <div className="pt-12 px-8 flex justify-center">
+        <img 
+          src={tarvaLogo} 
+          alt="TARVA" 
+          className="h-24 object-contain"
+        />
+      </div>
+
       {/* Carousel content */}
       <div className="flex-1 flex flex-col items-center justify-center px-8">
         <AnimatePresence mode="wait">
