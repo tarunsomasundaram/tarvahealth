@@ -3,6 +3,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Pill, Bell, Package, ChevronLeft, ChevronRight } from "lucide-react";
 import { triggerHaptic } from "@/hooks/use-haptics";
+import tarvaLogo from "@/assets/tarva-logo.png";
 
 const carouselData = [
   {
@@ -52,6 +53,15 @@ export default function Welcome() {
 
   return (
     <div className="fixed inset-0 flex flex-col bg-background">
+      {/* Logo at top */}
+      <div className="pt-12 pb-4 flex justify-center">
+        <img 
+          src={tarvaLogo} 
+          alt="TARVA" 
+          className="h-8 w-auto object-contain invert dark:invert-0"
+        />
+      </div>
+
       {/* Carousel content */}
       <div className="flex-1 flex flex-col items-center justify-center px-8">
         <AnimatePresence mode="wait">

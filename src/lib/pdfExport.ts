@@ -1,6 +1,6 @@
 import { format, eachDayOfInterval, startOfMonth, endOfMonth, getDay } from 'date-fns';
 import type { ScheduledDose, DoseLog, Medication } from '@/contexts/MedicationContext';
-import tarvaLogoFull from '@/assets/tarva-logo-full.png';
+import tarvaLogo from '@/assets/tarva-logo.png';
 
 interface ExportData {
   patientName: string;
@@ -45,7 +45,7 @@ export async function generateAdherencePDF(data: ExportData): Promise<Blob> {
   header.style.cssText = 'display: flex; justify-content: space-between; align-items: center; margin-bottom: 32px; border-bottom: 2px solid #8b5cf6; padding-bottom: 16px;';
   header.innerHTML = `
     <div>
-      <img src="${tarvaLogoFull}" alt="TARVA" style="height: 40px; object-fit: contain;" />
+      <img src="${tarvaLogo}" alt="TARVA" style="height: 32px; object-fit: contain; filter: invert(1);" />
       <p style="color: #6b7280; margin: 8px 0 0 0; font-size: 12px;">Medication Adherence Report</p>
     </div>
     <div style="text-align: right;">
@@ -270,7 +270,7 @@ export async function generateAdherencePDF(data: ExportData): Promise<Blob> {
   footer.style.cssText = 'margin-top: 32px; padding-top: 16px; border-top: 1px solid #e5e7eb; text-align: center;';
   footer.innerHTML = `
     <div style="display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 8px;">
-      <img src="${tarvaLogoFull}" alt="TARVA" style="height: 28px; object-fit: contain;" />
+      <img src="${tarvaLogo}" alt="TARVA" style="height: 24px; object-fit: contain; filter: invert(1);" />
     </div>
     <p style="font-size: 11px; color: #9ca3af; margin: 0;">
       Generated for ${patientName} on ${format(new Date(), 'MMMM d, yyyy \'at\' h:mm a')}

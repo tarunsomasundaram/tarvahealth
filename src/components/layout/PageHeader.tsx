@@ -4,7 +4,7 @@ import { Bell, Calendar } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useOnboarding } from "@/contexts/OnboardingContext";
 import { triggerHaptic } from "@/hooks/use-haptics";
-import tarvaLogoFull from "@/assets/tarva-logo-full.png";
+import tarvaLogo from "@/assets/tarva-logo.png";
 
 interface PageHeaderProps {
   title: string;
@@ -42,11 +42,11 @@ export function PageHeader({
         {title === "TARVA" ? (
           <div className="flex flex-col">
             <img 
-              src={tarvaLogoFull} 
+              src={tarvaLogo} 
               alt="TARVA" 
-              className="h-8 object-contain object-left dark:invert"
+              className="h-7 w-auto object-contain object-left invert dark:invert-0"
             />
-            {subtitle && <p className="text-caption mt-1">{subtitle}</p>}
+            {subtitle && <p className="text-caption mt-1.5">{subtitle}</p>}
           </div>
         ) : (
           <>

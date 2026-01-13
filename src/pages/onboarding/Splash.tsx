@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import tarvaLogoFull from "@/assets/tarva-logo-full.png";
+import tarvaLogo from "@/assets/tarva-logo.png";
 
 export default function Splash() {
   const navigate = useNavigate();
@@ -22,9 +22,9 @@ export default function Splash() {
         className="flex flex-col items-center gap-6"
       >
         <motion.img
-          src={tarvaLogoFull}
+          src={tarvaLogo}
           alt="TARVA"
-          className="h-16 object-contain invert"
+          className="h-12 w-auto object-contain"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3, duration: 0.5 }}
