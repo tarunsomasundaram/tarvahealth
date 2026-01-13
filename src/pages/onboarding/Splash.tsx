@@ -19,25 +19,26 @@ export default function Splash() {
         initial={{ scale: 0.5, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         transition={{ duration: 0.6, ease: "easeOut" }}
-        className="flex flex-col items-center gap-6"
+        className="flex flex-col items-center gap-4"
       >
-        <motion.img
-          src={tarvaLogo}
-          alt="TARVA"
-          className="h-12 w-auto object-contain"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3, duration: 0.5 }}
-        />
+        <motion.div
+          initial={{ rotate: -180 }}
+          animate={{ rotate: 0 }}
+          transition={{ duration: 0.8, ease: "easeOut" }}
+          className="flex h-24 w-24 items-center justify-center rounded-3xl bg-white/20 backdrop-blur-sm p-4"
+        >
+          <img src={tarvaLogo} alt="TARVA" className="h-16 w-16 object-contain brightness-0 invert" />
+        </motion.div>
         
-        <motion.p
+        <motion.div
           initial={{ y: 20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
-          transition={{ delay: 0.5, duration: 0.5 }}
-          className="text-white/80 text-sm"
+          transition={{ delay: 0.3, duration: 0.5 }}
+          className="text-center"
         >
-          Stay on schedule
-        </motion.p>
+          <h1 className="text-3xl font-bold text-white">TARVA Health</h1>
+          <p className="mt-1 text-white/80 text-sm">Stay on schedule</p>
+        </motion.div>
       </motion.div>
 
       <motion.div
