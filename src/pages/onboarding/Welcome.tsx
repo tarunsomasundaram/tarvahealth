@@ -53,12 +53,19 @@ export default function Welcome() {
 
   return (
     <div className="fixed inset-0 flex flex-col bg-background">
-      {/* Logo at top */}
+      {/* Logo at top with animation */}
       <div className="pt-12 pb-4 flex justify-center">
-        <img 
+        <motion.img 
           src={tarvaLogo} 
           alt="TARVA" 
           className="h-24 w-auto object-contain invert dark:invert-0"
+          initial={{ opacity: 0, scale: 0.8, y: -20 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          transition={{ 
+            duration: 0.8, 
+            ease: [0.16, 1, 0.3, 1],
+            delay: 0.1
+          }}
         />
       </div>
 

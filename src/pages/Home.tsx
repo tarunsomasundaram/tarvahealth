@@ -10,22 +10,34 @@ import { triggerHaptic } from "@/hooks/use-haptics";
 import { format } from "date-fns";
 import { useMedication, ScheduledDose } from "@/contexts/MedicationContext";
 import { useOnboarding } from "@/contexts/OnboardingContext";
-import { Pill, Check, X, Smartphone, Clock } from "lucide-react";
+import { Pill, Check, X, Smartphone, Clock, AlarmClock, MapPin } from "lucide-react";
 import { cn } from "@/lib/utils";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 function DoseCard({ 
   dose, 
   onMarkTaken, 
+  onMarkTakenElsewhere,
   onSkip,
+  onSnooze,
   showActions = true 
 }: { 
   dose: ScheduledDose; 
-  onMarkTaken?: () => void; 
+  onMarkTaken?: () => void;
+  onMarkTakenElsewhere?: () => void;
   onSkip?: () => void;
+  onSnooze?: (minutes: number) => void;
   showActions?: boolean;
 }) {
   const isPending = dose.displayStatus === 'pending';
   const isSkipped = dose.displayStatus === 'skipped';
+  const isSnoozed = dose.displayStatus === 'snoozed';
 
   return (
     <motion.div 
@@ -55,7 +67,7 @@ function DoseCard({
           
           {(dose.displayStatus === 'taken' || dose.displayStatus === 'late') && (
             <motion.div 
-              className="mt-2 flex items-center gap-2"
+              className="mt-2 flex items-center gap-2 flex-wrap"
               initial={{ opacity: 0, y: 4 }}
               animate={{ opacity: 1, y: 0 }}
             >
@@ -67,6 +79,12 @@ function DoseCard({
                 <span className="badge-pill text-xs">
                   <Smartphone className="h-3 w-3" />
                   Case
+                </span>
+              )}
+              {dose.source === "elsewhere" && (
+                <span className="badge-pill text-xs">
+                  <MapPin className="h-3 w-3" />
+                  Elsewhere
                 </span>
               )}
             </motion.div>
@@ -84,27 +102,90 @@ function DoseCard({
               </span>
             </motion.div>
           )}
+
+          {isSnoozed && dose.snoozedUntil && (
+            <motion.div 
+              className="mt-2 flex items-center gap-2"
+              initial={{ opacity: 0, y: 4 }}
+              animate={{ opacity: 1, y: 0 }}
+            >
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-100 dark:bg-amber-900/30 px-2.5 py-1 text-xs font-medium text-amber-700 dark:text-amber-400">
+                <AlarmClock className="h-3 w-3" />
+                Snoozed until {dose.snoozedUntil}
+              </span>
+            </motion.div>
+          )}
         </div>
       </div>
 
-      {showActions && isPending && (
+      {showActions && (isPending || isSnoozed) && (
         <motion.div 
           className="mt-4 flex gap-3"
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.15 }}
         >
-          <motion.button 
-            onClick={() => {
-              triggerHaptic('light');
-              onSkip?.();
-            }} 
-            className="btn-secondary flex-1"
-            whileTap={{ scale: 0.95 }}
-          >
-            <X className="h-4 w-4" />
-            Skip
-          </motion.button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <motion.button 
+                className="btn-secondary flex-1 gap-2"
+                whileTap={{ scale: 0.95 }}
+              >
+                <X className="h-4 w-4" />
+                Options
+              </motion.button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start" className="w-48">
+              <DropdownMenuItem 
+                onClick={() => {
+                  triggerHaptic('light');
+                  onSkip?.();
+                }}
+              >
+                <X className="h-4 w-4 mr-2" />
+                Skip dose
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem 
+                onClick={() => {
+                  triggerHaptic('light');
+                  onSnooze?.(5);
+                }}
+              >
+                <AlarmClock className="h-4 w-4 mr-2" />
+                Snooze 5 min
+              </DropdownMenuItem>
+              <DropdownMenuItem 
+                onClick={() => {
+                  triggerHaptic('light');
+                  onSnooze?.(10);
+                }}
+              >
+                <AlarmClock className="h-4 w-4 mr-2" />
+                Snooze 10 min
+              </DropdownMenuItem>
+              <DropdownMenuItem 
+                onClick={() => {
+                  triggerHaptic('light');
+                  onSnooze?.(15);
+                }}
+              >
+                <AlarmClock className="h-4 w-4 mr-2" />
+                Snooze 15 min
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem 
+                onClick={() => {
+                  triggerHaptic('light');
+                  onMarkTakenElsewhere?.();
+                }}
+              >
+                <MapPin className="h-4 w-4 mr-2" />
+                Taken elsewhere
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+          
           <motion.button 
             onClick={() => {
               triggerHaptic('success');
@@ -124,8 +205,16 @@ function DoseCard({
 
 export default function Home() {
   const [selectedDate, setSelectedDate] = useState(new Date());
-  const { getUpcomingDoses, getCompletedDoses, markDoseTaken, markDoseSkipped, getScheduledDosesForDate } = useMedication();
-  const { patientProfile } = useOnboarding();
+  const { 
+    getUpcomingDoses, 
+    getCompletedDoses, 
+    markDoseTaken, 
+    markDoseTakenElsewhere,
+    markDoseSkipped, 
+    markDoseSnoozed,
+    getScheduledDosesForDate 
+  } = useMedication();
+  const { patientProfile, addNotification } = useOnboarding();
   
   const firstName = patientProfile?.fullName?.split(' ')[0] || 'User';
 
@@ -143,12 +232,51 @@ export default function Home() {
 
   const handleMarkTaken = (dose: ScheduledDose) => {
     markDoseTaken(dose);
+    addNotification({
+      id: `notif_${Date.now()}`,
+      type: 'dose_taken',
+      title: 'Dose marked taken',
+      subtitle: 'Manual entry',
+      medicationName: `${dose.medication.genericName} ${dose.medication.strengthValue}${dose.medication.strengthUnit}`,
+      timestamp: new Date().toISOString(),
+      status: 'sent',
+      read: false,
+    });
+    triggerHaptic('success');
+  };
+
+  const handleMarkTakenElsewhere = (dose: ScheduledDose) => {
+    markDoseTakenElsewhere(dose);
+    addNotification({
+      id: `notif_${Date.now()}`,
+      type: 'dose_taken',
+      title: 'Dose marked taken',
+      subtitle: 'Taken elsewhere (case inventory unchanged)',
+      medicationName: `${dose.medication.genericName} ${dose.medication.strengthValue}${dose.medication.strengthUnit}`,
+      timestamp: new Date().toISOString(),
+      status: 'sent',
+      read: false,
+    });
     triggerHaptic('success');
   };
 
   const handleSkip = (dose: ScheduledDose) => {
     markDoseSkipped(dose);
     triggerHaptic('light');
+  };
+
+  const handleSnooze = (dose: ScheduledDose, minutes: number) => {
+    markDoseSnoozed(dose, minutes);
+    addNotification({
+      id: `notif_${Date.now()}`,
+      type: 'dose_reminder',
+      title: `Reminder snoozed ${minutes} min`,
+      medicationName: `${dose.medication.genericName} ${dose.medication.strengthValue}${dose.medication.strengthUnit}`,
+      timestamp: new Date().toISOString(),
+      status: 'sent',
+      read: false,
+    });
+    triggerHaptic('medium');
   };
 
   return (
@@ -191,7 +319,9 @@ export default function Home() {
                         <DoseCard
                           dose={dose}
                           onMarkTaken={() => handleMarkTaken(dose)}
+                          onMarkTakenElsewhere={() => handleMarkTakenElsewhere(dose)}
                           onSkip={() => handleSkip(dose)}
+                          onSnooze={(minutes) => handleSnooze(dose, minutes)}
                         />
                       </StaggerItem>
                     ))}
