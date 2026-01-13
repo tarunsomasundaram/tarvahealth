@@ -1,5 +1,8 @@
 import { useState } from "react";
+import { motion } from "framer-motion";
 import { PageHeader } from "@/components/layout/PageHeader";
+import { AnimatedPage } from "@/components/layout/AnimatedPage";
+import { FadeIn, StaggerContainer, StaggerItem } from "@/components/animations";
 import { CaseStatusCard } from "@/components/case/CaseStatusCard";
 import { InventoryCard } from "@/components/case/InventoryCard";
 import { Plus, Settings, TrendingUp } from "lucide-react";
@@ -21,73 +24,99 @@ export default function Case() {
   };
 
   return (
-    <div className="page-padding">
-      <PageHeader title="Case" subtitle="Manage your smart case" />
+    <AnimatedPage>
+      <div className="page-padding">
+        <PageHeader title="Case" subtitle="Manage your smart case" />
 
-      <div className="section-gap">
-        <CaseStatusCard
-          batteryLevel={batteryLevel}
-          isConnected={isConnected}
-          lastSync="12 min ago"
-          onSync={handleSync}
-        />
+        <div className="section-gap">
+          <FadeIn delay={0.1}>
+            <CaseStatusCard
+              batteryLevel={batteryLevel}
+              isConnected={isConnected}
+              lastSync="12 min ago"
+              onSync={handleSync}
+            />
+          </FadeIn>
 
-        <section>
-          <div className="flex items-center justify-between mb-3">
-            <h2 className="text-section text-foreground">Inventory</h2>
-            <button className="btn-secondary text-sm">
-              <Plus className="h-4 w-4" />
-              Log Refill
-            </button>
-          </div>
-          <div className="space-y-3">
-            {mockInventory.map((item) => (
-              <InventoryCard
-                key={item.id}
-                medicationName={item.name}
-                strength={item.strength}
-                remaining={item.remaining}
-                refillThreshold={item.refillThreshold}
-              />
-            ))}
-          </div>
-        </section>
-
-        <section>
-          <h2 className="text-section text-foreground mb-3">Case Info</h2>
-          <div className="space-y-3">
-            <div className="card-tarva-interactive" onClick={() => navigate("/stats")}>
-              <div className="flex items-center gap-4">
-                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-accent">
-                  <TrendingUp className="h-5 w-5 text-primary" />
-                </div>
-                <div>
-                  <h4 className="font-semibold text-foreground">Battery Trends</h4>
-                  <p className="text-caption">View usage patterns</p>
-                </div>
+          <section>
+            <FadeIn delay={0.15}>
+              <div className="flex items-center justify-between mb-3">
+                <h2 className="text-section text-foreground">Inventory</h2>
+                <motion.button 
+                  className="btn-secondary text-sm"
+                  whileTap={{ scale: 0.95 }}
+                >
+                  <Plus className="h-4 w-4" />
+                  Log Refill
+                </motion.button>
               </div>
-            </div>
-            <div className="card-tarva-interactive" onClick={() => navigate("/settings")}>
-              <div className="flex items-center gap-4">
-                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-accent">
-                  <Settings className="h-5 w-5 text-primary" />
-                </div>
-                <div>
-                  <h4 className="font-semibold text-foreground">Case Settings</h4>
-                  <p className="text-caption">Calibration, sync, notifications</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
+            </FadeIn>
+            <StaggerContainer className="space-y-3">
+              {mockInventory.map((item) => (
+                <StaggerItem key={item.id}>
+                  <InventoryCard
+                    medicationName={item.name}
+                    strength={item.strength}
+                    remaining={item.remaining}
+                    refillThreshold={item.refillThreshold}
+                  />
+                </StaggerItem>
+              ))}
+            </StaggerContainer>
+          </section>
 
-        <div className="card-tarva bg-accent/50">
-          <p className="text-sm text-muted-foreground">
-            <span className="font-medium text-foreground">Tip:</span> Dose detected when compartment opens. 
-            If a dose was taken outside the case, record it on Home.
-          </p>
+          <section>
+            <FadeIn delay={0.25}>
+              <h2 className="text-section text-foreground mb-3">Case Info</h2>
+            </FadeIn>
+            <StaggerContainer className="space-y-3">
+              <StaggerItem>
+                <motion.div 
+                  className="card-tarva-interactive" 
+                  onClick={() => navigate("/stats")}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  <div className="flex items-center gap-4">
+                    <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-accent">
+                      <TrendingUp className="h-5 w-5 text-primary" />
+                    </div>
+                    <div>
+                      <h4 className="font-semibold text-foreground">Battery Trends</h4>
+                      <p className="text-caption">View usage patterns</p>
+                    </div>
+                  </div>
+                </motion.div>
+              </StaggerItem>
+              <StaggerItem>
+                <motion.div 
+                  className="card-tarva-interactive" 
+                  onClick={() => navigate("/settings")}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  <div className="flex items-center gap-4">
+                    <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-accent">
+                      <Settings className="h-5 w-5 text-primary" />
+                    </div>
+                    <div>
+                      <h4 className="font-semibold text-foreground">Case Settings</h4>
+                      <p className="text-caption">Calibration, sync, notifications</p>
+                    </div>
+                  </div>
+                </motion.div>
+              </StaggerItem>
+            </StaggerContainer>
+          </section>
+
+          <FadeIn delay={0.35}>
+            <div className="card-tarva bg-accent/50">
+              <p className="text-sm text-muted-foreground">
+                <span className="font-medium text-foreground">Tip:</span> Dose detected when compartment opens. 
+                If a dose was taken outside the case, record it on Home.
+              </p>
+            </div>
+          </FadeIn>
         </div>
       </div>
-    </div>
+    </AnimatedPage>
   );
 }
