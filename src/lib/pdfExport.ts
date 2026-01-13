@@ -45,7 +45,7 @@ export async function generateAdherencePDF(data: ExportData): Promise<Blob> {
   header.style.cssText = 'display: flex; justify-content: space-between; align-items: center; margin-bottom: 32px; border-bottom: 2px solid #8b5cf6; padding-bottom: 20px;';
   header.innerHTML = `
     <div>
-      <img src="${tarvaLogoBase64}" alt="TARVA" style="height: 72px; object-fit: contain;" />
+      <img src="${tarvaLogoBase64}" alt="TARVA" style="height: 72px; object-fit: contain; filter: invert(1);" />
     </div>
     <div style="text-align: right;">
       <p style="font-weight: 600; font-size: 16px; margin: 0;">${patientName}</p>
@@ -270,7 +270,7 @@ export async function generateAdherencePDF(data: ExportData): Promise<Blob> {
   footer.style.cssText = 'margin-top: 32px; padding-top: 16px; border-top: 1px solid #e5e7eb; text-align: center;';
   footer.innerHTML = `
     <div style="display: flex; align-items: center; justify-content: center; margin-bottom: 8px;">
-      <img src="${tarvaLogoBase64}" alt="TARVA" style="height: 40px; object-fit: contain;" />
+      <img src="${tarvaLogoBase64}" alt="TARVA" style="height: 40px; object-fit: contain; filter: invert(1);" />
     </div>
     <p style="font-size: 11px; color: #9ca3af; margin: 0;">
       Generated for ${patientName} on ${format(new Date(), 'MMMM d, yyyy \'at\' h:mm a')}
