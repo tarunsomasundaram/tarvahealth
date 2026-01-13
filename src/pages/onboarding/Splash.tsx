@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Pill } from "lucide-react";
+import tarvaLogo from "@/assets/tarva-logo.png";
 
 export default function Splash() {
   const navigate = useNavigate();
@@ -25,9 +25,9 @@ export default function Splash() {
           initial={{ rotate: -180 }}
           animate={{ rotate: 0 }}
           transition={{ duration: 0.8, ease: "easeOut" }}
-          className="flex h-24 w-24 items-center justify-center rounded-3xl bg-white/20 backdrop-blur-sm"
+          className="flex h-24 w-24 items-center justify-center rounded-3xl bg-white/20 backdrop-blur-sm p-4"
         >
-          <Pill className="h-12 w-12 text-white" />
+          <img src={tarvaLogo} alt="TARVA" className="h-16 w-16 object-contain brightness-0 invert" />
         </motion.div>
         
         <motion.div
