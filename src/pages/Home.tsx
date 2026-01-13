@@ -6,26 +6,41 @@ import { FadeIn, StaggerContainer, StaggerItem } from "@/components/animations";
 import { WeekPicker } from "@/components/home/WeekPicker";
 import { ProgressCard } from "@/components/home/ProgressCard";
 import { PullToRefresh } from "@/components/common/PullToRefresh";
+import { SnoozeSheet } from "@/components/dose/SnoozeSheet";
+import { CaseSelectionSheet } from "@/components/dose/CaseSelectionSheet";
 import { triggerHaptic } from "@/hooks/use-haptics";
-import { format } from "date-fns";
+import { useNotifications } from "@/hooks/use-notifications";
+import { useCaseDevice } from "@/hooks/use-case-device";
+import { format, addMinutes } from "date-fns";
 import { useMedication, ScheduledDose } from "@/contexts/MedicationContext";
 import { useOnboarding } from "@/contexts/OnboardingContext";
-import { Pill, Check, X, Smartphone, Clock } from "lucide-react";
+import { Pill, Check, X, Smartphone, Clock, Bell, MoreVertical, MapPin } from "lucide-react";
 import { cn } from "@/lib/utils";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 function DoseCard({ 
   dose, 
   onMarkTaken, 
   onSkip,
+  onSnooze,
+  onTakenElsewhere,
   showActions = true 
 }: { 
   dose: ScheduledDose; 
   onMarkTaken?: () => void; 
   onSkip?: () => void;
+  onSnooze?: () => void;
+  onTakenElsewhere?: () => void;
   showActions?: boolean;
 }) {
   const isPending = dose.displayStatus === 'pending';
   const isSkipped = dose.displayStatus === 'skipped';
+  const isSnoozed = dose.displayStatus === 'snoozed';
 
   return (
     <motion.div 
@@ -35,11 +50,18 @@ function DoseCard({
     >
       <div className="flex items-start gap-4">
         <motion.div 
-          className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-accent"
+          className={cn(
+            "flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl",
+            isSnoozed ? "bg-primary/20" : "bg-accent"
+          )}
           whileHover={{ scale: 1.05 }}
           transition={{ type: "spring", stiffness: 400, damping: 20 }}
         >
-          <Pill className="h-6 w-6 text-primary" />
+          {isSnoozed ? (
+            <Bell className="h-6 w-6 text-primary" />
+          ) : (
+            <Pill className="h-6 w-6 text-primary" />
+          )}
         </motion.div>
         <div className="flex-1 min-w-0">
           <div className="flex items-start justify-between gap-2">
@@ -47,7 +69,46 @@ function DoseCard({
               <h3 className="font-semibold text-foreground">{dose.medication.genericName}</h3>
               <p className="text-caption">{dose.medication.strengthValue}{dose.medication.strengthUnit}</p>
             </div>
-            <span className="badge-time shrink-0">{dose.scheduledTime}</span>
+            <div className="flex items-center gap-1">
+              <span className="badge-time shrink-0">{dose.scheduledTime}</span>
+              {showActions && isPending && (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <motion.button 
+                      className="p-1 rounded-lg hover:bg-secondary"
+                      whileTap={{ scale: 0.9 }}
+                    >
+                      <MoreVertical className="h-4 w-4 text-muted-foreground" />
+                    </motion.button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent 
+                    align="end" 
+                    className="w-48 bg-popover border border-border rounded-xl shadow-lg z-50"
+                  >
+                    <DropdownMenuItem 
+                      onClick={() => {
+                        triggerHaptic('light');
+                        onTakenElsewhere?.();
+                      }}
+                      className="flex items-center gap-2 cursor-pointer"
+                    >
+                      <MapPin className="h-4 w-4 text-muted-foreground" />
+                      <span>Taken elsewhere</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem 
+                      onClick={() => {
+                        triggerHaptic('light');
+                        onSnooze?.();
+                      }}
+                      className="flex items-center gap-2 cursor-pointer"
+                    >
+                      <Clock className="h-4 w-4 text-muted-foreground" />
+                      <span>Snooze reminder</span>
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              )}
+            </div>
           </div>
           {dose.medication.instructions && (
             <p className="mt-1 text-small">{dose.medication.instructions}</p>
@@ -69,6 +130,12 @@ function DoseCard({
                   Case
                 </span>
               )}
+              {dose.source === "manual" && (
+                <span className="badge-pill text-xs">
+                  <MapPin className="h-3 w-3" />
+                  Manual
+                </span>
+              )}
             </motion.div>
           )}
           
@@ -84,10 +151,23 @@ function DoseCard({
               </span>
             </motion.div>
           )}
+
+          {isSnoozed && dose.snoozeState && (
+            <motion.div 
+              className="mt-2 flex items-center gap-2"
+              initial={{ opacity: 0, y: 4 }}
+              animate={{ opacity: 1, y: 0 }}
+            >
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-primary/15 px-2.5 py-1 text-xs font-medium text-primary">
+                <Bell className="h-3 w-3" />
+                Snoozed until {format(new Date(dose.snoozeState.until), 'h:mm a')}
+              </span>
+            </motion.div>
+          )}
         </div>
       </div>
 
-      {showActions && isPending && (
+      {showActions && (isPending || isSnoozed) && (
         <motion.div 
           className="mt-4 flex gap-3"
           initial={{ opacity: 0, y: 8 }}
@@ -124,8 +204,24 @@ function DoseCard({
 
 export default function Home() {
   const [selectedDate, setSelectedDate] = useState(new Date());
-  const { getUpcomingDoses, getCompletedDoses, markDoseTaken, markDoseSkipped, getScheduledDosesForDate } = useMedication();
-  const { patientProfile } = useOnboarding();
+  const [snoozeSheetOpen, setSnoozeSheetOpen] = useState(false);
+  const [selectedDoseForSnooze, setSelectedDoseForSnooze] = useState<ScheduledDose | null>(null);
+  
+  const { 
+    getUpcomingDoses, 
+    getCompletedDoses, 
+    markDoseTaken, 
+    markDoseSkipped, 
+    markDoseSnoozed,
+    getScheduledDosesForDate 
+  } = useMedication();
+  const { patientProfile, addNotification } = useOnboarding();
+  const { scheduleSnoozeReminder, cancelNotification } = useNotifications();
+  const { 
+    pendingCaseSelection, 
+    confirmCaseSelection, 
+    cancelCaseSelection 
+  } = useCaseDevice();
   
   const firstName = patientProfile?.fullName?.split(' ')[0] || 'User';
 
@@ -141,14 +237,76 @@ export default function Home() {
     triggerHaptic('success');
   }, []);
 
-  const handleMarkTaken = (dose: ScheduledDose) => {
-    markDoseTaken(dose);
+  const handleMarkTaken = async (dose: ScheduledDose) => {
+    markDoseTaken(dose, 'manual');
+    await cancelNotification(dose.medicationId, dose.scheduledDatetime);
+    
+    addNotification({
+      id: `taken_${dose.id}_${Date.now()}`,
+      type: 'dose_taken',
+      title: 'Dose marked taken',
+      subtitle: 'Manually recorded',
+      medicationName: `${dose.medication.genericName} ${dose.medication.strengthValue}${dose.medication.strengthUnit}`,
+      timestamp: new Date().toISOString(),
+      status: 'sent',
+      read: false,
+    });
+    
+    triggerHaptic('success');
+  };
+
+  const handleTakenElsewhere = async (dose: ScheduledDose) => {
+    // Mark as taken with manual source - does NOT decrement case inventory
+    markDoseTaken(dose, 'manual');
+    await cancelNotification(dose.medicationId, dose.scheduledDatetime);
+    
+    addNotification({
+      id: `taken_elsewhere_${dose.id}_${Date.now()}`,
+      type: 'dose_taken',
+      title: 'Dose marked taken',
+      subtitle: 'Taken elsewhere (not from case)',
+      medicationName: `${dose.medication.genericName} ${dose.medication.strengthValue}${dose.medication.strengthUnit}`,
+      timestamp: new Date().toISOString(),
+      status: 'sent',
+      read: false,
+    });
+    
     triggerHaptic('success');
   };
 
   const handleSkip = (dose: ScheduledDose) => {
     markDoseSkipped(dose);
     triggerHaptic('light');
+  };
+
+  const handleOpenSnooze = (dose: ScheduledDose) => {
+    setSelectedDoseForSnooze(dose);
+    setSnoozeSheetOpen(true);
+  };
+
+  const handleSnooze = async (minutes: number) => {
+    if (!selectedDoseForSnooze) return;
+    
+    markDoseSnoozed(selectedDoseForSnooze, minutes);
+    await scheduleSnoozeReminder(
+      selectedDoseForSnooze.medication, 
+      selectedDoseForSnooze.scheduledDatetime, 
+      minutes
+    );
+    
+    addNotification({
+      id: `snoozed_${selectedDoseForSnooze.id}_${Date.now()}`,
+      type: 'dose_reminder',
+      title: 'Reminder snoozed',
+      subtitle: `Will remind in ${minutes} minutes`,
+      medicationName: `${selectedDoseForSnooze.medication.genericName}`,
+      timestamp: new Date().toISOString(),
+      status: 'sent',
+      read: true,
+    });
+    
+    triggerHaptic('light');
+    setSelectedDoseForSnooze(null);
   };
 
   return (
@@ -192,6 +350,8 @@ export default function Home() {
                           dose={dose}
                           onMarkTaken={() => handleMarkTaken(dose)}
                           onSkip={() => handleSkip(dose)}
+                          onSnooze={() => handleOpenSnooze(dose)}
+                          onTakenElsewhere={() => handleTakenElsewhere(dose)}
                         />
                       </StaggerItem>
                     ))}
@@ -226,6 +386,22 @@ export default function Home() {
           </div>
         </div>
       </PullToRefresh>
+
+      {/* Snooze Sheet */}
+      <SnoozeSheet
+        open={snoozeSheetOpen}
+        onOpenChange={setSnoozeSheetOpen}
+        dose={selectedDoseForSnooze}
+        onSnooze={handleSnooze}
+      />
+
+      {/* Case Selection Sheet */}
+      <CaseSelectionSheet
+        open={!!pendingCaseSelection}
+        onOpenChange={(open) => !open && cancelCaseSelection()}
+        doses={pendingCaseSelection || []}
+        onSelect={confirmCaseSelection}
+      />
     </AnimatedPage>
   );
 }

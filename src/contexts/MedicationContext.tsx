@@ -33,9 +33,10 @@ export interface MedicationSchedule {
   endDate?: string;
 }
 
-export type DoseEventType = 'taken' | 'skipped' | 'missed';
+export type DoseEventType = 'taken' | 'skipped' | 'missed' | 'snoozed';
 export type DoseStatus = 'on_time' | 'late';
 export type DoseSource = 'case' | 'manual';
+export type SnoozeState = { until: string; count: number } | null;
 
 export interface DoseLog {
   id: string;
@@ -55,11 +56,12 @@ export interface ScheduledDose {
   medication: Medication;
   scheduledTime: string; // Display time like "8:00 AM"
   scheduledDatetime: string; // ISO datetime
-  displayStatus: 'pending' | 'taken' | 'skipped' | 'missed' | 'late';
+  displayStatus: 'pending' | 'taken' | 'skipped' | 'missed' | 'late' | 'snoozed';
   takenTime?: string;
   skippedTime?: string;
   source?: DoseSource;
   onTimeWindowMinutes: number;
+  snoozeState?: SnoozeState;
 }
 
 // ==================== CONTEXT INTERFACE ====================
@@ -79,8 +81,9 @@ interface MedicationContextType {
   updateSchedule: (medicationId: string, updates: Partial<MedicationSchedule>) => void;
   
   // Dose actions
-  markDoseTaken: (scheduledDose: ScheduledDose) => void;
+  markDoseTaken: (scheduledDose: ScheduledDose, source?: DoseSource) => void;
   markDoseSkipped: (scheduledDose: ScheduledDose) => void;
+  markDoseSnoozed: (scheduledDose: ScheduledDose, snoozeMinutes: number) => void;
   
   // Computed data
   getScheduledDosesForDate: (date: Date) => ScheduledDose[];
@@ -96,7 +99,7 @@ interface MedicationContextType {
   getAverageDelay: (startDate: Date, endDate: Date) => number;
   
   // For calendar
-  getDoseMarkersForMonth: (year: number, month: number) => Record<string, { id: string; status: 'taken' | 'missed' | 'late' | 'pending' | 'skipped' }[]>;
+  getDoseMarkersForMonth: (year: number, month: number) => Record<string, { id: string; status: 'taken' | 'missed' | 'late' | 'pending' | 'skipped' | 'snoozed' }[]>;
 }
 
 // ==================== DEFAULT/MOCK DATA ====================
@@ -377,7 +380,7 @@ export function MedicationProvider({ children }: { children: ReactNode }) {
 
   // ==================== DOSE ACTIONS ====================
 
-  const markDoseTaken = useCallback((scheduledDose: ScheduledDose) => {
+  const markDoseTaken = useCallback((scheduledDose: ScheduledDose, source: DoseSource = 'manual') => {
     const now = new Date();
     const scheduledTime = parseISO(scheduledDose.scheduledDatetime);
     const windowEnd = addMinutes(scheduledTime, scheduledDose.onTimeWindowMinutes);
@@ -390,14 +393,14 @@ export function MedicationProvider({ children }: { children: ReactNode }) {
       eventType: 'taken',
       eventDatetime: now.toISOString(),
       status: isLate ? 'late' : 'on_time',
-      source: 'manual',
+      source,
     };
     
     setDoseLogs(prev => [...prev, newLog]);
     
-    // Decrement remaining doses if stored in case
+    // Only decrement remaining doses if source is 'case' and medication is stored in case
     const med = medications.find(m => m.id === scheduledDose.medicationId);
-    if (med && med.storedInCase && med.remainingDoses > 0) {
+    if (source === 'case' && med && med.storedInCase && med.remainingDoses > 0) {
       updateMedication(med.id, { remainingDoses: med.remainingDoses - 1 });
     }
   }, [medications, updateMedication]);
@@ -416,6 +419,43 @@ export function MedicationProvider({ children }: { children: ReactNode }) {
     
     setDoseLogs(prev => [...prev, newLog]);
   }, []);
+
+  // Snooze state stored in localStorage for simplicity
+  const [snoozeStates, setSnoozeStates] = useState<Record<string, SnoozeState>>(() => {
+    const saved = localStorage.getItem('tarva-snooze-states');
+    return saved ? JSON.parse(saved) : {};
+  });
+
+  useEffect(() => {
+    localStorage.setItem('tarva-snooze-states', JSON.stringify(snoozeStates));
+  }, [snoozeStates]);
+
+  const markDoseSnoozed = useCallback((scheduledDose: ScheduledDose, snoozeMinutes: number) => {
+    const now = new Date();
+    const snoozeUntil = addMinutes(now, snoozeMinutes);
+    const currentSnooze = snoozeStates[scheduledDose.id];
+    
+    setSnoozeStates(prev => ({
+      ...prev,
+      [scheduledDose.id]: {
+        until: snoozeUntil.toISOString(),
+        count: (currentSnooze?.count || 0) + 1,
+      },
+    }));
+
+    // Log the snooze event
+    const newLog: DoseLog = {
+      id: generateId(),
+      medicationId: scheduledDose.medicationId,
+      scheduledDatetime: scheduledDose.scheduledDatetime,
+      eventType: 'snoozed',
+      eventDatetime: now.toISOString(),
+      source: 'manual',
+      notes: `Snoozed for ${snoozeMinutes} minutes`,
+    };
+    
+    setDoseLogs(prev => [...prev, newLog]);
+  }, [snoozeStates]);
 
   // ==================== COMPUTED DATA ====================
 
@@ -594,8 +634,8 @@ export function MedicationProvider({ children }: { children: ReactNode }) {
 
   // ==================== CALENDAR HELPERS ====================
 
-  const getDoseMarkersForMonth = useCallback((year: number, month: number): Record<string, { id: string; status: 'taken' | 'missed' | 'late' | 'pending' | 'skipped' }[]> => {
-    const result: Record<string, { id: string; status: 'taken' | 'missed' | 'late' | 'pending' | 'skipped' }[]> = {};
+  const getDoseMarkersForMonth = useCallback((year: number, month: number): Record<string, { id: string; status: 'taken' | 'missed' | 'late' | 'pending' | 'skipped' | 'snoozed' }[]> => {
+    const result: Record<string, { id: string; status: 'taken' | 'missed' | 'late' | 'pending' | 'skipped' | 'snoozed' }[]> = {};
     
     const startDate = new Date(year, month, 1);
     const endDate = new Date(year, month + 1, 0);
@@ -625,6 +665,7 @@ export function MedicationProvider({ children }: { children: ReactNode }) {
     updateSchedule,
     markDoseTaken,
     markDoseSkipped,
+    markDoseSnoozed,
     getScheduledDosesForDate,
     getDoseLogsForDateRange,
     getUpcomingDoses,
@@ -645,6 +686,7 @@ export function MedicationProvider({ children }: { children: ReactNode }) {
     updateSchedule,
     markDoseTaken,
     markDoseSkipped,
+    markDoseSnoozed,
     getScheduledDosesForDate,
     getDoseLogsForDateRange,
     getUpcomingDoses,
