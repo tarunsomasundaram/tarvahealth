@@ -44,7 +44,7 @@ export function PageHeader({
             <img 
               src={tarvaLogo} 
               alt="TARVA Logo" 
-              className="h-10 w-10 object-contain"
+              className="h-12 w-12 object-contain"
             />
             <div>
               <h1 className="text-title-large text-foreground">{title}</h1>
