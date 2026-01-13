@@ -13,12 +13,12 @@ import {
 import { cn } from "@/lib/utils";
 import { format, isToday, isYesterday, parseISO } from "date-fns";
 
-const filters = [
-  { id: "all", label: "All" },
-  { id: "doses", label: "Doses" },
-  { id: "refill", label: "Refill" },
-  { id: "case", label: "Case" },
-  { id: "caregivers", label: "Caregivers" },
+const filterOptions = [
+  { value: "all", label: "All" },
+  { value: "doses", label: "Doses" },
+  { value: "refill", label: "Refill" },
+  { value: "case", label: "Case" },
+  { value: "caregivers", label: "Caregivers" },
 ];
 
 function getNotificationIcon(type: Notification['type']) {
@@ -113,9 +113,9 @@ export default function Notifications() {
         <div className="section-gap">
           <FadeIn delay={0.1}>
             <FilterChips
-              filters={filters}
-              activeFilter={activeFilter}
-              onFilterChange={setActiveFilter}
+              options={filterOptions}
+              selected={activeFilter}
+              onSelect={setActiveFilter}
             />
           </FadeIn>
 
