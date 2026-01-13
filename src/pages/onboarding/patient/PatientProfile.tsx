@@ -37,7 +37,7 @@ export default function PatientProfile() {
       allergies: allergies || undefined,
     });
 
-    navigate("/onboarding/patient/notifications");
+    navigate("/onboarding/patient/passcode");
   };
 
   const handleSkip = () => {
@@ -46,7 +46,7 @@ export default function PatientProfile() {
       fullName: "User",
       timezone,
     });
-    navigate("/onboarding/patient/notifications");
+    navigate("/onboarding/patient/passcode");
   };
 
   return (

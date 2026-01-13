@@ -16,6 +16,8 @@ import Profile from "./pages/Profile";
 import Calendar from "./pages/Calendar";
 import Caregivers from "./pages/Caregivers";
 import Settings from "./pages/Settings";
+import Notifications from "./pages/Notifications";
+import MyMedications from "./pages/MyMedications";
 import NotFound from "./pages/NotFound";
 
 // Onboarding pages
@@ -24,11 +26,13 @@ import Welcome from "./pages/onboarding/Welcome";
 import Auth from "./pages/onboarding/Auth";
 import RoleSelect from "./pages/onboarding/RoleSelect";
 import PatientProfile from "./pages/onboarding/patient/PatientProfile";
+import PatientPasscode from "./pages/onboarding/patient/PatientPasscode";
 import PatientNotifications from "./pages/onboarding/patient/PatientNotifications";
 import PatientCase from "./pages/onboarding/patient/PatientCase";
 import PatientMedication from "./pages/onboarding/patient/PatientMedication";
 import PatientCaregiver from "./pages/onboarding/patient/PatientCaregiver";
 import CaregiverProfile from "./pages/onboarding/caregiver/CaregiverProfile";
+import CaregiverPasscode from "./pages/onboarding/caregiver/CaregiverPasscode";
 import CaregiverNotifications from "./pages/onboarding/caregiver/CaregiverNotifications";
 import CaregiverLink from "./pages/onboarding/caregiver/CaregiverLink";
 import OnboardingComplete from "./pages/onboarding/OnboardingComplete";
@@ -46,11 +50,13 @@ function AppRoutes() {
         <Route path="/auth" element={<Auth />} />
         <Route path="/role-select" element={<RoleSelect />} />
         <Route path="/onboarding/patient/profile" element={<PatientProfile />} />
+        <Route path="/onboarding/patient/passcode" element={<PatientPasscode />} />
         <Route path="/onboarding/patient/notifications" element={<PatientNotifications />} />
         <Route path="/onboarding/patient/case" element={<PatientCase />} />
         <Route path="/onboarding/patient/medication" element={<PatientMedication />} />
         <Route path="/onboarding/patient/caregiver" element={<PatientCaregiver />} />
         <Route path="/onboarding/caregiver/profile" element={<CaregiverProfile />} />
+        <Route path="/onboarding/caregiver/passcode" element={<CaregiverPasscode />} />
         <Route path="/onboarding/caregiver/notifications" element={<CaregiverNotifications />} />
         <Route path="/onboarding/caregiver/link" element={<CaregiverLink />} />
         <Route path="/onboarding/complete" element={<OnboardingComplete />} />
@@ -70,6 +76,8 @@ function AppRoutes() {
         <Route path="/calendar" element={<Calendar />} />
         <Route path="/caregivers" element={<Caregivers />} />
         <Route path="/settings" element={<Settings />} />
+        <Route path="/notifications" element={<Notifications />} />
+        <Route path="/my-medications" element={<MyMedications />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
       <BottomTabBar />
