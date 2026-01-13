@@ -3,6 +3,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { ThemeProvider } from "@/hooks/use-theme";
 import { BottomTabBar } from "@/components/layout/BottomTabBar";
 import Home from "./pages/Home";
 import Case from "./pages/Case";
@@ -18,26 +19,28 @@ const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <div className="mx-auto max-w-md min-h-screen bg-background">
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/case" element={<Case />} />
-            <Route path="/add" element={<AddMedication />} />
-            <Route path="/stats" element={<Stats />} />
-            <Route path="/profile" element={<Profile />} />
-            <Route path="/calendar" element={<Calendar />} />
-            <Route path="/caregivers" element={<Caregivers />} />
-            <Route path="/settings" element={<Settings />} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-          <BottomTabBar />
-        </div>
-      </BrowserRouter>
-    </TooltipProvider>
+    <ThemeProvider>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <div className="mx-auto max-w-md min-h-screen bg-background">
+            <Routes>
+              <Route path="/" element={<Home />} />
+              <Route path="/case" element={<Case />} />
+              <Route path="/add" element={<AddMedication />} />
+              <Route path="/stats" element={<Stats />} />
+              <Route path="/profile" element={<Profile />} />
+              <Route path="/calendar" element={<Calendar />} />
+              <Route path="/caregivers" element={<Caregivers />} />
+              <Route path="/settings" element={<Settings />} />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+            <BottomTabBar />
+          </div>
+        </BrowserRouter>
+      </TooltipProvider>
+    </ThemeProvider>
   </QueryClientProvider>
 );
 

@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import { Pill, Check, X, Smartphone } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { triggerHaptic } from "@/hooks/use-haptics";
 
 export interface Medication {
   id: string;
@@ -106,7 +107,10 @@ export function MedicationCard({
           transition={{ delay: 0.15 }}
         >
           <motion.button 
-            onClick={onSkip} 
+            onClick={() => {
+              triggerHaptic('light');
+              onSkip?.();
+            }} 
             className="btn-secondary flex-1"
             whileTap={{ scale: 0.95 }}
           >
@@ -114,7 +118,10 @@ export function MedicationCard({
             Skip
           </motion.button>
           <motion.button 
-            onClick={onMarkTaken} 
+            onClick={() => {
+              triggerHaptic('success');
+              onMarkTaken?.();
+            }} 
             className="btn-primary flex-1"
             whileTap={{ scale: 0.95 }}
           >
