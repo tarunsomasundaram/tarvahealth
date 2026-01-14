@@ -52,22 +52,24 @@ interface ForumContextType {
   posts: ForumPost[];
   comments: ForumComment[];
   reports: ForumReport[];
+  userPosts: string[];
   getGroupsForConditions: (conditionIds: string[]) => ForumGroup[];
   getSuggestedGroups: (conditionIds: string[]) => ForumGroup[];
   getPostsForGroup: (groupId: string) => ForumPost[];
   getCommentsForPost: (postId: string) => ForumComment[];
-  createPost: (post: Omit<ForumPost, 'id' | 'createdAt' | 'updatedAt' | 'likes' | 'commentCount'>) => void;
-  createComment: (comment: Omit<ForumComment, 'id' | 'createdAt'>) => void;
+  createPost: (post: Omit<ForumPost, 'id' | 'createdAt' | 'updatedAt' | 'likes' | 'commentCount'>) => string;
+  createComment: (comment: Omit<ForumComment, 'id' | 'createdAt'>, onNotify?: (postTitle: string, commenterName: string) => void) => void;
   reportContent: (report: Omit<ForumReport, 'id' | 'createdAt'>) => void;
-  likePost: (postId: string) => void;
+  likePost: (postId: string, onNotify?: (postTitle: string) => void) => void;
   generateAnonymousHandle: () => string;
+  getPostById: (postId: string) => ForumPost | undefined;
 }
 
 const ForumContext = createContext<ForumContextType | undefined>(undefined);
 
 // Generate mock groups based on conditions
 const generateMockGroups = (): ForumGroup[] => {
-  return conditions.slice(0, 30).map((condition, index) => ({
+  return conditions.slice(0, 30).map((condition) => ({
     id: `group-${condition.id}`,
     conditionId: condition.id,
     name: condition.name,
@@ -147,6 +149,15 @@ export function ForumProvider({ children }: { children: ReactNode }) {
   const [posts, setPosts] = useState<ForumPost[]>(() => generateMockPosts(groups));
   const [comments, setComments] = useState<ForumComment[]>(() => generateMockComments(posts));
   const [reports, setReports] = useState<ForumReport[]>([]);
+  const [userPosts, setUserPosts] = useState<string[]>(() => {
+    const saved = localStorage.getItem('tarva-forum-user-posts');
+    return saved ? JSON.parse(saved) : [];
+  });
+
+  // Save user posts to localStorage
+  useEffect(() => {
+    localStorage.setItem('tarva-forum-user-posts', JSON.stringify(userPosts));
+  }, [userPosts]);
 
   const acknowledgeGuidelines = () => {
     setHasAcknowledgedGuidelines(true);
@@ -158,14 +169,12 @@ export function ForumProvider({ children }: { children: ReactNode }) {
   };
 
   const getSuggestedGroups = (conditionIds: string[]): ForumGroup[] => {
-    // Get categories of user's conditions
     const userCategories = new Set(
       conditionIds
         .map(id => conditions.find(c => c.id === id)?.category)
         .filter(Boolean)
     );
 
-    // Return groups in same categories but not already in user's conditions
     return groups
       .filter(group => {
         const condition = conditions.find(c => c.id === group.conditionId);
@@ -186,19 +195,29 @@ export function ForumProvider({ children }: { children: ReactNode }) {
       .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
   };
 
-  const createPost = (post: Omit<ForumPost, 'id' | 'createdAt' | 'updatedAt' | 'likes' | 'commentCount'>) => {
+  const getPostById = (postId: string): ForumPost | undefined => {
+    return posts.find(p => p.id === postId);
+  };
+
+  const createPost = (post: Omit<ForumPost, 'id' | 'createdAt' | 'updatedAt' | 'likes' | 'commentCount'>): string => {
+    const postId = `post-${Date.now()}`;
     const newPost: ForumPost = {
       ...post,
-      id: `post-${Date.now()}`,
+      id: postId,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       likes: 0,
       commentCount: 0,
     };
     setPosts(prev => [newPost, ...prev]);
+    setUserPosts(prev => [...prev, postId]);
+    return postId;
   };
 
-  const createComment = (comment: Omit<ForumComment, 'id' | 'createdAt'>) => {
+  const createComment = (
+    comment: Omit<ForumComment, 'id' | 'createdAt'>,
+    onNotify?: (postTitle: string, commenterName: string) => void
+  ) => {
     const newComment: ForumComment = {
       ...comment,
       id: `comment-${Date.now()}`,
@@ -212,6 +231,12 @@ export function ForumProvider({ children }: { children: ReactNode }) {
         ? { ...post, commentCount: post.commentCount + 1 }
         : post
     ));
+
+    // Trigger notification if this is on user's own post
+    const post = posts.find(p => p.id === comment.postId);
+    if (post && userPosts.includes(comment.postId) && onNotify) {
+      onNotify(post.title, comment.authorDisplayName);
+    }
   };
 
   const reportContent = (report: Omit<ForumReport, 'id' | 'createdAt'>) => {
@@ -223,10 +248,16 @@ export function ForumProvider({ children }: { children: ReactNode }) {
     setReports(prev => [...prev, newReport]);
   };
 
-  const likePost = (postId: string) => {
+  const likePost = (postId: string, onNotify?: (postTitle: string) => void) => {
     setPosts(prev => prev.map(post =>
       post.id === postId ? { ...post, likes: post.likes + 1 } : post
     ));
+
+    // Trigger notification if this is user's own post
+    const post = posts.find(p => p.id === postId);
+    if (post && userPosts.includes(postId) && onNotify) {
+      onNotify(post.title);
+    }
   };
 
   const generateAnonymousHandle = (): string => {
@@ -242,6 +273,7 @@ export function ForumProvider({ children }: { children: ReactNode }) {
         posts,
         comments,
         reports,
+        userPosts,
         getGroupsForConditions,
         getSuggestedGroups,
         getPostsForGroup,
@@ -251,6 +283,7 @@ export function ForumProvider({ children }: { children: ReactNode }) {
         reportContent,
         likePost,
         generateAnonymousHandle,
+        getPostById,
       }}
     >
       {children}
