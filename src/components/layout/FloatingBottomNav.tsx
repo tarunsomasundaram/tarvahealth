@@ -19,16 +19,9 @@ export function FloatingBottomNav() {
   const navigate = useNavigate();
   const [isMoreOpen, setIsMoreOpen] = useState(false);
 
-  // Hide on certain routes
+  // Hide only on add medication flow and edit pages
   const hiddenRoutes = [
     "/add",
-    "/community",
-    "/calendar",
-    "/caregivers",
-    "/settings",
-    "/notifications",
-    "/my-medications",
-    "/reminder-preferences",
     "/edit-profile",
   ];
 
