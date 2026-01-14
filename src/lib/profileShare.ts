@@ -1,6 +1,8 @@
 import { format } from 'date-fns';
 import type { PatientProfile, Medication } from '@/contexts/OnboardingContext';
 import type { HealthProfile } from '@/contexts/HealthProfileContext';
+import { conditions } from '@/data/conditions';
+import { behaviors } from '@/data/behaviors';
 import tarvaLogoBase64 from '@/assets/tarva-logo.png';
 
 interface ProfileShareData {
@@ -14,124 +16,194 @@ export async function generateProfilePDF(data: ProfileShareData): Promise<void> 
   
   const name = patientProfile?.fullName || 'Patient';
   
+  // Get condition names from IDs
+  const conditionNames = healthProfile.conditions
+    .map(id => conditions.find(c => c.id === id)?.name || id)
+    .filter(Boolean);
+  
+  // Get behavior names from IDs
+  const behaviorNames = healthProfile.selectedBehaviors
+    .map(id => behaviors.find(b => b.id === id)?.name || id)
+    .filter(Boolean);
+  
   // Create the document
   const doc = document.createElement('div');
   doc.style.cssText = `
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     background: white;
     color: #1a1a1a;
-    padding: 40px;
+    padding: 32px;
     max-width: 800px;
     margin: 0 auto;
   `;
   
-  // Header with avatar
+  // Header with avatar and branding
   const header = document.createElement('div');
-  header.style.cssText = 'display: flex; justify-content: space-between; align-items: center; margin-bottom: 32px; border-bottom: 2px solid #8b5cf6; padding-bottom: 20px;';
+  header.style.cssText = 'display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; background: linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%); padding: 20px; border-radius: 16px;';
   
   const avatarHtml = patientProfile?.avatarUrl 
-    ? `<img src="${patientProfile.avatarUrl}" alt="${name}" style="width: 80px; height: 80px; border-radius: 50%; object-fit: cover; border: 3px solid #8b5cf6;" />`
-    : `<div style="width: 80px; height: 80px; border-radius: 50%; background: linear-gradient(135deg, #8b5cf6, #a78bfa); display: flex; align-items: center; justify-content: center; font-size: 32px; font-weight: bold; color: white;">${name.charAt(0).toUpperCase()}</div>`;
+    ? `<img src="${patientProfile.avatarUrl}" alt="${name}" style="width: 70px; height: 70px; border-radius: 50%; object-fit: cover; border: 3px solid white;" />`
+    : `<div style="width: 70px; height: 70px; border-radius: 50%; background: white; display: flex; align-items: center; justify-content: center; font-size: 28px; font-weight: bold; color: #8b5cf6;">${name.charAt(0).toUpperCase()}</div>`;
   
   header.innerHTML = `
     <div style="display: flex; align-items: center; gap: 16px;">
       ${avatarHtml}
       <div>
-        <p style="font-weight: 600; font-size: 18px; margin: 0;">${name}</p>
-        <p style="color: #9ca3af; font-size: 12px; margin: 4px 0 0 0;">Health Profile</p>
+        <p style="font-weight: 600; font-size: 20px; margin: 0; color: white;">${name}</p>
+        <p style="color: rgba(255,255,255,0.8); font-size: 13px; margin: 4px 0 0 0;">Health Profile Report</p>
       </div>
     </div>
     <div style="text-align: right;">
-      <img src="${tarvaLogoBase64}" alt="TARVA" style="height: 48px; object-fit: contain; filter: invert(1);" />
-      <p style="color: #6b7280; font-size: 11px; margin: 4px 0 0 0;">
-        Generated ${format(new Date(), 'MMM d, yyyy')}
+      <img src="${tarvaLogoBase64}" alt="TARVA" style="height: 40px; object-fit: contain; filter: brightness(0) invert(1);" />
+      <p style="color: rgba(255,255,255,0.7); font-size: 11px; margin: 6px 0 0 0;">
+        ${format(new Date(), 'MMM d, yyyy')}
       </p>
     </div>
   `;
   doc.appendChild(header);
 
-  // Personal Info Section
-  const personalSection = document.createElement('div');
-  personalSection.style.cssText = 'margin-bottom: 24px;';
-  personalSection.innerHTML = `
-    <h2 style="font-size: 16px; font-weight: 600; margin: 0 0 12px 0; color: #374151;">Personal Information</h2>
-    <div style="background: #f3f4f6; padding: 16px; border-radius: 12px; display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px;">
-      <div>
-        <p style="font-size: 11px; color: #6b7280; margin: 0;">Full Name</p>
-        <p style="font-size: 14px; font-weight: 500; margin: 4px 0 0 0;">${name}</p>
-      </div>
-      ${patientProfile?.dateOfBirth ? `
-        <div>
-          <p style="font-size: 11px; color: #6b7280; margin: 0;">Date of Birth</p>
-          <p style="font-size: 14px; font-weight: 500; margin: 4px 0 0 0;">${format(new Date(patientProfile.dateOfBirth), 'MMM d, yyyy')}</p>
-        </div>
-      ` : ''}
-      ${healthProfile.age ? `
-        <div>
-          <p style="font-size: 11px; color: #6b7280; margin: 0;">Age</p>
-          <p style="font-size: 14px; font-weight: 500; margin: 4px 0 0 0;">${healthProfile.age} years</p>
-        </div>
-      ` : ''}
-      ${healthProfile.heightValue ? `
-        <div>
-          <p style="font-size: 11px; color: #6b7280; margin: 0;">Height</p>
-          <p style="font-size: 14px; font-weight: 500; margin: 4px 0 0 0;">${healthProfile.heightValue} ${healthProfile.heightUnit}</p>
-        </div>
-      ` : ''}
-      ${healthProfile.bloodGroup ? `
-        <div>
-          <p style="font-size: 11px; color: #6b7280; margin: 0;">Blood Group</p>
-          <p style="font-size: 14px; font-weight: 500; margin: 4px 0 0 0;">${healthProfile.bloodGroup}</p>
-        </div>
-      ` : ''}
-      ${patientProfile?.allergies ? `
-        <div style="grid-column: span 2;">
-          <p style="font-size: 11px; color: #6b7280; margin: 0;">Allergies</p>
-          <p style="font-size: 14px; font-weight: 500; margin: 4px 0 0 0;">${patientProfile.allergies}</p>
-        </div>
-      ` : ''}
+  // Quick Stats Row
+  const statsRow = document.createElement('div');
+  statsRow.style.cssText = 'display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 20px;';
+  
+  const statBoxStyle = 'background: #f8fafc; border: 1px solid #e2e8f0; padding: 14px; border-radius: 12px; text-align: center;';
+  const statLabelStyle = 'font-size: 10px; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; margin: 0;';
+  const statValueStyle = 'font-size: 18px; font-weight: 600; color: #1e293b; margin: 4px 0 0 0;';
+  
+  statsRow.innerHTML = `
+    <div style="${statBoxStyle}">
+      <p style="${statLabelStyle}">Age</p>
+      <p style="${statValueStyle}">${healthProfile.age || '—'}</p>
+    </div>
+    <div style="${statBoxStyle}">
+      <p style="${statLabelStyle}">Height</p>
+      <p style="${statValueStyle}">${healthProfile.heightValue ? `${healthProfile.heightValue} ${healthProfile.heightUnit}` : '—'}</p>
+    </div>
+    <div style="${statBoxStyle}">
+      <p style="${statLabelStyle}">Weight</p>
+      <p style="${statValueStyle}">${healthProfile.weightValue ? `${healthProfile.weightValue} ${healthProfile.weightUnit}` : '—'}</p>
+    </div>
+    <div style="${statBoxStyle}">
+      <p style="${statLabelStyle}">Blood</p>
+      <p style="${statValueStyle}">${healthProfile.bloodGroup || '—'}</p>
     </div>
   `;
-  doc.appendChild(personalSection);
+  doc.appendChild(statsRow);
 
-  // Conditions Section
-  if (healthProfile.conditions.length > 0) {
+  // Personal Info Section
+  const personalSection = document.createElement('div');
+  personalSection.style.cssText = 'margin-bottom: 20px;';
+  
+  let personalInfo = '';
+  if (patientProfile?.dateOfBirth) {
+    personalInfo += `
+      <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #f1f5f9;">
+        <span style="color: #64748b; font-size: 13px;">Date of Birth</span>
+        <span style="font-weight: 500; font-size: 13px;">${format(new Date(patientProfile.dateOfBirth), 'MMMM d, yyyy')}</span>
+      </div>
+    `;
+  }
+  if (patientProfile?.allergies) {
+    personalInfo += `
+      <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #f1f5f9;">
+        <span style="color: #64748b; font-size: 13px;">Allergies</span>
+        <span style="font-weight: 500; font-size: 13px; color: #dc2626;">${patientProfile.allergies}</span>
+      </div>
+    `;
+  }
+  
+  if (personalInfo) {
+    personalSection.innerHTML = `
+      <div style="background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 4px 16px;">
+        ${personalInfo}
+      </div>
+    `;
+    doc.appendChild(personalSection);
+  }
+
+  // Medical Conditions Section
+  if (conditionNames.length > 0) {
     const conditionsSection = document.createElement('div');
-    conditionsSection.style.cssText = 'margin-bottom: 24px;';
+    conditionsSection.style.cssText = 'margin-bottom: 20px;';
     conditionsSection.innerHTML = `
-      <h2 style="font-size: 16px; font-weight: 600; margin: 0 0 12px 0; color: #374151;">Medical Conditions</h2>
-      <div style="background: #fef3c7; padding: 16px; border-radius: 12px;">
-        <div style="display: flex; flex-wrap: wrap; gap: 8px;">
-          ${healthProfile.conditions.map(condition => `
-            <span style="background: #fbbf24; color: #78350f; padding: 4px 12px; border-radius: 16px; font-size: 12px; font-weight: 500;">${condition}</span>
+      <h2 style="font-size: 14px; font-weight: 600; margin: 0 0 10px 0; color: #374151; display: flex; align-items: center; gap: 8px;">
+        <span style="display: inline-block; width: 4px; height: 16px; background: #f59e0b; border-radius: 2px;"></span>
+        Medical Conditions
+      </h2>
+      <div style="background: linear-gradient(135deg, #fef3c7 0%, #fef9c3 100%); padding: 14px; border-radius: 12px; border: 1px solid #fde68a;">
+        <div style="display: flex; flex-wrap: wrap; gap: 6px;">
+          ${conditionNames.map(name => `
+            <span style="background: #f59e0b; color: white; padding: 5px 12px; border-radius: 20px; font-size: 11px; font-weight: 500;">${name}</span>
           `).join('')}
         </div>
         ${healthProfile.conditionOtherText ? `
-          <p style="font-size: 12px; color: #92400e; margin: 12px 0 0 0;"><strong>Other:</strong> ${healthProfile.conditionOtherText}</p>
+          <p style="font-size: 12px; color: #92400e; margin: 10px 0 0 0;"><strong>Note:</strong> ${healthProfile.conditionOtherText}</p>
         ` : ''}
       </div>
     `;
     doc.appendChild(conditionsSection);
   }
 
+  // Behaviors Section
+  if (behaviorNames.length > 0) {
+    const behaviorsSection = document.createElement('div');
+    behaviorsSection.style.cssText = 'margin-bottom: 20px;';
+    behaviorsSection.innerHTML = `
+      <h2 style="font-size: 14px; font-weight: 600; margin: 0 0 10px 0; color: #374151; display: flex; align-items: center; gap: 8px;">
+        <span style="display: inline-block; width: 4px; height: 16px; background: #06b6d4; border-radius: 2px;"></span>
+        Tracked Behaviors
+      </h2>
+      <div style="background: linear-gradient(135deg, #cffafe 0%, #e0f2fe 100%); padding: 14px; border-radius: 12px; border: 1px solid #a5f3fc;">
+        <div style="display: flex; flex-wrap: wrap; gap: 6px;">
+          ${behaviorNames.map(name => `
+            <span style="background: #0891b2; color: white; padding: 5px 12px; border-radius: 20px; font-size: 11px; font-weight: 500;">${name}</span>
+          `).join('')}
+        </div>
+      </div>
+    `;
+    doc.appendChild(behaviorsSection);
+  }
+
   // Medications Section
   if (medications.length > 0) {
     const medsSection = document.createElement('div');
-    medsSection.style.cssText = 'margin-bottom: 24px;';
+    medsSection.style.cssText = 'margin-bottom: 20px;';
     medsSection.innerHTML = `
-      <h2 style="font-size: 16px; font-weight: 600; margin: 0 0 12px 0; color: #374151;">Current Medications</h2>
-      <div style="background: #faf5ff; padding: 16px; border-radius: 12px; border: 1px solid #e9d5ff;">
-        <div style="display: grid; gap: 8px;">
-          ${medications.map(med => `
-            <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; background: white; border-radius: 8px;">
-              <div>
-                <span style="font-weight: 500; font-size: 13px;">${med.name}</span>
-                <span style="color: #6b7280; font-size: 12px; margin-left: 8px;">${med.strength}</span>
-              </div>
-              <span style="font-size: 11px; color: #8b5cf6; background: #f3e8ff; padding: 2px 8px; border-radius: 10px;">${med.form}</span>
-            </div>
-          `).join('')}
-        </div>
+      <h2 style="font-size: 14px; font-weight: 600; margin: 0 0 10px 0; color: #374151; display: flex; align-items: center; gap: 8px;">
+        <span style="display: inline-block; width: 4px; height: 16px; background: #8b5cf6; border-radius: 2px;"></span>
+        Current Medications
+      </h2>
+      <div style="background: linear-gradient(135deg, #f3e8ff 0%, #ede9fe 100%); border: 1px solid #ddd6fe; border-radius: 12px; overflow: hidden;">
+        <table style="width: 100%; border-collapse: collapse; font-size: 12px;">
+          <thead>
+            <tr style="background: #8b5cf6; color: white;">
+              <th style="text-align: left; padding: 10px 14px; font-weight: 600;">Medication</th>
+              <th style="text-align: left; padding: 10px 14px; font-weight: 600;">Strength</th>
+              <th style="text-align: left; padding: 10px 14px; font-weight: 600;">Form</th>
+              <th style="text-align: left; padding: 10px 14px; font-weight: 600;">Frequency</th>
+              <th style="text-align: left; padding: 10px 14px; font-weight: 600;">Schedule</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${medications.map((med, i) => `
+              <tr style="background: ${i % 2 === 0 ? 'white' : '#faf5ff'};">
+                <td style="padding: 10px 14px; font-weight: 500; color: #1e293b;">${med.name}</td>
+                <td style="padding: 10px 14px; color: #64748b;">${med.strength}</td>
+                <td style="padding: 10px 14px; color: #64748b;">${med.form}</td>
+                <td style="padding: 10px 14px; color: #64748b;">${med.frequency}</td>
+                <td style="padding: 10px 14px; color: #8b5cf6; font-weight: 500;">${med.times?.join(', ') || '—'}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+        ${medications.some(m => m.instructions) ? `
+          <div style="padding: 12px 14px; border-top: 1px solid #ddd6fe; background: white;">
+            <p style="font-size: 11px; font-weight: 600; color: #374151; margin: 0 0 6px 0;">Special Instructions:</p>
+            ${medications.filter(m => m.instructions).map(med => `
+              <p style="font-size: 11px; color: #64748b; margin: 4px 0;"><strong>${med.name}:</strong> ${med.instructions}</p>
+            `).join('')}
+          </div>
+        ` : ''}
       </div>
     `;
     doc.appendChild(medsSection);
@@ -139,10 +211,13 @@ export async function generateProfilePDF(data: ProfileShareData): Promise<void> 
 
   // Footer
   const footer = document.createElement('div');
-  footer.style.cssText = 'margin-top: 32px; padding-top: 16px; border-top: 1px solid #e5e7eb; text-align: center;';
+  footer.style.cssText = 'margin-top: 24px; padding-top: 16px; border-top: 2px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center;';
   footer.innerHTML = `
-    <p style="font-size: 11px; color: #9ca3af; margin: 0;">
-      This profile was generated by TARVA Health on ${format(new Date(), 'MMMM d, yyyy \'at\' h:mm a')}
+    <p style="font-size: 10px; color: #94a3b8; margin: 0;">
+      Generated by TARVA Health • ${format(new Date(), 'MMMM d, yyyy \'at\' h:mm a')}
+    </p>
+    <p style="font-size: 10px; color: #94a3b8; margin: 0;">
+      For healthcare provider reference only
     </p>
   `;
   doc.appendChild(footer);
@@ -160,8 +235,8 @@ export async function generateProfilePDF(data: ProfileShareData): Promise<void> 
         <title>TARVA Health Profile - ${name}</title>
         <style>
           @media print {
-            body { margin: 0; }
-            @page { margin: 0.5in; }
+            body { margin: 0; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            @page { margin: 0.4in; }
           }
         </style>
       </head>
@@ -183,9 +258,17 @@ export function generateProfileLink(data: ProfileShareData): string {
   const shareData = {
     name: patientProfile?.fullName || 'Patient',
     age: healthProfile.age,
+    height: healthProfile.heightValue ? `${healthProfile.heightValue} ${healthProfile.heightUnit}` : undefined,
+    weight: healthProfile.weightValue ? `${healthProfile.weightValue} ${healthProfile.weightUnit}` : undefined,
     bloodGroup: healthProfile.bloodGroup,
     conditions: healthProfile.conditions,
-    medications: medications.map(m => ({ name: m.name, strength: m.strength })),
+    behaviors: healthProfile.selectedBehaviors,
+    medications: medications.map(m => ({ 
+      name: m.name, 
+      strength: m.strength, 
+      frequency: m.frequency,
+      times: m.times 
+    })),
   };
   
   // Create a base64 encoded string of the data
