@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { ArrowLeft, Heart, MessageCircle, Send, User, Clock, Flag, MoreVertical } from 'lucide-react';
 import { ForumPost, useForum } from '@/contexts/ForumContext';
+import { useOnboarding } from '@/contexts/OnboardingContext';
 import { ReportSheet } from './ReportSheet';
 import { CommunityGuidelinesModal } from './CommunityGuidelinesModal';
 import { triggerHaptic } from '@/hooks/use-haptics';
@@ -20,7 +21,8 @@ interface ForumPostViewProps {
 }
 
 export function ForumPostView({ post, onBack }: ForumPostViewProps) {
-  const { getCommentsForPost, createComment, likePost, generateAnonymousHandle, hasAcknowledgedGuidelines } = useForum();
+  const { getCommentsForPost, createComment, likePost, generateAnonymousHandle, hasAcknowledgedGuidelines, userPosts } = useForum();
+  const { addNotification } = useOnboarding();
   const [commentText, setCommentText] = useState('');
   const [showReport, setShowReport] = useState(false);
   const [reportContentId, setReportContentId] = useState('');
@@ -29,10 +31,22 @@ export function ForumPostView({ post, onBack }: ForumPostViewProps) {
   const [liked, setLiked] = useState(false);
 
   const comments = getCommentsForPost(post.id);
+  const isOwnPost = userPosts.includes(post.id);
 
   const handleLike = () => {
     if (!liked) {
-      likePost(post.id);
+      likePost(post.id, (postTitle) => {
+        // Notification for likes on own posts
+        addNotification({
+          id: `forum_like_${Date.now()}`,
+          type: 'forum_like',
+          title: 'Someone liked your post',
+          subtitle: postTitle,
+          postTitle,
+          timestamp: new Date().toISOString(),
+          read: false,
+        });
+      });
       setLiked(true);
       triggerHaptic('light');
     }
@@ -46,11 +60,24 @@ export function ForumPostView({ post, onBack }: ForumPostViewProps) {
       return;
     }
 
+    const commenterName = generateAnonymousHandle();
+    
     createComment({
       postId: post.id,
       authorUserId: 'current-user',
-      authorDisplayName: generateAnonymousHandle(),
+      authorDisplayName: commenterName,
       body: commentText.trim(),
+    }, (postTitle, commenter) => {
+      // Notification for comments on own posts
+      addNotification({
+        id: `forum_comment_${Date.now()}`,
+        type: 'forum_comment',
+        title: `${commenter} commented on your post`,
+        subtitle: postTitle,
+        postTitle,
+        timestamp: new Date().toISOString(),
+        read: false,
+      });
     });
 
     setCommentText('');

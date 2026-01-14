@@ -64,10 +64,11 @@ export interface NotificationPreferences {
 
 export interface Notification {
   id: string;
-  type: 'dose_reminder' | 'dose_taken' | 'dose_late' | 'dose_missed' | 'refill' | 'low_battery' | 'caregiver_notified' | 'caregiver_request' | 'caregiver_approved' | 'caregiver_declined';
+  type: 'dose_reminder' | 'dose_taken' | 'dose_late' | 'dose_missed' | 'refill' | 'low_battery' | 'caregiver_notified' | 'caregiver_request' | 'caregiver_approved' | 'caregiver_declined' | 'forum_comment' | 'forum_like';
   title: string;
   subtitle?: string;
   medicationName?: string;
+  postTitle?: string;
   timestamp: string;
   status?: 'sent' | 'late' | 'viewed' | 'approved' | 'declined';
   read: boolean;

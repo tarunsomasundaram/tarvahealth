@@ -8,7 +8,7 @@ import { useOnboarding, Notification } from "@/contexts/OnboardingContext";
 import { triggerHaptic } from "@/hooks/use-haptics";
 import { 
   Bell, Check, Clock, AlertTriangle, Package, 
-  Battery, Users, CheckCircle2, XCircle
+  Battery, Users, CheckCircle2, XCircle, MessageCircle, Heart
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { format, isToday, isYesterday, parseISO } from "date-fns";
@@ -16,6 +16,7 @@ import { format, isToday, isYesterday, parseISO } from "date-fns";
 const filterOptions = [
   { value: "all", label: "All" },
   { value: "doses", label: "Doses" },
+  { value: "forum", label: "Forum" },
   { value: "refill", label: "Refill" },
   { value: "case", label: "Case" },
   { value: "caregivers", label: "Caregivers" },
@@ -43,6 +44,10 @@ function getNotificationIcon(type: Notification['type']) {
       return <CheckCircle2 className="h-5 w-5 text-success" />;
     case 'caregiver_declined':
       return <XCircle className="h-5 w-5 text-destructive" />;
+    case 'forum_comment':
+      return <MessageCircle className="h-5 w-5 text-primary" />;
+    case 'forum_like':
+      return <Heart className="h-5 w-5 text-pink-500" />;
     default:
       return <Bell className="h-5 w-5 text-primary" />;
   }
@@ -82,6 +87,7 @@ function filterNotifications(notifications: Notification[], filter: string): Not
   
   const typeMap: Record<string, Notification['type'][]> = {
     doses: ['dose_reminder', 'dose_taken', 'dose_late', 'dose_missed'],
+    forum: ['forum_comment', 'forum_like'],
     refill: ['refill'],
     case: ['low_battery'],
     caregivers: ['caregiver_notified', 'caregiver_request', 'caregiver_approved', 'caregiver_declined'],
@@ -166,7 +172,12 @@ export default function Notifications() {
                                 {notification.medicationName}
                               </p>
                             )}
-                            {notification.subtitle && (
+                            {notification.postTitle && (
+                              <p className="text-sm text-primary font-medium truncate">
+                                "{notification.postTitle}"
+                              </p>
+                            )}
+                            {notification.subtitle && !notification.postTitle && (
                               <p className="text-caption truncate">{notification.subtitle}</p>
                             )}
                           </div>
