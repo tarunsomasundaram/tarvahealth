@@ -331,19 +331,16 @@
   .more-menu-sheet {
     @apply rounded-t-[28px] border-0 pb-8;
     background: hsl(var(--card));
-    max-height: 85vh;
+    max-height: 70vh;
   }
 
   .more-menu-header {
-    @apply flex flex-row items-center justify-between px-5 py-4 border-b border-border/50;
-  }
-
-  .more-menu-close {
-    @apply flex items-center justify-center w-10 h-10 rounded-full bg-muted/50 text-muted-foreground transition-colors hover:bg-muted;
+    @apply flex flex-row items-center justify-center px-5 py-3 border-b border-border/50;
   }
 
   .more-menu-content {
-    @apply flex flex-col gap-2 p-5;
+    @apply flex flex-col gap-2 p-5 overflow-y-auto;
+    max-height: calc(70vh - 60px);
   }
 
   .more-menu-item {

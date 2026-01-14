@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { X, Plus, Globe, Bell, Settings, ChevronRight, Calendar, Users } from "lucide-react";
+import { Plus, Globe, Bell, Settings, ChevronRight, Calendar, Users } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import {
   Sheet,
@@ -88,17 +88,7 @@ export function MoreMenuSheet({ open, onOpenChange }: MoreMenuSheetProps) {
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="bottom" className="more-menu-sheet">
         <SheetHeader className="more-menu-header">
-          <button
-            onClick={() => {
-              triggerHaptic('light');
-              onOpenChange(false);
-            }}
-            className="more-menu-close"
-          >
-            <X className="h-5 w-5" />
-          </button>
-          <SheetTitle className="text-lg font-semibold">More</SheetTitle>
-          <div className="w-10" /> {/* Spacer for centering */}
+          <SheetTitle className="text-base font-semibold">More</SheetTitle>
         </SheetHeader>
 
         <div className="more-menu-content">
