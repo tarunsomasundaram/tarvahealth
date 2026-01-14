@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { motion } from 'framer-motion';
-import { ArrowLeft, Heart, MessageCircle, Send, User, Clock, Flag, MoreVertical } from 'lucide-react';
-import { ForumPost, useForum } from '@/contexts/ForumContext';
+import { motion, AnimatePresence } from 'framer-motion';
+import { ArrowLeft, Heart, MessageCircle, Send, User, Clock, Flag, MoreVertical, Reply, X } from 'lucide-react';
+import { ForumPost, ForumComment, useForum } from '@/contexts/ForumContext';
 import { useOnboarding } from '@/contexts/OnboardingContext';
 import { ReportSheet } from './ReportSheet';
 import { CommunityGuidelinesModal } from './CommunityGuidelinesModal';
@@ -20,23 +20,115 @@ interface ForumPostViewProps {
   onBack: () => void;
 }
 
+interface CommentItemProps {
+  comment: ForumComment;
+  replies: ForumComment[];
+  onReply: (comment: ForumComment) => void;
+  onReport: (commentId: string) => void;
+  depth?: number;
+}
+
+function CommentItem({ comment, replies, onReply, onReport, depth = 0 }: CommentItemProps) {
+  const [showReplies, setShowReplies] = useState(true);
+  const maxDepth = 2; // Limit nesting depth
+  
+  return (
+    <div className={depth > 0 ? 'ml-6 border-l-2 border-border pl-4' : ''}>
+      <div className="flex gap-3">
+        <div className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center flex-shrink-0">
+          <User className="h-4 w-4 text-muted-foreground" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-medium text-foreground">{comment.authorDisplayName}</span>
+              <span className="text-xs text-muted-foreground">
+                {formatDistanceToNow(new Date(comment.createdAt), { addSuffix: true })}
+              </span>
+            </div>
+            <button
+              onClick={() => onReport(comment.id)}
+              className="p-1 rounded hover:bg-secondary text-muted-foreground hover:text-destructive"
+            >
+              <Flag className="h-3 w-3" />
+            </button>
+          </div>
+          <p className="text-sm text-foreground mt-1">{comment.body}</p>
+          
+          {/* Reply button */}
+          {depth < maxDepth && (
+            <button
+              onClick={() => onReply(comment)}
+              className="flex items-center gap-1 mt-2 text-xs text-muted-foreground hover:text-primary transition-colors"
+            >
+              <Reply className="h-3 w-3" />
+              Reply
+            </button>
+          )}
+        </div>
+      </div>
+      
+      {/* Nested replies */}
+      {replies.length > 0 && (
+        <div className="mt-3 space-y-3">
+          {!showReplies ? (
+            <button
+              onClick={() => setShowReplies(true)}
+              className="text-xs text-primary hover:underline ml-11"
+            >
+              Show {replies.length} {replies.length === 1 ? 'reply' : 'replies'}
+            </button>
+          ) : (
+            <>
+              {replies.length > 2 && (
+                <button
+                  onClick={() => setShowReplies(false)}
+                  className="text-xs text-muted-foreground hover:text-foreground ml-11"
+                >
+                  Hide replies
+                </button>
+              )}
+              {replies.map((reply) => (
+                <CommentItem
+                  key={reply.id}
+                  comment={reply}
+                  replies={[]} // Don't show nested replies beyond depth
+                  onReply={onReply}
+                  onReport={onReport}
+                  depth={depth + 1}
+                />
+              ))}
+            </>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export function ForumPostView({ post, onBack }: ForumPostViewProps) {
   const { getCommentsForPost, createComment, likePost, generateAnonymousHandle, hasAcknowledgedGuidelines, userPosts } = useForum();
   const { addNotification } = useOnboarding();
   const [commentText, setCommentText] = useState('');
+  const [replyingTo, setReplyingTo] = useState<ForumComment | null>(null);
   const [showReport, setShowReport] = useState(false);
   const [reportContentId, setReportContentId] = useState('');
   const [reportContentType, setReportContentType] = useState<'post' | 'comment'>('post');
   const [showGuidelines, setShowGuidelines] = useState(false);
   const [liked, setLiked] = useState(false);
 
-  const comments = getCommentsForPost(post.id);
+  const allComments = getCommentsForPost(post.id);
+  
+  // Separate top-level comments from replies
+  const topLevelComments = allComments.filter(c => !c.parentCommentId);
+  const getRepliesForComment = (commentId: string) => 
+    allComments.filter(c => c.parentCommentId === commentId);
+
   const isOwnPost = userPosts.includes(post.id);
 
   const handleLike = () => {
     if (!liked) {
       likePost(post.id, (postTitle) => {
-        // Notification for likes on own posts
         addNotification({
           id: `forum_like_${Date.now()}`,
           type: 'forum_like',
@@ -64,15 +156,17 @@ export function ForumPostView({ post, onBack }: ForumPostViewProps) {
     
     createComment({
       postId: post.id,
+      parentCommentId: replyingTo?.id,
       authorUserId: 'current-user',
       authorDisplayName: commenterName,
       body: commentText.trim(),
     }, (postTitle, commenter) => {
-      // Notification for comments on own posts
       addNotification({
         id: `forum_comment_${Date.now()}`,
         type: 'forum_comment',
-        title: `${commenter} commented on your post`,
+        title: replyingTo 
+          ? `${commenter} replied to a comment`
+          : `${commenter} commented on your post`,
         subtitle: postTitle,
         postTitle,
         timestamp: new Date().toISOString(),
@@ -81,8 +175,18 @@ export function ForumPostView({ post, onBack }: ForumPostViewProps) {
     });
 
     setCommentText('');
+    setReplyingTo(null);
     triggerHaptic('success');
-    toast.success('Comment added!');
+    toast.success(replyingTo ? 'Reply added!' : 'Comment added!');
+  };
+
+  const handleReply = (comment: ForumComment) => {
+    setReplyingTo(comment);
+    triggerHaptic('light');
+  };
+
+  const handleCancelReply = () => {
+    setReplyingTo(null);
   };
 
   const handleReportPost = () => {
@@ -171,7 +275,7 @@ export function ForumPostView({ post, onBack }: ForumPostViewProps) {
             </button>
             <span className="flex items-center gap-2 text-sm text-muted-foreground">
               <MessageCircle className="h-5 w-5" />
-              {comments.length} comments
+              {allComments.length} comments
             </span>
           </div>
         </div>
@@ -180,31 +284,16 @@ export function ForumPostView({ post, onBack }: ForumPostViewProps) {
         <div className="p-4 space-y-4">
           <h3 className="font-semibold text-foreground">Comments</h3>
           
-          {comments.length > 0 ? (
+          {topLevelComments.length > 0 ? (
             <div className="space-y-4">
-              {comments.map((comment) => (
-                <div key={comment.id} className="flex gap-3">
-                  <div className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center flex-shrink-0">
-                    <User className="h-4 w-4 text-muted-foreground" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm font-medium text-foreground">{comment.authorDisplayName}</span>
-                        <span className="text-xs text-muted-foreground">
-                          {formatDistanceToNow(new Date(comment.createdAt), { addSuffix: true })}
-                        </span>
-                      </div>
-                      <button
-                        onClick={() => handleReportComment(comment.id)}
-                        className="p-1 rounded hover:bg-secondary text-muted-foreground hover:text-destructive"
-                      >
-                        <Flag className="h-3 w-3" />
-                      </button>
-                    </div>
-                    <p className="text-sm text-foreground mt-1">{comment.body}</p>
-                  </div>
-                </div>
+              {topLevelComments.map((comment) => (
+                <CommentItem
+                  key={comment.id}
+                  comment={comment}
+                  replies={getRepliesForComment(comment.id)}
+                  onReply={handleReply}
+                  onReport={handleReportComment}
+                />
               ))}
             </div>
           ) : (
@@ -213,12 +302,36 @@ export function ForumPostView({ post, onBack }: ForumPostViewProps) {
         </div>
       </div>
 
+      {/* Reply indicator */}
+      <AnimatePresence>
+        {replyingTo && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 10 }}
+            className="bg-secondary/80 backdrop-blur-sm border-t border-border px-4 py-2 flex items-center justify-between"
+          >
+            <div className="flex items-center gap-2 text-sm">
+              <Reply className="h-4 w-4 text-primary" />
+              <span className="text-muted-foreground">Replying to</span>
+              <span className="font-medium text-foreground">{replyingTo.authorDisplayName}</span>
+            </div>
+            <button
+              onClick={handleCancelReply}
+              className="p-1 rounded hover:bg-background/50"
+            >
+              <X className="h-4 w-4 text-muted-foreground" />
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Comment input */}
       <div className="sticky bottom-0 bg-background border-t border-border p-4">
         <div className="flex gap-3">
           <input
             type="text"
-            placeholder="Add a comment..."
+            placeholder={replyingTo ? `Reply to ${replyingTo.authorDisplayName}...` : "Add a comment..."}
             value={commentText}
             onChange={(e) => setCommentText(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && handleComment()}
@@ -250,13 +363,15 @@ export function ForumPostView({ post, onBack }: ForumPostViewProps) {
           if (commentText.trim()) {
             createComment({
               postId: post.id,
+              parentCommentId: replyingTo?.id,
               authorUserId: 'current-user',
               authorDisplayName: generateAnonymousHandle(),
               body: commentText.trim(),
             });
             setCommentText('');
+            setReplyingTo(null);
             triggerHaptic('success');
-            toast.success('Comment added!');
+            toast.success(replyingTo ? 'Reply added!' : 'Comment added!');
           }
         }}
       />
