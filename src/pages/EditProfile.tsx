@@ -38,9 +38,14 @@ export default function EditProfile() {
     age, 
     heightValue, 
     heightUnit, 
+    weightValue,
+    weightUnit,
     bloodGroup, 
     setAge, 
-    setHeightValue, 
+    setHeightValue,
+    setHeightUnit,
+    setWeightValue,
+    setWeightUnit,
     setBloodGroup,
     getProfileCompletionPercentage 
   } = useHealthProfile();
@@ -50,6 +55,9 @@ export default function EditProfile() {
   const [allergies, setAllergies] = useState(patientProfile?.allergies || "");
   const [profileAge, setProfileAge] = useState(age?.toString() || "");
   const [height, setHeight] = useState(heightValue?.toString() || "");
+  const [localHeightUnit, setLocalHeightUnit] = useState(heightUnit);
+  const [weight, setWeight] = useState(weightValue?.toString() || "");
+  const [localWeightUnit, setLocalWeightUnit] = useState(weightUnit);
   const [blood, setBlood] = useState(bloodGroup || "");
   const [avatarUrl, setAvatarUrl] = useState(patientProfile?.avatarUrl || "");
 
@@ -78,6 +86,11 @@ export default function EditProfile() {
     if (height) {
       setHeightValue(parseFloat(height));
     }
+    setHeightUnit(localHeightUnit);
+    if (weight) {
+      setWeightValue(parseFloat(weight));
+    }
+    setWeightUnit(localWeightUnit);
     if (blood) {
       setBloodGroup(blood);
     }
@@ -91,6 +104,7 @@ export default function EditProfile() {
   const fieldsCompleted = [
     profileAge ? 1 : 0,
     height ? 1 : 0,
+    weight ? 1 : 0,
     blood ? 1 : 0,
   ].reduce((a, b) => a + b, 0);
 
@@ -140,7 +154,7 @@ export default function EditProfile() {
                   Complete your profile to help us personalize your experience
                 </p>
                 <p className="text-xs text-primary mt-1">
-                  {fieldsCompleted}/3 health fields filled • Save anytime
+                  {fieldsCompleted}/4 health fields filled • Save anytime
                 </p>
               </div>
 
@@ -176,14 +190,79 @@ export default function EditProfile() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="height">Height ({heightUnit})</Label>
-                <Input
-                  id="height"
-                  type="number"
-                  value={height}
-                  onChange={(e) => setHeight(e.target.value)}
-                  placeholder={`Enter height in ${heightUnit}`}
-                />
+                <Label htmlFor="height">Height</Label>
+                <div className="flex gap-2">
+                  <Input
+                    id="height"
+                    type="number"
+                    value={height}
+                    onChange={(e) => setHeight(e.target.value)}
+                    placeholder={`Enter height`}
+                    className="flex-1"
+                  />
+                  <div className="flex rounded-lg border border-input overflow-hidden">
+                    <button
+                      type="button"
+                      onClick={() => setLocalHeightUnit('cm')}
+                      className={`px-3 py-2 text-sm font-medium transition-colors ${
+                        localHeightUnit === 'cm' 
+                          ? 'bg-primary text-primary-foreground' 
+                          : 'bg-background text-muted-foreground hover:bg-accent'
+                      }`}
+                    >
+                      cm
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setLocalHeightUnit('in')}
+                      className={`px-3 py-2 text-sm font-medium transition-colors ${
+                        localHeightUnit === 'in' 
+                          ? 'bg-primary text-primary-foreground' 
+                          : 'bg-background text-muted-foreground hover:bg-accent'
+                      }`}
+                    >
+                      in
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="weight">Weight</Label>
+                <div className="flex gap-2">
+                  <Input
+                    id="weight"
+                    type="number"
+                    value={weight}
+                    onChange={(e) => setWeight(e.target.value)}
+                    placeholder={`Enter weight`}
+                    className="flex-1"
+                  />
+                  <div className="flex rounded-lg border border-input overflow-hidden">
+                    <button
+                      type="button"
+                      onClick={() => setLocalWeightUnit('kg')}
+                      className={`px-3 py-2 text-sm font-medium transition-colors ${
+                        localWeightUnit === 'kg' 
+                          ? 'bg-primary text-primary-foreground' 
+                          : 'bg-background text-muted-foreground hover:bg-accent'
+                      }`}
+                    >
+                      kg
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setLocalWeightUnit('lbs')}
+                      className={`px-3 py-2 text-sm font-medium transition-colors ${
+                        localWeightUnit === 'lbs' 
+                          ? 'bg-primary text-primary-foreground' 
+                          : 'bg-background text-muted-foreground hover:bg-accent'
+                      }`}
+                    >
+                      lbs
+                    </button>
+                  </div>
+                </div>
               </div>
 
               <div className="space-y-2">
