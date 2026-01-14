@@ -21,6 +21,7 @@ export interface ForumPost {
 export interface ForumComment {
   id: string;
   postId: string;
+  parentCommentId?: string; // For nested replies
   authorUserId: string;
   authorDisplayName: string;
   body: string;
