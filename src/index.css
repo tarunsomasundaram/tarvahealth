@@ -250,7 +250,7 @@
     @apply h-full rounded-full bg-white transition-all duration-500;
   }
 
-  /* Tab bar */
+  /* Tab bar - legacy */
   .tab-bar {
     @apply fixed bottom-0 left-0 right-0 z-50 flex items-end justify-between border-t border-border bg-background/95 px-2 pb-6 pt-2 backdrop-blur-lg;
   }
@@ -267,6 +267,128 @@
     @apply -mt-5 flex h-12 w-12 items-center justify-center rounded-full text-white shadow-lg flex-shrink-0;
     background: var(--gradient-primary);
     box-shadow: var(--shadow-button);
+  }
+
+  /* Floating Bottom Nav - Whoop Style */
+  .floating-nav {
+    @apply fixed bottom-0 left-0 right-0 z-50 flex justify-center px-4 pb-6;
+    padding-bottom: calc(1.5rem + env(safe-area-inset-bottom));
+  }
+
+  .floating-nav-container {
+    @apply flex items-center justify-between gap-1 rounded-[28px] px-3 py-2;
+    background: rgba(28, 28, 32, 0.92);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    box-shadow: 
+      0 4px 24px -4px rgba(0, 0, 0, 0.4),
+      0 0 0 1px rgba(255, 255, 255, 0.08) inset,
+      0 1px 0 0 rgba(255, 255, 255, 0.05) inset;
+    min-width: 320px;
+    max-width: 380px;
+    width: 100%;
+  }
+
+  .dark .floating-nav-container {
+    background: rgba(18, 18, 22, 0.95);
+    box-shadow: 
+      0 4px 32px -4px rgba(0, 0, 0, 0.6),
+      0 0 0 1px rgba(255, 255, 255, 0.06) inset,
+      0 1px 0 0 rgba(255, 255, 255, 0.03) inset;
+  }
+
+  .floating-nav-item {
+    @apply relative flex flex-col items-center justify-center gap-0.5 py-1.5 px-4 rounded-2xl transition-all duration-200;
+    min-width: 56px;
+    color: rgba(255, 255, 255, 0.5);
+  }
+
+  .floating-nav-item:hover {
+    color: rgba(255, 255, 255, 0.7);
+  }
+
+  .floating-nav-item.active {
+    color: white;
+  }
+
+  .floating-nav-icon-wrapper {
+    @apply relative z-10;
+  }
+
+  .floating-nav-label {
+    @apply text-[10px] font-medium tracking-tight z-10;
+  }
+
+  .floating-nav-glow {
+    @apply absolute inset-0 rounded-2xl;
+    background: linear-gradient(180deg, 
+      hsl(258 70% 60% / 0.3) 0%, 
+      hsl(258 70% 50% / 0.15) 100%
+    );
+  }
+
+  /* More Menu Sheet */
+  .more-menu-sheet {
+    @apply rounded-t-[28px] border-0 pb-8;
+    background: hsl(var(--card));
+    max-height: 85vh;
+  }
+
+  .more-menu-header {
+    @apply flex flex-row items-center justify-between px-5 py-4 border-b border-border/50;
+  }
+
+  .more-menu-close {
+    @apply flex items-center justify-center w-10 h-10 rounded-full bg-muted/50 text-muted-foreground transition-colors hover:bg-muted;
+  }
+
+  .more-menu-content {
+    @apply flex flex-col gap-2 p-5;
+  }
+
+  .more-menu-item {
+    @apply flex items-center gap-4 p-4 rounded-2xl bg-muted/30 transition-all duration-200 hover:bg-muted/50 active:scale-[0.98];
+  }
+
+  .more-menu-icon {
+    @apply flex items-center justify-center w-11 h-11 rounded-xl flex-shrink-0;
+  }
+
+  .more-menu-text {
+    @apply flex flex-col items-start gap-0.5 flex-1 min-w-0;
+  }
+
+  .more-menu-title {
+    @apply text-[15px] font-medium text-foreground;
+  }
+
+  .more-menu-subtitle {
+    @apply text-[13px] text-muted-foreground;
+  }
+
+  /* Main App Gradient Background */
+  .app-gradient-bg {
+    @apply relative;
+  }
+
+  .app-gradient-bg::before {
+    content: '';
+    @apply fixed inset-0 pointer-events-none z-0;
+    background: linear-gradient(
+      180deg,
+      hsl(var(--background)) 0%,
+      hsl(var(--background)) 60%,
+      hsl(240 10% 96%) 100%
+    );
+  }
+
+  .dark .app-gradient-bg::before {
+    background: linear-gradient(
+      180deg,
+      hsl(240 15% 8%) 0%,
+      hsl(240 15% 6%) 40%,
+      hsl(258 20% 10%) 100%
+    );
   }
 
   /* Input styles */
