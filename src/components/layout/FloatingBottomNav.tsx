@@ -14,10 +14,24 @@ const tabs = [
   { id: "more", label: "More", icon: Menu, path: null },
 ];
 
+// Routes accessible from the More menu
+const moreMenuRoutes = [
+  "/community",
+  "/calendar",
+  "/caregivers",
+  "/notifications",
+  "/settings",
+  "/my-medications",
+  "/reminder-preferences",
+];
+
 export function FloatingBottomNav() {
   const location = useLocation();
   const navigate = useNavigate();
   const [isMoreOpen, setIsMoreOpen] = useState(false);
+
+  // Check if current route is a More menu page
+  const isOnMoreMenuPage = moreMenuRoutes.some(route => location.pathname.startsWith(route));
 
   // Hide only on add medication flow and edit pages
   const hiddenRoutes = [
@@ -39,7 +53,10 @@ export function FloatingBottomNav() {
       >
         <div className="floating-nav-container">
           {tabs.map((tab) => {
-            const isActive = tab.path ? location.pathname === tab.path : isMoreOpen;
+            // More button is active if sheet is open OR if on a More menu page
+            const isActive = tab.path 
+              ? location.pathname === tab.path 
+              : (isMoreOpen || isOnMoreMenuPage);
             const Icon = tab.icon;
 
             return (
