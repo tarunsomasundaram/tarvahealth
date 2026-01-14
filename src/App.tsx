@@ -6,7 +6,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { ThemeProvider } from "@/hooks/use-theme";
 import { OnboardingProvider, useOnboarding } from "@/contexts/OnboardingContext";
 import { MedicationProvider } from "@/contexts/MedicationContext";
-import { BottomTabBar } from "@/components/layout/BottomTabBar";
+import { FloatingBottomNav } from "@/components/layout/FloatingBottomNav";
 import { CaregiverTabBar } from "@/components/layout/CaregiverTabBar";
 
 // Main app pages
@@ -97,7 +97,7 @@ function AppRoutes() {
 
   // Patient dashboard routes (default)
   return (
-    <>
+    <div className="app-gradient-bg">
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/case" element={<Case />} />
@@ -114,8 +114,8 @@ function AppRoutes() {
         <Route path="/edit-profile" element={<EditProfile />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
-      <BottomTabBar />
-    </>
+      <FloatingBottomNav />
+    </div>
   );
 }
 
