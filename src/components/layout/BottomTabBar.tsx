@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Home, Smartphone, Plus, BarChart3, User } from "lucide-react";
+import { Home, Smartphone, Plus, BarChart3, MessageCircle, User } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { triggerHaptic } from "@/hooks/use-haptics";
@@ -9,6 +9,7 @@ const tabs = [
   { id: "case", label: "Case", icon: Smartphone, path: "/case" },
   { id: "add", label: "Add", icon: Plus, path: "/add" },
   { id: "stats", label: "Stats", icon: BarChart3, path: "/stats" },
+  { id: "forum", label: "Forum", icon: MessageCircle, path: "/forum" },
   { id: "profile", label: "Profile", icon: User, path: "/profile" },
 ];
 
