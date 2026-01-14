@@ -4,6 +4,8 @@ export interface HealthProfile {
   age?: number;
   heightValue?: number;
   heightUnit: 'cm' | 'in';
+  weightValue?: number;
+  weightUnit: 'kg' | 'lbs';
   bloodGroup?: string;
   conditions: string[]; // condition IDs
   conditionOtherText?: string;
@@ -16,6 +18,8 @@ interface HealthProfileContextType extends HealthProfile {
   setAge: (age: number | undefined) => void;
   setHeightValue: (value: number | undefined) => void;
   setHeightUnit: (unit: 'cm' | 'in') => void;
+  setWeightValue: (value: number | undefined) => void;
+  setWeightUnit: (unit: 'kg' | 'lbs') => void;
   setBloodGroup: (group: string | undefined) => void;
   setConditions: (conditions: string[]) => void;
   setConditionOtherText: (text: string | undefined) => void;
@@ -30,6 +34,8 @@ const defaultHealthProfile: HealthProfile = {
   age: undefined,
   heightValue: undefined,
   heightUnit: 'cm',
+  weightValue: undefined,
+  weightUnit: 'kg',
   bloodGroup: undefined,
   conditions: [],
   conditionOtherText: undefined,
@@ -63,6 +69,14 @@ export function HealthProfileProvider({ children }: { children: ReactNode }) {
 
   const setHeightUnit = (heightUnit: 'cm' | 'in') => {
     setProfile(prev => ({ ...prev, heightUnit }));
+  };
+
+  const setWeightValue = (weightValue: number | undefined) => {
+    setProfile(prev => ({ ...prev, weightValue }));
+  };
+
+  const setWeightUnit = (weightUnit: 'kg' | 'lbs') => {
+    setProfile(prev => ({ ...prev, weightUnit }));
   };
 
   const setBloodGroup = (bloodGroup: string | undefined) => {
@@ -114,6 +128,8 @@ export function HealthProfileProvider({ children }: { children: ReactNode }) {
         setAge,
         setHeightValue,
         setHeightUnit,
+        setWeightValue,
+        setWeightUnit,
         setBloodGroup,
         setConditions,
         setConditionOtherText,
