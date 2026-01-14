@@ -36,7 +36,7 @@ export function BottomTabBar() {
               whileTap={{ scale: 0.9 }}
               whileHover={{ scale: 1.05 }}
             >
-              <Icon className="h-6 w-6" strokeWidth={2.5} />
+              <Icon className="h-5 w-5" strokeWidth={2.5} />
             </motion.button>
           );
         }
@@ -53,14 +53,14 @@ export function BottomTabBar() {
           >
             <motion.div
               animate={{ 
-                scale: isActive ? 1.1 : 1,
-                y: isActive ? -2 : 0
+                scale: isActive ? 1.05 : 1,
+                y: isActive ? -1 : 0
               }}
               transition={{ type: "spring", stiffness: 400, damping: 20 }}
             >
-              <Icon className="h-6 w-6" strokeWidth={isActive ? 2.5 : 2} />
+              <Icon className="h-5 w-5" strokeWidth={isActive ? 2.5 : 2} />
             </motion.div>
-            <span className="text-[11px] font-medium">{tab.label}</span>
+            <span className="text-[10px] font-medium truncate max-w-[48px]">{tab.label}</span>
             {isActive && (
               <motion.div
                 className="absolute -bottom-1 h-1 w-1 rounded-full bg-primary"

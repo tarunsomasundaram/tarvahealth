@@ -252,11 +252,11 @@
 
   /* Tab bar */
   .tab-bar {
-    @apply fixed bottom-0 left-0 right-0 z-50 flex items-end justify-around border-t border-border bg-background/95 px-4 pb-6 pt-2 backdrop-blur-lg;
+    @apply fixed bottom-0 left-0 right-0 z-50 flex items-end justify-between border-t border-border bg-background/95 px-2 pb-6 pt-2 backdrop-blur-lg;
   }
 
   .tab-item {
-    @apply flex flex-col items-center gap-0.5 text-muted-foreground transition-colors;
+    @apply relative flex flex-col items-center gap-0.5 text-muted-foreground transition-colors px-1 min-w-0;
   }
 
   .tab-item.active {
@@ -264,7 +264,7 @@
   }
 
   .tab-add {
-    @apply -mt-6 flex h-14 w-14 items-center justify-center rounded-full text-white shadow-lg;
+    @apply -mt-5 flex h-12 w-12 items-center justify-center rounded-full text-white shadow-lg flex-shrink-0;
     background: var(--gradient-primary);
     box-shadow: var(--shadow-button);
   }
