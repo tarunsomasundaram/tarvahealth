@@ -368,12 +368,7 @@
 
   /* Main App Gradient Background */
   .app-gradient-bg {
-    @apply relative;
-  }
-
-  .app-gradient-bg::before {
-    content: '';
-    @apply fixed inset-0 pointer-events-none z-0;
+    @apply relative min-h-screen;
     background: linear-gradient(
       180deg,
       hsl(var(--background)) 0%,
@@ -382,7 +377,7 @@
     );
   }
 
-  .dark .app-gradient-bg::before {
+  .dark .app-gradient-bg {
     background: linear-gradient(
       180deg,
       hsl(240 15% 8%) 0%,
