@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { PageHeader } from "@/components/layout/PageHeader";
 import { AnimatedPage } from "@/components/layout/AnimatedPage";
 import { FadeIn } from "@/components/animations";
 import { useOnboarding } from "@/contexts/OnboardingContext";
@@ -12,6 +11,7 @@ import { toast } from "sonner";
 import { triggerHaptic } from "@/hooks/use-haptics";
 import { ArrowLeft } from "lucide-react";
 import { motion } from "framer-motion";
+import { AvatarUpload } from "@/components/profile/AvatarUpload";
 
 export default function EditProfile() {
   const navigate = useNavigate();
@@ -24,6 +24,7 @@ export default function EditProfile() {
   const [profileAge, setProfileAge] = useState(age?.toString() || "");
   const [height, setHeight] = useState(heightValue?.toString() || "");
   const [blood, setBlood] = useState(bloodGroup || "");
+  const [avatarUrl, setAvatarUrl] = useState(patientProfile?.avatarUrl || "");
 
   const handleBack = () => {
     triggerHaptic('light');
@@ -40,6 +41,7 @@ export default function EditProfile() {
       timezone: patientProfile?.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone,
       dateOfBirth,
       allergies,
+      avatarUrl,
     });
 
     // Update health profile
@@ -72,6 +74,17 @@ export default function EditProfile() {
         <div className="flex-1 overflow-y-auto px-4 pb-32">
           <FadeIn delay={0.1}>
             <div className="space-y-6 mt-4">
+              {/* Avatar Upload */}
+              <div className="flex flex-col items-center">
+                <AvatarUpload
+                  currentAvatar={avatarUrl}
+                  name={fullName}
+                  onAvatarChange={setAvatarUrl}
+                  size="lg"
+                />
+                <p className="mt-2 text-sm text-muted-foreground">Tap to change photo</p>
+              </div>
+
               <div className="space-y-2">
                 <Label htmlFor="fullName">Full Name *</Label>
                 <Input

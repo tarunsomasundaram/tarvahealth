@@ -10,6 +10,7 @@ export interface PatientProfile {
   bloodType?: string;
   height?: string;
   weight?: string;
+  avatarUrl?: string;
 }
 
 export interface CaregiverProfile {

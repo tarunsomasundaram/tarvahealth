@@ -25,17 +25,25 @@ export async function generateProfilePDF(data: ProfileShareData): Promise<void> 
     margin: 0 auto;
   `;
   
-  // Header
+  // Header with avatar
   const header = document.createElement('div');
   header.style.cssText = 'display: flex; justify-content: space-between; align-items: center; margin-bottom: 32px; border-bottom: 2px solid #8b5cf6; padding-bottom: 20px;';
+  
+  const avatarHtml = patientProfile?.avatarUrl 
+    ? `<img src="${patientProfile.avatarUrl}" alt="${name}" style="width: 80px; height: 80px; border-radius: 50%; object-fit: cover; border: 3px solid #8b5cf6;" />`
+    : `<div style="width: 80px; height: 80px; border-radius: 50%; background: linear-gradient(135deg, #8b5cf6, #a78bfa); display: flex; align-items: center; justify-content: center; font-size: 32px; font-weight: bold; color: white;">${name.charAt(0).toUpperCase()}</div>`;
+  
   header.innerHTML = `
-    <div>
-      <img src="${tarvaLogoBase64}" alt="TARVA" style="height: 80px; object-fit: contain; filter: invert(1);" />
+    <div style="display: flex; align-items: center; gap: 16px;">
+      ${avatarHtml}
+      <div>
+        <p style="font-weight: 600; font-size: 18px; margin: 0;">${name}</p>
+        <p style="color: #9ca3af; font-size: 12px; margin: 4px 0 0 0;">Health Profile</p>
+      </div>
     </div>
     <div style="text-align: right;">
-      <p style="font-weight: 600; font-size: 18px; margin: 0;">${name}</p>
-      <p style="color: #9ca3af; font-size: 12px; margin: 4px 0 0 0;">Health Profile</p>
-      <p style="color: #6b7280; font-size: 12px; margin: 4px 0 0 0;">
+      <img src="${tarvaLogoBase64}" alt="TARVA" style="height: 48px; object-fit: contain; filter: invert(1);" />
+      <p style="color: #6b7280; font-size: 11px; margin: 4px 0 0 0;">
         Generated ${format(new Date(), 'MMM d, yyyy')}
       </p>
     </div>
