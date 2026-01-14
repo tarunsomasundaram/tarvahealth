@@ -14,6 +14,7 @@ import Home from "./pages/Home";
 import Case from "./pages/Case";
 import AddMedication from "./pages/AddMedication";
 import Stats from "./pages/Stats";
+import Forum from "./pages/Forum";
 import Profile from "./pages/Profile";
 import Calendar from "./pages/Calendar";
 import Caregivers from "./pages/Caregivers";
@@ -101,6 +102,7 @@ function AppRoutes() {
         <Route path="/case" element={<Case />} />
         <Route path="/add" element={<AddMedication />} />
         <Route path="/stats" element={<Stats />} />
+        <Route path="/forum" element={<Forum />} />
         <Route path="/profile" element={<Profile />} />
         <Route path="/calendar" element={<Calendar />} />
         <Route path="/caregivers" element={<Caregivers />} />
