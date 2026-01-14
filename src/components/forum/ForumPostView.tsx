@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, Heart, MessageCircle, Send, User, Clock, Flag, MoreVertical, Reply, X, Edit2, Trash2 } from 'lucide-react';
+import { ArrowLeft, Heart, MessageCircle, Send, User, Clock, Flag, MoreVertical, Reply, X, Edit2, Trash2, ChevronUp, ChevronDown } from 'lucide-react';
 import { ForumPost, ForumComment, useForum } from '@/contexts/ForumContext';
 import { useOnboarding } from '@/contexts/OnboardingContext';
 import { ReportSheet } from './ReportSheet';
@@ -31,24 +31,71 @@ interface CommentItemProps {
   onReport: (commentId: string) => void;
   onEdit: (comment: ForumComment) => void;
   onDelete: (commentId: string) => void;
+  onVote: (commentId: string, voteType: 'up' | 'down') => void;
+  userVote?: 'up' | 'down';
   isOwn: boolean;
   userComments: string[];
+  userVotes: Record<string, 'up' | 'down'>;
   depth?: number;
 }
 
-function CommentItem({ comment, replies, onReply, onReport, onEdit, onDelete, isOwn, userComments, depth = 0 }: CommentItemProps) {
+function CommentItem({ 
+  comment, 
+  replies, 
+  onReply, 
+  onReport, 
+  onEdit, 
+  onDelete, 
+  onVote,
+  userVote,
+  isOwn, 
+  userComments,
+  userVotes,
+  depth = 0 
+}: CommentItemProps) {
   const [showReplies, setShowReplies] = useState(true);
-  const maxDepth = 2; // Limit nesting depth
+  const maxDepth = 2;
+  
+  const voteScore = comment.upvotes - comment.downvotes;
   
   return (
     <div className={depth > 0 ? 'ml-6 border-l-2 border-border pl-4' : ''}>
       <div className="flex gap-3">
-        <div className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center flex-shrink-0">
-          <User className="h-4 w-4 text-muted-foreground" />
+        {/* Vote buttons */}
+        <div className="flex flex-col items-center gap-0.5 pt-1">
+          <button
+            onClick={() => onVote(comment.id, 'up')}
+            className={`p-1 rounded transition-colors ${
+              userVote === 'up' 
+                ? 'text-primary bg-primary/10' 
+                : 'text-muted-foreground hover:text-primary hover:bg-primary/5'
+            }`}
+          >
+            <ChevronUp className="h-4 w-4" />
+          </button>
+          <span className={`text-xs font-medium ${
+            voteScore > 0 ? 'text-primary' : voteScore < 0 ? 'text-destructive' : 'text-muted-foreground'
+          }`}>
+            {voteScore}
+          </span>
+          <button
+            onClick={() => onVote(comment.id, 'down')}
+            className={`p-1 rounded transition-colors ${
+              userVote === 'down' 
+                ? 'text-destructive bg-destructive/10' 
+                : 'text-muted-foreground hover:text-destructive hover:bg-destructive/5'
+            }`}
+          >
+            <ChevronDown className="h-4 w-4" />
+          </button>
         </div>
+        
         <div className="flex-1 min-w-0">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
+              <div className="w-6 h-6 rounded-full bg-secondary flex items-center justify-center flex-shrink-0">
+                <User className="h-3 w-3 text-muted-foreground" />
+              </div>
               <span className="text-sm font-medium text-foreground">{comment.authorDisplayName}</span>
               <span className="text-xs text-muted-foreground">
                 {formatDistanceToNow(new Date(comment.createdAt), { addSuffix: true })}
@@ -123,13 +170,16 @@ function CommentItem({ comment, replies, onReply, onReport, onEdit, onDelete, is
                 <CommentItem
                   key={reply.id}
                   comment={reply}
-                  replies={[]} // Don't show nested replies beyond depth
+                  replies={[]}
                   onReply={onReply}
                   onReport={onReport}
                   onEdit={onEdit}
                   onDelete={onDelete}
+                  onVote={onVote}
+                  userVote={userVotes[reply.id]}
                   isOwn={userComments.includes(reply.id)}
                   userComments={userComments}
+                  userVotes={userVotes}
                   depth={depth + 1}
                 />
               ))}
@@ -150,10 +200,12 @@ export function ForumPostView({ post, onBack }: ForumPostViewProps) {
     deletePost,
     editComment,
     deleteComment,
+    voteComment,
     generateAnonymousHandle, 
     hasAcknowledgedGuidelines, 
     userPosts,
-    userComments 
+    userComments,
+    userVotes
   } = useForum();
   const { addNotification } = useOnboarding();
   const [commentText, setCommentText] = useState('');
@@ -174,10 +226,14 @@ export function ForumPostView({ post, onBack }: ForumPostViewProps) {
 
   const allComments = getCommentsForPost(post.id);
   
-  // Separate top-level comments from replies
-  const topLevelComments = allComments.filter(c => !c.parentCommentId);
+  // Separate top-level comments from replies and sort by vote score
+  const topLevelComments = allComments
+    .filter(c => !c.parentCommentId)
+    .sort((a, b) => (b.upvotes - b.downvotes) - (a.upvotes - a.downvotes));
   const getRepliesForComment = (commentId: string) => 
-    allComments.filter(c => c.parentCommentId === commentId);
+    allComments
+      .filter(c => c.parentCommentId === commentId)
+      .sort((a, b) => (b.upvotes - b.downvotes) - (a.upvotes - a.downvotes));
 
   const isOwnPost = userPosts.includes(post.id);
 
@@ -290,6 +346,11 @@ export function ForumPostView({ post, onBack }: ForumPostViewProps) {
     }
   };
 
+  const handleVoteComment = (commentId: string, voteType: 'up' | 'down') => {
+    voteComment(commentId, voteType);
+    triggerHaptic('light');
+  };
+
   return (
     <div className="min-h-screen bg-background flex flex-col">
       {/* Header */}
@@ -398,8 +459,11 @@ export function ForumPostView({ post, onBack }: ForumPostViewProps) {
                   onReport={handleReportComment}
                   onEdit={handleEditComment}
                   onDelete={handleDeleteComment}
+                  onVote={handleVoteComment}
+                  userVote={userVotes[comment.id]}
                   isOwn={userComments.includes(comment.id)}
                   userComments={userComments}
+                  userVotes={userVotes}
                 />
               ))}
             </div>

@@ -27,6 +27,8 @@ export interface ForumComment {
   body: string;
   createdAt: string;
   updatedAt?: string;
+  upvotes: number;
+  downvotes: number;
 }
 
 export interface ForumGroup {
@@ -56,16 +58,18 @@ interface ForumContextType {
   reports: ForumReport[];
   userPosts: string[];
   userComments: string[];
+  userVotes: Record<string, 'up' | 'down'>; // commentId -> vote type
   getGroupsForConditions: (conditionIds: string[]) => ForumGroup[];
   getSuggestedGroups: (conditionIds: string[]) => ForumGroup[];
   getPostsForGroup: (groupId: string) => ForumPost[];
   getCommentsForPost: (postId: string) => ForumComment[];
   createPost: (post: Omit<ForumPost, 'id' | 'createdAt' | 'updatedAt' | 'likes' | 'commentCount'>) => string;
-  createComment: (comment: Omit<ForumComment, 'id' | 'createdAt'>, onNotify?: (postTitle: string, commenterName: string) => void) => void;
+  createComment: (comment: Omit<ForumComment, 'id' | 'createdAt' | 'upvotes' | 'downvotes'>, onNotify?: (postTitle: string, commenterName: string) => void) => void;
   editPost: (postId: string, title: string, body: string) => void;
   deletePost: (postId: string) => void;
   editComment: (commentId: string, body: string) => void;
   deleteComment: (commentId: string) => void;
+  voteComment: (commentId: string, voteType: 'up' | 'down') => void;
   reportContent: (report: Omit<ForumReport, 'id' | 'createdAt'>) => void;
   likePost: (postId: string, onNotify?: (postTitle: string) => void) => void;
   generateAnonymousHandle: () => string;
@@ -140,6 +144,8 @@ const generateMockComments = (posts: ForumPost[]): ForumComment[] => {
         authorDisplayName: `User ${Math.floor(Math.random() * 9000) + 1000}`,
         body: replies[Math.floor(Math.random() * replies.length)],
         createdAt: new Date(Date.now() - Math.random() * 3 * 24 * 60 * 60 * 1000).toISOString(),
+        upvotes: Math.floor(Math.random() * 15),
+        downvotes: Math.floor(Math.random() * 3),
       });
     }
   });
@@ -164,6 +170,10 @@ export function ForumProvider({ children }: { children: ReactNode }) {
     const saved = localStorage.getItem('tarva-forum-user-comments');
     return saved ? JSON.parse(saved) : [];
   });
+  const [userVotes, setUserVotes] = useState<Record<string, 'up' | 'down'>>(() => {
+    const saved = localStorage.getItem('tarva-forum-user-votes');
+    return saved ? JSON.parse(saved) : {};
+  });
 
   // Save user posts to localStorage
   useEffect(() => {
@@ -174,6 +184,11 @@ export function ForumProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     localStorage.setItem('tarva-forum-user-comments', JSON.stringify(userComments));
   }, [userComments]);
+
+  // Save user votes to localStorage
+  useEffect(() => {
+    localStorage.setItem('tarva-forum-user-votes', JSON.stringify(userVotes));
+  }, [userVotes]);
 
   const acknowledgeGuidelines = () => {
     setHasAcknowledgedGuidelines(true);
@@ -231,13 +246,15 @@ export function ForumProvider({ children }: { children: ReactNode }) {
   };
 
   const createComment = (
-    comment: Omit<ForumComment, 'id' | 'createdAt'>,
+    comment: Omit<ForumComment, 'id' | 'createdAt' | 'upvotes' | 'downvotes'>,
     onNotify?: (postTitle: string, commenterName: string) => void
   ) => {
     const newComment: ForumComment = {
       ...comment,
       id: `comment-${Date.now()}`,
       createdAt: new Date().toISOString(),
+      upvotes: 0,
+      downvotes: 0,
     };
     setComments(prev => [...prev, newComment]);
     setUserComments(prev => [...prev, newComment.id]);
@@ -296,6 +313,52 @@ export function ForumProvider({ children }: { children: ReactNode }) {
     setUserComments(prev => prev.filter(id => id !== commentId));
   };
 
+  const voteComment = (commentId: string, voteType: 'up' | 'down') => {
+    const currentVote = userVotes[commentId];
+    
+    if (currentVote === voteType) {
+      // Remove vote if clicking same button
+      setUserVotes(prev => {
+        const newVotes = { ...prev };
+        delete newVotes[commentId];
+        return newVotes;
+      });
+      setComments(prev => prev.map(comment =>
+        comment.id === commentId
+          ? { 
+              ...comment, 
+              upvotes: voteType === 'up' ? comment.upvotes - 1 : comment.upvotes,
+              downvotes: voteType === 'down' ? comment.downvotes - 1 : comment.downvotes
+            }
+          : comment
+      ));
+    } else if (currentVote) {
+      // Change vote
+      setUserVotes(prev => ({ ...prev, [commentId]: voteType }));
+      setComments(prev => prev.map(comment =>
+        comment.id === commentId
+          ? { 
+              ...comment, 
+              upvotes: voteType === 'up' ? comment.upvotes + 1 : comment.upvotes - 1,
+              downvotes: voteType === 'down' ? comment.downvotes + 1 : comment.downvotes - 1
+            }
+          : comment
+      ));
+    } else {
+      // New vote
+      setUserVotes(prev => ({ ...prev, [commentId]: voteType }));
+      setComments(prev => prev.map(comment =>
+        comment.id === commentId
+          ? { 
+              ...comment, 
+              upvotes: voteType === 'up' ? comment.upvotes + 1 : comment.upvotes,
+              downvotes: voteType === 'down' ? comment.downvotes + 1 : comment.downvotes
+            }
+          : comment
+      ));
+    }
+  };
+
   const reportContent = (report: Omit<ForumReport, 'id' | 'createdAt'>) => {
     const newReport: ForumReport = {
       ...report,
@@ -332,6 +395,7 @@ export function ForumProvider({ children }: { children: ReactNode }) {
         reports,
         userPosts,
         userComments,
+        userVotes,
         getGroupsForConditions,
         getSuggestedGroups,
         getPostsForGroup,
@@ -342,6 +406,7 @@ export function ForumProvider({ children }: { children: ReactNode }) {
         deletePost,
         editComment,
         deleteComment,
+        voteComment,
         reportContent,
         likePost,
         generateAnonymousHandle,
