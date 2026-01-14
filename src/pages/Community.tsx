@@ -7,10 +7,10 @@ import { ForumGroupView } from "@/components/forum/ForumGroupView";
 import { useForum, ForumGroup } from "@/contexts/ForumContext";
 import { useHealthProfile } from "@/contexts/HealthProfileContext";
 import { conditions } from "@/data/conditions";
-import { MessageCircle, Search, Sparkles, Users } from "lucide-react";
+import { Users2, Search, Sparkles, Users } from "lucide-react";
 import { motion } from "framer-motion";
 
-export default function Forum() {
+export default function Community() {
   const { groups, getGroupsForConditions, getSuggestedGroups } = useForum();
   const { conditions: userConditions } = useHealthProfile();
   const [searchQuery, setSearchQuery] = useState('');
@@ -35,7 +35,7 @@ export default function Forum() {
   return (
     <AnimatedPage>
       <div className="page-padding">
-        <PageHeader title="Forum" subtitle="Connect with your community" />
+        <PageHeader title="Community" subtitle="Connect with your community" />
 
         <div className="section-gap">
           {/* Search */}
@@ -132,7 +132,7 @@ export default function Forum() {
               </StaggerContainer>
             ) : (
               <div className="card-tarva text-center py-8">
-                <MessageCircle className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
+                <Users2 className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
                 <p className="text-muted-foreground">No groups found for "{searchQuery}"</p>
               </div>
             )}

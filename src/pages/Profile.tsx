@@ -33,9 +33,7 @@ export default function Profile() {
 
   const profile = {
     name: patientProfile?.fullName || "Sarah Johnson",
-    age: patientProfile?.dateOfBirth 
-      ? Math.floor((Date.now() - new Date(patientProfile.dateOfBirth).getTime()) / 31557600000)
-      : 45,
+    age: healthProfile.age,
   };
 
   const medicationCount = medications.length > 0 ? medications.length : 3;
