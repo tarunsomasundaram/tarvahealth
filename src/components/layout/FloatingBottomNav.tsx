@@ -53,10 +53,11 @@ export function FloatingBottomNav() {
               <motion.button
                 key={tab.id}
                 onClick={() => {
-                  triggerHaptic('light');
                   if (tab.path) {
+                    triggerHaptic('light');
                     navigate(tab.path);
                   } else {
+                    triggerHaptic('medium');
                     setIsMoreOpen(true);
                   }
                 }}
