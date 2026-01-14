@@ -1,15 +1,19 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Heart, MessageCircle, MoreVertical, Flag, User, Clock } from 'lucide-react';
+import { Heart, MessageCircle, MoreVertical, Flag, User, Clock, Edit2, Trash2 } from 'lucide-react';
 import { ForumPost } from '@/contexts/ForumContext';
 import { useForum } from '@/contexts/ForumContext';
 import { ReportSheet } from './ReportSheet';
+import { EditPostSheet } from './EditPostSheet';
+import { DeleteConfirmDialog } from './DeleteConfirmDialog';
 import { triggerHaptic } from '@/hooks/use-haptics';
 import { formatDistanceToNow } from 'date-fns';
+import { toast } from 'sonner';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 
@@ -19,9 +23,13 @@ interface ForumPostCardProps {
 }
 
 export function ForumPostCard({ post, onClick }: ForumPostCardProps) {
-  const { likePost } = useForum();
+  const { likePost, editPost, deletePost, userPosts } = useForum();
   const [showReport, setShowReport] = useState(false);
+  const [showEditPost, setShowEditPost] = useState(false);
+  const [showDeletePost, setShowDeletePost] = useState(false);
   const [liked, setLiked] = useState(false);
+
+  const isOwnPost = userPosts.includes(post.id);
 
   const handleLike = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -35,6 +43,22 @@ export function ForumPostCard({ post, onClick }: ForumPostCardProps) {
   const handleReport = (e: React.MouseEvent) => {
     e.stopPropagation();
     setShowReport(true);
+  };
+
+  const handleEdit = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setShowEditPost(true);
+  };
+
+  const handleDelete = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setShowDeletePost(true);
+  };
+
+  const handleConfirmDelete = () => {
+    deletePost(post.id);
+    triggerHaptic('success');
+    toast.success('Post deleted');
   };
 
   return (
@@ -55,6 +79,7 @@ export function ForumPostCard({ post, onClick }: ForumPostCardProps) {
               <p className="text-xs text-muted-foreground flex items-center gap-1">
                 <Clock className="h-3 w-3" />
                 {formatDistanceToNow(new Date(post.createdAt), { addSuffix: true })}
+                {post.updatedAt !== post.createdAt && ' (edited)'}
               </p>
             </div>
           </div>
@@ -65,6 +90,19 @@ export function ForumPostCard({ post, onClick }: ForumPostCardProps) {
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="bg-popover border border-border rounded-xl shadow-lg z-50">
+              {isOwnPost && (
+                <>
+                  <DropdownMenuItem onClick={handleEdit} className="flex items-center gap-2">
+                    <Edit2 className="h-4 w-4" />
+                    Edit post
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={handleDelete} className="flex items-center gap-2 text-destructive">
+                    <Trash2 className="h-4 w-4" />
+                    Delete post
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                </>
+              )}
               <DropdownMenuItem onClick={handleReport} className="flex items-center gap-2 text-destructive">
                 <Flag className="h-4 w-4" />
                 Report
@@ -109,6 +147,22 @@ export function ForumPostCard({ post, onClick }: ForumPostCardProps) {
         onOpenChange={setShowReport}
         contentType="post"
         contentId={post.id}
+      />
+
+      <EditPostSheet
+        open={showEditPost}
+        onOpenChange={setShowEditPost}
+        initialTitle={post.title}
+        initialBody={post.body}
+        onSave={(title, body) => editPost(post.id, title, body)}
+      />
+
+      <DeleteConfirmDialog
+        open={showDeletePost}
+        onOpenChange={setShowDeletePost}
+        title="Delete post?"
+        description="This will permanently delete your post and all its comments. This action cannot be undone."
+        onConfirm={handleConfirmDelete}
       />
     </>
   );
