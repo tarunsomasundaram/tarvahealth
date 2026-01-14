@@ -26,6 +26,7 @@ export interface ForumComment {
   authorDisplayName: string;
   body: string;
   createdAt: string;
+  updatedAt?: string;
 }
 
 export interface ForumGroup {
@@ -54,12 +55,17 @@ interface ForumContextType {
   comments: ForumComment[];
   reports: ForumReport[];
   userPosts: string[];
+  userComments: string[];
   getGroupsForConditions: (conditionIds: string[]) => ForumGroup[];
   getSuggestedGroups: (conditionIds: string[]) => ForumGroup[];
   getPostsForGroup: (groupId: string) => ForumPost[];
   getCommentsForPost: (postId: string) => ForumComment[];
   createPost: (post: Omit<ForumPost, 'id' | 'createdAt' | 'updatedAt' | 'likes' | 'commentCount'>) => string;
   createComment: (comment: Omit<ForumComment, 'id' | 'createdAt'>, onNotify?: (postTitle: string, commenterName: string) => void) => void;
+  editPost: (postId: string, title: string, body: string) => void;
+  deletePost: (postId: string) => void;
+  editComment: (commentId: string, body: string) => void;
+  deleteComment: (commentId: string) => void;
   reportContent: (report: Omit<ForumReport, 'id' | 'createdAt'>) => void;
   likePost: (postId: string, onNotify?: (postTitle: string) => void) => void;
   generateAnonymousHandle: () => string;
@@ -154,11 +160,20 @@ export function ForumProvider({ children }: { children: ReactNode }) {
     const saved = localStorage.getItem('tarva-forum-user-posts');
     return saved ? JSON.parse(saved) : [];
   });
+  const [userComments, setUserComments] = useState<string[]>(() => {
+    const saved = localStorage.getItem('tarva-forum-user-comments');
+    return saved ? JSON.parse(saved) : [];
+  });
 
   // Save user posts to localStorage
   useEffect(() => {
     localStorage.setItem('tarva-forum-user-posts', JSON.stringify(userPosts));
   }, [userPosts]);
+
+  // Save user comments to localStorage
+  useEffect(() => {
+    localStorage.setItem('tarva-forum-user-comments', JSON.stringify(userComments));
+  }, [userComments]);
 
   const acknowledgeGuidelines = () => {
     setHasAcknowledgedGuidelines(true);
@@ -225,6 +240,7 @@ export function ForumProvider({ children }: { children: ReactNode }) {
       createdAt: new Date().toISOString(),
     };
     setComments(prev => [...prev, newComment]);
+    setUserComments(prev => [...prev, newComment.id]);
     
     // Update post comment count
     setPosts(prev => prev.map(post => 
@@ -238,6 +254,46 @@ export function ForumProvider({ children }: { children: ReactNode }) {
     if (post && userPosts.includes(comment.postId) && onNotify) {
       onNotify(post.title, comment.authorDisplayName);
     }
+  };
+
+  const editPost = (postId: string, title: string, body: string) => {
+    setPosts(prev => prev.map(post =>
+      post.id === postId
+        ? { ...post, title, body, updatedAt: new Date().toISOString() }
+        : post
+    ));
+  };
+
+  const deletePost = (postId: string) => {
+    setPosts(prev => prev.filter(post => post.id !== postId));
+    setUserPosts(prev => prev.filter(id => id !== postId));
+    // Also delete all comments for this post
+    setComments(prev => prev.filter(comment => comment.postId !== postId));
+  };
+
+  const editComment = (commentId: string, body: string) => {
+    setComments(prev => prev.map(comment =>
+      comment.id === commentId
+        ? { ...comment, body, updatedAt: new Date().toISOString() }
+        : comment
+    ));
+  };
+
+  const deleteComment = (commentId: string) => {
+    const commentToDelete = comments.find(c => c.id === commentId);
+    if (commentToDelete) {
+      // Update post comment count
+      setPosts(prev => prev.map(post =>
+        post.id === commentToDelete.postId
+          ? { ...post, commentCount: Math.max(0, post.commentCount - 1) }
+          : post
+      ));
+    }
+    // Delete the comment and all its replies
+    setComments(prev => prev.filter(comment => 
+      comment.id !== commentId && comment.parentCommentId !== commentId
+    ));
+    setUserComments(prev => prev.filter(id => id !== commentId));
   };
 
   const reportContent = (report: Omit<ForumReport, 'id' | 'createdAt'>) => {
@@ -275,12 +331,17 @@ export function ForumProvider({ children }: { children: ReactNode }) {
         comments,
         reports,
         userPosts,
+        userComments,
         getGroupsForConditions,
         getSuggestedGroups,
         getPostsForGroup,
         getCommentsForPost,
         createPost,
         createComment,
+        editPost,
+        deletePost,
+        editComment,
+        deleteComment,
         reportContent,
         likePost,
         generateAnonymousHandle,

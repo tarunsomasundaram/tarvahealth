@@ -1,9 +1,12 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, Heart, MessageCircle, Send, User, Clock, Flag, MoreVertical, Reply, X } from 'lucide-react';
+import { ArrowLeft, Heart, MessageCircle, Send, User, Clock, Flag, MoreVertical, Reply, X, Edit2, Trash2 } from 'lucide-react';
 import { ForumPost, ForumComment, useForum } from '@/contexts/ForumContext';
 import { useOnboarding } from '@/contexts/OnboardingContext';
 import { ReportSheet } from './ReportSheet';
+import { EditPostSheet } from './EditPostSheet';
+import { EditCommentSheet } from './EditCommentSheet';
+import { DeleteConfirmDialog } from './DeleteConfirmDialog';
 import { CommunityGuidelinesModal } from './CommunityGuidelinesModal';
 import { triggerHaptic } from '@/hooks/use-haptics';
 import { formatDistanceToNow } from 'date-fns';
@@ -12,6 +15,7 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 
@@ -25,10 +29,14 @@ interface CommentItemProps {
   replies: ForumComment[];
   onReply: (comment: ForumComment) => void;
   onReport: (commentId: string) => void;
+  onEdit: (comment: ForumComment) => void;
+  onDelete: (commentId: string) => void;
+  isOwn: boolean;
+  userComments: string[];
   depth?: number;
 }
 
-function CommentItem({ comment, replies, onReply, onReport, depth = 0 }: CommentItemProps) {
+function CommentItem({ comment, replies, onReply, onReport, onEdit, onDelete, isOwn, userComments, depth = 0 }: CommentItemProps) {
   const [showReplies, setShowReplies] = useState(true);
   const maxDepth = 2; // Limit nesting depth
   
@@ -45,13 +53,36 @@ function CommentItem({ comment, replies, onReply, onReport, depth = 0 }: Comment
               <span className="text-xs text-muted-foreground">
                 {formatDistanceToNow(new Date(comment.createdAt), { addSuffix: true })}
               </span>
+              {comment.updatedAt && (
+                <span className="text-xs text-muted-foreground">(edited)</span>
+              )}
             </div>
-            <button
-              onClick={() => onReport(comment.id)}
-              className="p-1 rounded hover:bg-secondary text-muted-foreground hover:text-destructive"
-            >
-              <Flag className="h-3 w-3" />
-            </button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className="p-1 rounded hover:bg-secondary text-muted-foreground">
+                  <MoreVertical className="h-3 w-3" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="bg-popover border border-border rounded-xl shadow-lg z-50">
+                {isOwn && (
+                  <>
+                    <DropdownMenuItem onClick={() => onEdit(comment)} className="flex items-center gap-2">
+                      <Edit2 className="h-4 w-4" />
+                      Edit comment
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => onDelete(comment.id)} className="flex items-center gap-2 text-destructive">
+                      <Trash2 className="h-4 w-4" />
+                      Delete comment
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                  </>
+                )}
+                <DropdownMenuItem onClick={() => onReport(comment.id)} className="flex items-center gap-2 text-destructive">
+                  <Flag className="h-4 w-4" />
+                  Report
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
           <p className="text-sm text-foreground mt-1">{comment.body}</p>
           
@@ -95,6 +126,10 @@ function CommentItem({ comment, replies, onReply, onReport, depth = 0 }: Comment
                   replies={[]} // Don't show nested replies beyond depth
                   onReply={onReply}
                   onReport={onReport}
+                  onEdit={onEdit}
+                  onDelete={onDelete}
+                  isOwn={userComments.includes(reply.id)}
+                  userComments={userComments}
                   depth={depth + 1}
                 />
               ))}
@@ -107,7 +142,19 @@ function CommentItem({ comment, replies, onReply, onReport, depth = 0 }: Comment
 }
 
 export function ForumPostView({ post, onBack }: ForumPostViewProps) {
-  const { getCommentsForPost, createComment, likePost, generateAnonymousHandle, hasAcknowledgedGuidelines, userPosts } = useForum();
+  const { 
+    getCommentsForPost, 
+    createComment, 
+    likePost, 
+    editPost,
+    deletePost,
+    editComment,
+    deleteComment,
+    generateAnonymousHandle, 
+    hasAcknowledgedGuidelines, 
+    userPosts,
+    userComments 
+  } = useForum();
   const { addNotification } = useOnboarding();
   const [commentText, setCommentText] = useState('');
   const [replyingTo, setReplyingTo] = useState<ForumComment | null>(null);
@@ -116,6 +163,14 @@ export function ForumPostView({ post, onBack }: ForumPostViewProps) {
   const [reportContentType, setReportContentType] = useState<'post' | 'comment'>('post');
   const [showGuidelines, setShowGuidelines] = useState(false);
   const [liked, setLiked] = useState(false);
+  
+  // Edit/Delete states
+  const [showEditPost, setShowEditPost] = useState(false);
+  const [showDeletePost, setShowDeletePost] = useState(false);
+  const [showEditComment, setShowEditComment] = useState(false);
+  const [showDeleteComment, setShowDeleteComment] = useState(false);
+  const [editingComment, setEditingComment] = useState<ForumComment | null>(null);
+  const [deletingCommentId, setDeletingCommentId] = useState<string | null>(null);
 
   const allComments = getCommentsForPost(post.id);
   
@@ -201,6 +256,40 @@ export function ForumPostView({ post, onBack }: ForumPostViewProps) {
     setShowReport(true);
   };
 
+  const handleEditPost = () => {
+    setShowEditPost(true);
+  };
+
+  const handleDeletePost = () => {
+    setShowDeletePost(true);
+  };
+
+  const handleConfirmDeletePost = () => {
+    deletePost(post.id);
+    triggerHaptic('success');
+    toast.success('Post deleted');
+    onBack();
+  };
+
+  const handleEditComment = (comment: ForumComment) => {
+    setEditingComment(comment);
+    setShowEditComment(true);
+  };
+
+  const handleDeleteComment = (commentId: string) => {
+    setDeletingCommentId(commentId);
+    setShowDeleteComment(true);
+  };
+
+  const handleConfirmDeleteComment = () => {
+    if (deletingCommentId) {
+      deleteComment(deletingCommentId);
+      triggerHaptic('success');
+      toast.success('Comment deleted');
+      setDeletingCommentId(null);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background flex flex-col">
       {/* Header */}
@@ -231,6 +320,7 @@ export function ForumPostView({ post, onBack }: ForumPostViewProps) {
                 <p className="text-xs text-muted-foreground flex items-center gap-1">
                   <Clock className="h-3 w-3" />
                   {formatDistanceToNow(new Date(post.createdAt), { addSuffix: true })}
+                  {post.updatedAt !== post.createdAt && ' (edited)'}
                 </p>
               </div>
             </div>
@@ -241,6 +331,19 @@ export function ForumPostView({ post, onBack }: ForumPostViewProps) {
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="bg-popover border border-border rounded-xl shadow-lg z-50">
+                {isOwnPost && (
+                  <>
+                    <DropdownMenuItem onClick={handleEditPost} className="flex items-center gap-2">
+                      <Edit2 className="h-4 w-4" />
+                      Edit post
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={handleDeletePost} className="flex items-center gap-2 text-destructive">
+                      <Trash2 className="h-4 w-4" />
+                      Delete post
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                  </>
+                )}
                 <DropdownMenuItem onClick={handleReportPost} className="flex items-center gap-2 text-destructive">
                   <Flag className="h-4 w-4" />
                   Report post
@@ -293,6 +396,10 @@ export function ForumPostView({ post, onBack }: ForumPostViewProps) {
                   replies={getRepliesForComment(comment.id)}
                   onReply={handleReply}
                   onReport={handleReportComment}
+                  onEdit={handleEditComment}
+                  onDelete={handleDeleteComment}
+                  isOwn={userComments.includes(comment.id)}
+                  userComments={userComments}
                 />
               ))}
             </div>
@@ -374,6 +481,37 @@ export function ForumPostView({ post, onBack }: ForumPostViewProps) {
             toast.success(replyingTo ? 'Reply added!' : 'Comment added!');
           }
         }}
+      />
+
+      <EditPostSheet
+        open={showEditPost}
+        onOpenChange={setShowEditPost}
+        initialTitle={post.title}
+        initialBody={post.body}
+        onSave={(title, body) => editPost(post.id, title, body)}
+      />
+
+      <DeleteConfirmDialog
+        open={showDeletePost}
+        onOpenChange={setShowDeletePost}
+        title="Delete post?"
+        description="This will permanently delete your post and all its comments. This action cannot be undone."
+        onConfirm={handleConfirmDeletePost}
+      />
+
+      <EditCommentSheet
+        open={showEditComment}
+        onOpenChange={setShowEditComment}
+        initialBody={editingComment?.body || ''}
+        onSave={(body) => editingComment && editComment(editingComment.id, body)}
+      />
+
+      <DeleteConfirmDialog
+        open={showDeleteComment}
+        onOpenChange={setShowDeleteComment}
+        title="Delete comment?"
+        description="This will permanently delete your comment and any replies. This action cannot be undone."
+        onConfirm={handleConfirmDeleteComment}
       />
     </div>
   );
