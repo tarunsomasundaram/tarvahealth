@@ -8,12 +8,14 @@ import { ProgressCard } from "@/components/home/ProgressCard";
 import { PullToRefresh } from "@/components/common/PullToRefresh";
 import { SnoozeSheet } from "@/components/dose/SnoozeSheet";
 import { CaseSelectionSheet } from "@/components/dose/CaseSelectionSheet";
+import { FinishProfileCard } from "@/components/profile/FinishProfileCard";
 import { triggerHaptic } from "@/hooks/use-haptics";
 import { useNotifications } from "@/hooks/use-notifications";
 import { useCaseDevice } from "@/hooks/use-case-device";
 import { format, addMinutes } from "date-fns";
 import { useMedication, ScheduledDose } from "@/contexts/MedicationContext";
 import { useOnboarding } from "@/contexts/OnboardingContext";
+import { useHealthProfile } from "@/contexts/HealthProfileContext";
 import { Pill, Check, X, Smartphone, Clock, Bell, MoreVertical, MapPin } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
@@ -206,6 +208,7 @@ export default function Home() {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [snoozeSheetOpen, setSnoozeSheetOpen] = useState(false);
   const [selectedDoseForSnooze, setSelectedDoseForSnooze] = useState<ScheduledDose | null>(null);
+  const [showFinishProfile, setShowFinishProfile] = useState(true);
   
   const { 
     getUpcomingDoses, 
@@ -216,6 +219,7 @@ export default function Home() {
     getScheduledDosesForDate 
   } = useMedication();
   const { patientProfile, addNotification } = useOnboarding();
+  const { getProfileCompletionPercentage, profileCompleted } = useHealthProfile();
   const { scheduleSnoozeReminder, cancelNotification } = useNotifications();
   const { 
     pendingCaseSelection, 
@@ -224,6 +228,7 @@ export default function Home() {
   } = useCaseDevice();
   
   const firstName = patientProfile?.fullName?.split(' ')[0] || 'User';
+  const showProfileCard = showFinishProfile && !profileCompleted && getProfileCompletionPercentage() < 100;
 
   const upcomingDoses = getUpcomingDoses(selectedDate);
   const completedDoses = getCompletedDoses(selectedDate);
@@ -336,6 +341,13 @@ export default function Home() {
             <FadeIn delay={0.2}>
               <ProgressCard taken={takenCount} total={totalCount} />
             </FadeIn>
+
+            {showProfileCard && (
+              <FadeIn delay={0.25}>
+                <FinishProfileCard onDismiss={() => setShowFinishProfile(false)} />
+              </FadeIn>
+            )}
+
 
             {upcomingDoses.length > 0 && (
               <section>
