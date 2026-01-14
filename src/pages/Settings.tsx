@@ -5,13 +5,14 @@ import { AnimatedPage } from "@/components/layout/AnimatedPage";
 import { FadeIn, StaggerItem } from "@/components/animations";
 import { useTheme } from "@/hooks/use-theme";
 import { useOnboarding } from "@/contexts/OnboardingContext";
+import { useHealthProfile } from "@/contexts/HealthProfileContext";
 import { triggerHaptic } from "@/hooks/use-haptics";
 import { PinSetup } from "@/components/security/PinSetup";
 import { 
   Box, Bell, Download, Link, Shield, 
   Bluetooth, Battery, Sliders, Volume2, 
   FileText, Calendar, Lock, Moon, Sun, Monitor,
-  ChevronRight, Fingerprint
+  ChevronRight, Fingerprint, Users
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
@@ -92,6 +93,7 @@ export default function Settings() {
   const navigate = useNavigate();
   const { theme, setTheme } = useTheme();
   const { pinEnabled, faceIdEnabled, setFaceIdEnabled, notificationPreferences } = useOnboarding();
+  const { shareProfileInForum, setShareProfileInForum } = useHealthProfile();
   const [batterySaver, setBatterySaver] = useState(false);
   
   const [pinModalOpen, setPinModalOpen] = useState(false);
@@ -227,6 +229,13 @@ export default function Settings() {
             <section className="card-tarva">
               <h3 className="text-section text-foreground mb-2">Privacy & Security</h3>
               <div className="divide-y divide-border">
+                <SettingToggle
+                  label="Share profile in Forum"
+                  description={shareProfileInForum ? "Age & conditions visible on posts" : "Stay fully anonymous"}
+                  icon={<Users className="h-5 w-5 text-primary" />}
+                  enabled={shareProfileInForum}
+                  onToggle={() => setShareProfileInForum(!shareProfileInForum)}
+                />
                 <SettingToggle
                   label="Face ID / Touch ID"
                   description={faceIdEnabled ? "Enabled" : "Unlock with biometrics"}
