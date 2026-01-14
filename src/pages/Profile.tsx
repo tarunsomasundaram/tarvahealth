@@ -93,6 +93,7 @@ export default function Profile() {
             <ProfileHeader
               name={profile.name}
               age={profile.age}
+              avatarUrl={patientProfile?.avatarUrl}
               onEdit={handleEdit}
               onShare={handleShare}
             />
