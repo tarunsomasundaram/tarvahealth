@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { ChevronRight, Heart, Activity, Droplets, Ruler, Calendar, AlertCircle, Sparkles } from 'lucide-react';
+import { ChevronRight, Heart, Activity, Droplets, Ruler, Calendar, AlertCircle, Sparkles, Scale } from 'lucide-react';
 import { useHealthProfile } from '@/contexts/HealthProfileContext';
 import { conditions } from '@/data/conditions';
 import { behaviors } from '@/data/behaviors';
@@ -15,6 +15,8 @@ export function HealthProfileCard() {
     age,
     heightValue,
     heightUnit,
+    weightValue,
+    weightUnit,
     bloodGroup,
     conditions: selectedConditionIds,
     conditionOtherText,
@@ -22,6 +24,8 @@ export function HealthProfileCard() {
     setAge,
     setHeightValue,
     setHeightUnit,
+    setWeightValue,
+    setWeightUnit,
     setBloodGroup,
     setConditions,
     setConditionOtherText,
@@ -52,6 +56,11 @@ export function HealthProfileCard() {
     return `${feet}'${inches}"`;
   };
 
+  const formatWeight = () => {
+    if (!weightValue) return null;
+    return `${weightValue} ${weightUnit}`;
+  };
+
   return (
     <>
       <div className="card-tarva">
@@ -69,35 +78,45 @@ export function HealthProfileCard() {
         </div>
 
         {/* Quick Stats Grid */}
-        <div className="grid grid-cols-3 gap-3 mb-4">
+        <div className="grid grid-cols-4 gap-2 mb-4">
           {/* Age */}
           <button
             onClick={() => setIsEditing(true)}
-            className="flex flex-col items-center rounded-xl bg-accent p-3 hover:bg-accent/80 transition-colors"
+            className="flex flex-col items-center rounded-xl bg-accent p-2.5 hover:bg-accent/80 transition-colors"
           >
-            <Calendar className="h-5 w-5 text-primary" />
-            <span className="mt-1 text-xs text-muted-foreground">Age</span>
-            <span className="font-semibold text-foreground">{age || '—'}</span>
+            <Calendar className="h-4 w-4 text-primary" />
+            <span className="mt-1 text-[10px] text-muted-foreground">Age</span>
+            <span className="font-semibold text-foreground text-sm">{age || '—'}</span>
           </button>
 
           {/* Height */}
           <button
             onClick={() => setIsEditing(true)}
-            className="flex flex-col items-center rounded-xl bg-accent p-3 hover:bg-accent/80 transition-colors"
+            className="flex flex-col items-center rounded-xl bg-accent p-2.5 hover:bg-accent/80 transition-colors"
           >
-            <Ruler className="h-5 w-5 text-primary" />
-            <span className="mt-1 text-xs text-muted-foreground">Height</span>
-            <span className="font-semibold text-foreground">{formatHeight() || '—'}</span>
+            <Ruler className="h-4 w-4 text-primary" />
+            <span className="mt-1 text-[10px] text-muted-foreground">Height</span>
+            <span className="font-semibold text-foreground text-sm">{formatHeight() || '—'}</span>
+          </button>
+
+          {/* Weight */}
+          <button
+            onClick={() => setIsEditing(true)}
+            className="flex flex-col items-center rounded-xl bg-accent p-2.5 hover:bg-accent/80 transition-colors"
+          >
+            <Scale className="h-4 w-4 text-primary" />
+            <span className="mt-1 text-[10px] text-muted-foreground">Weight</span>
+            <span className="font-semibold text-foreground text-sm">{formatWeight() || '—'}</span>
           </button>
 
           {/* Blood Group */}
           <button
             onClick={() => setIsEditing(true)}
-            className="flex flex-col items-center rounded-xl bg-accent p-3 hover:bg-accent/80 transition-colors"
+            className="flex flex-col items-center rounded-xl bg-accent p-2.5 hover:bg-accent/80 transition-colors"
           >
-            <Droplets className="h-5 w-5 text-primary" />
-            <span className="mt-1 text-xs text-muted-foreground">Blood</span>
-            <span className="font-semibold text-foreground">{bloodGroup || '—'}</span>
+            <Droplets className="h-4 w-4 text-primary" />
+            <span className="mt-1 text-[10px] text-muted-foreground">Blood</span>
+            <span className="font-semibold text-foreground text-sm">{bloodGroup || '—'}</span>
           </button>
         </div>
 
@@ -172,11 +191,15 @@ export function HealthProfileCard() {
           age={age}
           heightValue={heightValue}
           heightUnit={heightUnit}
+          weightValue={weightValue}
+          weightUnit={weightUnit}
           bloodGroup={bloodGroup}
           onSave={(data) => {
             setAge(data.age);
             setHeightValue(data.heightValue);
             setHeightUnit(data.heightUnit);
+            setWeightValue(data.weightValue);
+            setWeightUnit(data.weightUnit);
             setBloodGroup(data.bloodGroup);
             setIsEditing(false);
           }}
@@ -211,8 +234,17 @@ interface EditHealthInfoModalProps {
   age?: number;
   heightValue?: number;
   heightUnit: 'cm' | 'in';
+  weightValue?: number;
+  weightUnit: 'kg' | 'lbs';
   bloodGroup?: string;
-  onSave: (data: { age?: number; heightValue?: number; heightUnit: 'cm' | 'in'; bloodGroup?: string }) => void;
+  onSave: (data: { 
+    age?: number; 
+    heightValue?: number; 
+    heightUnit: 'cm' | 'in'; 
+    weightValue?: number;
+    weightUnit: 'kg' | 'lbs';
+    bloodGroup?: string;
+  }) => void;
 }
 
 function EditHealthInfoModal({
@@ -221,12 +253,16 @@ function EditHealthInfoModal({
   age: initialAge,
   heightValue: initialHeightValue,
   heightUnit: initialHeightUnit,
+  weightValue: initialWeightValue,
+  weightUnit: initialWeightUnit,
   bloodGroup: initialBloodGroup,
   onSave,
 }: EditHealthInfoModalProps) {
   const [age, setAge] = useState(initialAge?.toString() || '');
   const [heightValue, setHeightValue] = useState(initialHeightValue?.toString() || '');
   const [heightUnit, setHeightUnit] = useState<'cm' | 'in'>(initialHeightUnit);
+  const [weightValue, setWeightValue] = useState(initialWeightValue?.toString() || '');
+  const [weightUnit, setWeightUnit] = useState<'kg' | 'lbs'>(initialWeightUnit);
   const [bloodGroup, setBloodGroup] = useState(initialBloodGroup || '');
 
   const handleSave = () => {
@@ -234,6 +270,8 @@ function EditHealthInfoModal({
       age: age ? parseInt(age) : undefined,
       heightValue: heightValue ? parseFloat(heightValue) : undefined,
       heightUnit,
+      weightValue: weightValue ? parseFloat(weightValue) : undefined,
+      weightUnit,
       bloodGroup: bloodGroup || undefined,
     });
   };
@@ -295,6 +333,44 @@ function EditHealthInfoModal({
                 )}
               >
                 in
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Weight */}
+        <div className="mb-4">
+          <label className="text-sm font-medium text-foreground mb-2 block">Weight</label>
+          <div className="flex gap-2">
+            <input
+              type="number"
+              value={weightValue}
+              onChange={(e) => setWeightValue(e.target.value)}
+              placeholder={weightUnit === 'kg' ? '70' : '154'}
+              className="input-tarva flex-1"
+            />
+            <div className="flex bg-muted rounded-xl overflow-hidden">
+              <button
+                onClick={() => setWeightUnit('kg')}
+                className={cn(
+                  "px-4 py-3 text-sm font-medium transition-colors",
+                  weightUnit === 'kg'
+                    ? "bg-primary text-primary-foreground"
+                    : "text-muted-foreground hover:text-foreground"
+                )}
+              >
+                kg
+              </button>
+              <button
+                onClick={() => setWeightUnit('lbs')}
+                className={cn(
+                  "px-4 py-3 text-sm font-medium transition-colors",
+                  weightUnit === 'lbs'
+                    ? "bg-primary text-primary-foreground"
+                    : "text-muted-foreground hover:text-foreground"
+                )}
+              >
+                lbs
               </button>
             </div>
           </div>
