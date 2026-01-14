@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { AnimatedPage } from "@/components/layout/AnimatedPage";
 import { FadeIn, StaggerContainer, StaggerItem } from "@/components/animations";
@@ -9,11 +10,24 @@ import { useHealthProfile } from "@/contexts/HealthProfileContext";
 import { Users, Settings, Pill, ChevronRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
+import { shareProfile } from "@/lib/profileShare";
+import { toast } from "sonner";
+import { triggerHaptic } from "@/hooks/use-haptics";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { FileText, Link } from "lucide-react";
 
 export default function Profile() {
   const navigate = useNavigate();
   const { patientProfile, medications } = useOnboarding();
-  const { getProfileCompletionPercentage, profileCompleted } = useHealthProfile();
+  const healthProfile = useHealthProfile();
+  const { getProfileCompletionPercentage, profileCompleted } = healthProfile;
+  const [shareDialogOpen, setShareDialogOpen] = useState(false);
   
   const completionPercentage = getProfileCompletionPercentage();
 
@@ -26,8 +40,31 @@ export default function Profile() {
 
   const medicationCount = medications.length > 0 ? medications.length : 3;
 
-  const handleEdit = () => console.log("Edit profile");
-  const handleShare = () => console.log("Share profile");
+  const handleEdit = () => {
+    triggerHaptic('light');
+    navigate("/edit-profile");
+  };
+
+  const handleShare = () => {
+    triggerHaptic('light');
+    setShareDialogOpen(true);
+  };
+
+  const handleShareAs = async (method: 'pdf' | 'link') => {
+    try {
+      triggerHaptic('medium');
+      await shareProfile(
+        { patientProfile, healthProfile, medications },
+        method
+      );
+      setShareDialogOpen(false);
+      if (method === 'link') {
+        toast.success("Profile link copied to clipboard");
+      }
+    } catch (error) {
+      toast.error("Failed to share profile");
+    }
+  };
 
   return (
     <AnimatedPage>
@@ -105,6 +142,43 @@ export default function Profile() {
           </StaggerContainer>
         </div>
       </div>
+
+      {/* Share Dialog */}
+      <Dialog open={shareDialogOpen} onOpenChange={setShareDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Share Profile</DialogTitle>
+          </DialogHeader>
+          <div className="grid gap-3 py-4">
+            <Button
+              variant="outline"
+              className="justify-start gap-3 h-14"
+              onClick={() => handleShareAs('pdf')}
+            >
+              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
+                <FileText className="h-5 w-5 text-primary" />
+              </div>
+              <div className="text-left">
+                <p className="font-medium">Export as PDF</p>
+                <p className="text-xs text-muted-foreground">Download or print your profile</p>
+              </div>
+            </Button>
+            <Button
+              variant="outline"
+              className="justify-start gap-3 h-14"
+              onClick={() => handleShareAs('link')}
+            >
+              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
+                <Link className="h-5 w-5 text-primary" />
+              </div>
+              <div className="text-left">
+                <p className="font-medium">Copy Link</p>
+                <p className="text-xs text-muted-foreground">Share a link to your profile</p>
+              </div>
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </AnimatedPage>
   );
 }

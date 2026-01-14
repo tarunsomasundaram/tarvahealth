@@ -61,7 +61,7 @@ export default function PatientNotifications() {
   return (
     <div className="fixed inset-0 flex flex-col bg-background">
       {/* Header */}
-      <div className="flex items-center justify-between px-4 pt-4">
+      <div className="flex-shrink-0 flex items-center justify-between px-4 pt-4">
         <motion.button
           onClick={handleBack}
           className="flex h-10 w-10 items-center justify-center rounded-full bg-secondary"
@@ -85,14 +85,16 @@ export default function PatientNotifications() {
         <div className="w-10" />
       </div>
 
-      <div className="flex-1 flex flex-col items-center justify-center px-6">
-        <motion.div
-          initial={{ scale: 0.8, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          className="flex h-24 w-24 items-center justify-center rounded-3xl bg-gradient-primary shadow-lg"
-        >
-          <Bell className="h-12 w-12 text-white" />
-        </motion.div>
+      {/* Scrollable content */}
+      <div className="flex-1 overflow-y-auto px-6 py-8">
+        <div className="flex flex-col items-center">
+          <motion.div
+            initial={{ scale: 0.8, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className="flex h-24 w-24 items-center justify-center rounded-3xl bg-gradient-primary shadow-lg"
+          >
+            <Bell className="h-12 w-12 text-white" />
+          </motion.div>
 
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -106,7 +108,8 @@ export default function PatientNotifications() {
           <p className="mt-2 text-body text-muted-foreground">
             Select the alerts you want to receive
           </p>
-        </motion.div>
+          </motion.div>
+        </div>
 
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -164,15 +167,15 @@ export default function PatientNotifications() {
           <motion.p
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="mt-4 text-sm text-muted-foreground"
+            className="mt-4 text-sm text-muted-foreground text-center"
           >
             Select at least one to enable notifications
           </motion.p>
         )}
       </div>
 
-      {/* Bottom buttons */}
-      <div className="px-6 pb-10 pt-4">
+      {/* Bottom buttons - fixed at bottom */}
+      <div className="flex-shrink-0 px-6 pb-10 pt-4 bg-background">
         <motion.button
           onClick={handleEnable}
           disabled={!hasAnySelected}
