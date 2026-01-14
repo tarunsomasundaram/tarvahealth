@@ -1,41 +1,29 @@
-import { motion } from "framer-motion";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { AnimatedPage } from "@/components/layout/AnimatedPage";
 import { FadeIn, StaggerContainer, StaggerItem } from "@/components/animations";
 import { ProfileHeader } from "@/components/profile/ProfileHeader";
-import { ProfileInfoCard } from "@/components/profile/ProfileInfoCard";
+import { HealthProfileCard } from "@/components/profile/HealthProfileCard";
 import { NavigationCard } from "@/components/common/NavigationCard";
 import { useOnboarding } from "@/contexts/OnboardingContext";
 import { Users, Settings, Pill, ChevronRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { motion } from "framer-motion";
 
 export default function Profile() {
   const navigate = useNavigate();
   const { patientProfile, medications } = useOnboarding();
 
-  // Use profile data from context or defaults
   const profile = {
     name: patientProfile?.fullName || "Sarah Johnson",
     age: patientProfile?.dateOfBirth 
       ? Math.floor((Date.now() - new Date(patientProfile.dateOfBirth).getTime()) / 31557600000)
       : 45,
-    bloodType: patientProfile?.bloodType || "A+",
-    height: patientProfile?.height || "5'6\"",
-    weight: patientProfile?.weight || "145 lbs",
-    allergies: patientProfile?.allergies 
-      ? patientProfile.allergies.split(',').map(a => a.trim())
-      : ["Penicillin", "Sulfa"],
   };
 
   const medicationCount = medications.length > 0 ? medications.length : 3;
 
-  const handleEdit = () => {
-    console.log("Edit profile");
-  };
-
-  const handleShare = () => {
-    console.log("Share profile");
-  };
+  const handleEdit = () => console.log("Edit profile");
+  const handleShare = () => console.log("Share profile");
 
   return (
     <AnimatedPage>
@@ -53,12 +41,7 @@ export default function Profile() {
           </FadeIn>
 
           <FadeIn delay={0.15}>
-            <ProfileInfoCard
-              bloodType={profile.bloodType}
-              height={profile.height}
-              weight={profile.weight}
-              allergies={profile.allergies}
-            />
+            <HealthProfileCard />
           </FadeIn>
 
           <StaggerContainer className="space-y-3">
