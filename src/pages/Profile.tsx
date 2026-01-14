@@ -5,6 +5,7 @@ import { ProfileHeader } from "@/components/profile/ProfileHeader";
 import { HealthProfileCard } from "@/components/profile/HealthProfileCard";
 import { NavigationCard } from "@/components/common/NavigationCard";
 import { useOnboarding } from "@/contexts/OnboardingContext";
+import { useHealthProfile } from "@/contexts/HealthProfileContext";
 import { Users, Settings, Pill, ChevronRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
@@ -12,6 +13,9 @@ import { motion } from "framer-motion";
 export default function Profile() {
   const navigate = useNavigate();
   const { patientProfile, medications } = useOnboarding();
+  const { getProfileCompletionPercentage, profileCompleted } = useHealthProfile();
+  
+  const completionPercentage = getProfileCompletionPercentage();
 
   const profile = {
     name: patientProfile?.fullName || "Sarah Johnson",
@@ -28,7 +32,24 @@ export default function Profile() {
   return (
     <AnimatedPage>
       <div className="page-padding">
-        <PageHeader title="Profile" />
+        <PageHeader 
+          title="Profile" 
+          rightContent={
+            !profileCompleted && completionPercentage < 100 ? (
+              <div className="flex items-center gap-2">
+                <div className="h-2 w-16 bg-muted rounded-full overflow-hidden">
+                  <motion.div
+                    className="h-full bg-primary rounded-full"
+                    initial={{ width: 0 }}
+                    animate={{ width: `${completionPercentage}%` }}
+                    transition={{ duration: 0.5 }}
+                  />
+                </div>
+                <span className="text-xs font-medium text-primary">{completionPercentage}%</span>
+              </div>
+            ) : null
+          }
+        />
 
         <div className="section-gap">
           <FadeIn delay={0.1}>
