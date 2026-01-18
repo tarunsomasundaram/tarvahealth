@@ -53,7 +53,8 @@ export default function MyMedications() {
               return (
                 <StaggerItem key={med.id}>
                   <motion.div 
-                    className="card-tarva"
+                    className="card-tarva cursor-pointer"
+                    onClick={() => navigate(`/medications/${med.id}/edit`)}
                     whileTap={{ scale: 0.98 }}
                   >
                     <div className="flex items-start gap-4">

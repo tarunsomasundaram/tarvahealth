@@ -21,7 +21,7 @@ const moreMenuRoutes = [
   "/caregivers",
   "/notifications",
   "/settings",
-  "/my-medications",
+  "/medications",
   "/reminder-preferences",
 ];
 
@@ -37,6 +37,7 @@ export function FloatingBottomNav() {
   const hiddenRoutes = [
     "/add",
     "/edit-profile",
+    "/medications/",
   ];
 
   const shouldHide = hiddenRoutes.some(route => location.pathname.startsWith(route));
