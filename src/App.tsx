@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { ThemeProvider } from "@/hooks/use-theme";
 import { OnboardingProvider, useOnboarding } from "@/contexts/OnboardingContext";
 import { MedicationProvider } from "@/contexts/MedicationContext";
+import { HealthProfileProvider } from "@/contexts/HealthProfileContext";
 import { FloatingBottomNav } from "@/components/layout/FloatingBottomNav";
 import { CaregiverTabBar } from "@/components/layout/CaregiverTabBar";
 
@@ -40,6 +41,7 @@ import PatientProfile from "./pages/onboarding/patient/PatientProfile";
 import PatientPasscode from "./pages/onboarding/patient/PatientPasscode";
 import PatientNotifications from "./pages/onboarding/patient/PatientNotifications";
 import PatientCase from "./pages/onboarding/patient/PatientCase";
+import PatientConditions from "./pages/onboarding/patient/PatientConditions";
 import PatientMedication from "./pages/onboarding/patient/PatientMedication";
 import PatientCaregiver from "./pages/onboarding/patient/PatientCaregiver";
 import CaregiverOnboardingProfile from "./pages/onboarding/caregiver/CaregiverProfile";
@@ -64,7 +66,9 @@ function AppRoutes() {
         <Route path="/onboarding/patient/passcode" element={<PatientPasscode />} />
         <Route path="/onboarding/patient/notifications" element={<PatientNotifications />} />
         <Route path="/onboarding/patient/case" element={<PatientCase />} />
+        <Route path="/onboarding/patient/conditions" element={<PatientConditions />} />
         <Route path="/onboarding/patient/medication" element={<PatientMedication />} />
+        <Route path="/add" element={<AddMedication />} />
         <Route path="/onboarding/patient/caregiver" element={<PatientCaregiver />} />
         <Route path="/onboarding/caregiver/profile" element={<CaregiverOnboardingProfile />} />
         <Route path="/onboarding/caregiver/passcode" element={<CaregiverPasscode />} />
@@ -123,17 +127,19 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <ThemeProvider>
       <OnboardingProvider>
-        <MedicationProvider>
-          <TooltipProvider>
-            <Toaster />
-            <Sonner />
-            <BrowserRouter>
-              <div className="mx-auto max-w-md min-h-screen bg-background">
-                <AppRoutes />
-              </div>
-            </BrowserRouter>
-          </TooltipProvider>
-        </MedicationProvider>
+        <HealthProfileProvider>
+          <MedicationProvider>
+            <TooltipProvider>
+              <Toaster />
+              <Sonner />
+              <BrowserRouter>
+                <div className="mx-auto max-w-md min-h-screen bg-background">
+                  <AppRoutes />
+                </div>
+              </BrowserRouter>
+            </TooltipProvider>
+          </MedicationProvider>
+        </HealthProfileProvider>
       </OnboardingProvider>
     </ThemeProvider>
   </QueryClientProvider>

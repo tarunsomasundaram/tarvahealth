@@ -1,19 +1,30 @@
 import { motion } from "framer-motion";
-import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Pill, Plus } from "lucide-react";
+import { useNavigate, useLocation } from "react-router-dom";
+import { ArrowLeft, Pill, Plus, Check } from "lucide-react";
 import { triggerHaptic } from "@/hooks/use-haptics";
+import { useMedication } from "@/contexts/MedicationContext";
 
 export default function PatientMedication() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const { medications } = useMedication();
+
+  // Check if user just added a medication (coming back from /add)
+  const justAdded = location.state?.fromAdd === true;
 
   const handleBack = () => {
     triggerHaptic('light');
-    navigate("/onboarding/patient/case");
+    navigate("/onboarding/patient/conditions");
   };
 
   const handleAddMedication = () => {
     triggerHaptic('medium');
-    // For now, skip to caregiver step
+    // Navigate to the add medication page with onboarding flag
+    navigate("/add", { state: { fromOnboarding: true } });
+  };
+
+  const handleContinue = () => {
+    triggerHaptic('medium');
     navigate("/onboarding/patient/caregiver");
   };
 
@@ -21,6 +32,8 @@ export default function PatientMedication() {
     triggerHaptic('light');
     navigate("/onboarding/patient/caregiver");
   };
+
+  const hasMedications = medications.length > 0;
 
   return (
     <div className="fixed inset-0 flex flex-col bg-background">
@@ -36,11 +49,11 @@ export default function PatientMedication() {
         
         {/* Progress indicator */}
         <div className="flex gap-1.5">
-          {[0, 1, 2, 3, 4].map((i) => (
+          {[0, 1, 2, 3, 4, 5].map((i) => (
             <div
               key={i}
               className={`h-1.5 w-6 rounded-full ${
-                i <= 3 ? "bg-primary" : "bg-muted"
+                i <= 4 ? "bg-primary" : "bg-muted"
               }`}
             />
           ))}
@@ -65,12 +78,42 @@ export default function PatientMedication() {
           className="mt-8 text-center"
         >
           <h1 className="text-title-large text-foreground">
-            Add your first medication
+            {hasMedications ? "Your medications" : "Add your medications"}
           </h1>
           <p className="mt-3 text-body text-muted-foreground max-w-xs">
-            Choose from a verified list of US generic medications.
+            {hasMedications 
+              ? `You've added ${medications.length} medication${medications.length > 1 ? 's' : ''}`
+              : "Add the medications you take regularly"
+            }
           </p>
         </motion.div>
+
+        {/* Show added medications */}
+        {hasMedications && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.15 }}
+            className="mt-6 w-full space-y-2"
+          >
+            {medications.map((med) => (
+              <div
+                key={med.id}
+                className="flex items-center gap-3 p-3 rounded-xl bg-secondary"
+              >
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10">
+                  <Check className="h-5 w-5 text-primary" />
+                </div>
+                <div className="flex-1">
+                  <p className="font-medium text-foreground">{med.genericName}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {med.strengthValue}{med.strengthUnit} • {med.form}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </motion.div>
+        )}
 
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -86,7 +129,9 @@ export default function PatientMedication() {
             <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-primary">
               <Plus className="h-6 w-6 text-white" />
             </div>
-            <span className="text-lg font-semibold text-primary">Add medication</span>
+            <span className="text-lg font-semibold text-primary">
+              {hasMedications ? "Add another" : "Add medication"}
+            </span>
           </motion.button>
         </motion.div>
 
@@ -97,11 +142,20 @@ export default function PatientMedication() {
 
       {/* Bottom buttons */}
       <div className="px-6 pb-10 pt-4">
+        {hasMedications ? (
+          <motion.button
+            onClick={handleContinue}
+            className="btn-primary w-full mb-3"
+            whileTap={{ scale: 0.98 }}
+          >
+            Continue
+          </motion.button>
+        ) : null}
         <button
           onClick={handleSkip}
           className="w-full text-center text-sm font-medium text-muted-foreground"
         >
-          Do this later
+          {hasMedications ? "Skip adding more" : "Do this later"}
         </button>
       </div>
     </div>

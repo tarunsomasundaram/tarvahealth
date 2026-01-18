@@ -314,14 +314,8 @@ export function MedicationProvider({ children }: { children: ReactNode }) {
       setMedications(parsed.medications || []);
       setSchedules(parsed.schedules || []);
       setDoseLogs(parsed.doseLogs || []);
-    } else {
-      // Initialize with default data
-      const { medications: defaultMeds, schedules: defaultScheds } = createDefaultMedications();
-      const defaultLogs = createMockDoseLogs();
-      setMedications(defaultMeds);
-      setSchedules(defaultScheds);
-      setDoseLogs(defaultLogs);
     }
+    // Start with empty medications - user adds during onboarding or later
   }, []);
 
   // Persist to localStorage
