@@ -49,6 +49,15 @@ export interface DoseLog {
   notes?: string;
 }
 
+export interface RefillLog {
+  id: string;
+  medicationId: string;
+  refillAmount: number;
+  previousDoses: number;
+  newTotalDoses: number;
+  refillDatetime: string; // ISO datetime
+}
+
 // Display-ready dose for UI
 export interface ScheduledDose {
   id: string;
@@ -71,6 +80,7 @@ interface MedicationContextType {
   medications: Medication[];
   schedules: MedicationSchedule[];
   doseLogs: DoseLog[];
+  refillLogs: RefillLog[];
   
   // Medication CRUD
   addMedication: (med: Omit<Medication, 'id' | 'createdAt' | 'updatedAt'>, schedule: Omit<MedicationSchedule, 'id' | 'medicationId'>) => string;
@@ -84,6 +94,10 @@ interface MedicationContextType {
   markDoseTaken: (scheduledDose: ScheduledDose, source?: DoseSource) => void;
   markDoseSkipped: (scheduledDose: ScheduledDose) => void;
   markDoseSnoozed: (scheduledDose: ScheduledDose, snoozeMinutes: number) => void;
+  
+  // Refill actions
+  logRefill: (medicationId: string, refillAmount: number) => void;
+  getRefillLogsForMedication: (medicationId: string) => RefillLog[];
   
   // Computed data
   getScheduledDosesForDate: (date: Date) => ScheduledDose[];
@@ -305,6 +319,7 @@ export function MedicationProvider({ children }: { children: ReactNode }) {
   const [medications, setMedications] = useState<Medication[]>([]);
   const [schedules, setSchedules] = useState<MedicationSchedule[]>([]);
   const [doseLogs, setDoseLogs] = useState<DoseLog[]>([]);
+  const [refillLogs, setRefillLogs] = useState<RefillLog[]>([]);
 
   // Load from localStorage on mount
   useEffect(() => {
@@ -314,16 +329,17 @@ export function MedicationProvider({ children }: { children: ReactNode }) {
       setMedications(parsed.medications || []);
       setSchedules(parsed.schedules || []);
       setDoseLogs(parsed.doseLogs || []);
+      setRefillLogs(parsed.refillLogs || []);
     }
     // Start with empty medications - user adds during onboarding or later
   }, []);
 
   // Persist to localStorage
   useEffect(() => {
-    if (medications.length > 0 || schedules.length > 0 || doseLogs.length > 0) {
-      localStorage.setItem('tarva-medications', JSON.stringify({ medications, schedules, doseLogs }));
+    if (medications.length > 0 || schedules.length > 0 || doseLogs.length > 0 || refillLogs.length > 0) {
+      localStorage.setItem('tarva-medications', JSON.stringify({ medications, schedules, doseLogs, refillLogs }));
     }
-  }, [medications, schedules, doseLogs]);
+  }, [medications, schedules, doseLogs, refillLogs]);
 
   // ==================== MEDICATION CRUD ====================
   
@@ -450,6 +466,31 @@ export function MedicationProvider({ children }: { children: ReactNode }) {
     
     setDoseLogs(prev => [...prev, newLog]);
   }, [snoozeStates]);
+
+  // ==================== REFILL ACTIONS ====================
+
+  const logRefill = useCallback((medicationId: string, refillAmount: number) => {
+    const medication = medications.find(m => m.id === medicationId);
+    if (!medication) return;
+
+    const newLog: RefillLog = {
+      id: generateId(),
+      medicationId,
+      refillAmount,
+      previousDoses: medication.remainingDoses,
+      newTotalDoses: medication.remainingDoses + refillAmount,
+      refillDatetime: new Date().toISOString(),
+    };
+
+    setRefillLogs(prev => [...prev, newLog]);
+    updateMedication(medicationId, { remainingDoses: medication.remainingDoses + refillAmount });
+  }, [medications, updateMedication]);
+
+  const getRefillLogsForMedication = useCallback((medicationId: string): RefillLog[] => {
+    return refillLogs
+      .filter(log => log.medicationId === medicationId)
+      .sort((a, b) => b.refillDatetime.localeCompare(a.refillDatetime));
+  }, [refillLogs]);
 
   // ==================== COMPUTED DATA ====================
 
@@ -653,6 +694,7 @@ export function MedicationProvider({ children }: { children: ReactNode }) {
     medications,
     schedules,
     doseLogs,
+    refillLogs,
     addMedication,
     updateMedication,
     removeMedication,
@@ -660,6 +702,8 @@ export function MedicationProvider({ children }: { children: ReactNode }) {
     markDoseTaken,
     markDoseSkipped,
     markDoseSnoozed,
+    logRefill,
+    getRefillLogsForMedication,
     getScheduledDosesForDate,
     getDoseLogsForDateRange,
     getUpcomingDoses,
@@ -674,6 +718,7 @@ export function MedicationProvider({ children }: { children: ReactNode }) {
     medications,
     schedules,
     doseLogs,
+    refillLogs,
     addMedication,
     updateMedication,
     removeMedication,
@@ -681,6 +726,8 @@ export function MedicationProvider({ children }: { children: ReactNode }) {
     markDoseTaken,
     markDoseSkipped,
     markDoseSnoozed,
+    logRefill,
+    getRefillLogsForMedication,
     getScheduledDosesForDate,
     getDoseLogsForDateRange,
     getUpcomingDoses,
