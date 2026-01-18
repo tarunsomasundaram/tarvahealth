@@ -5,22 +5,35 @@ import { AnimatedPage } from "@/components/layout/AnimatedPage";
 import { FadeIn, StaggerContainer, StaggerItem } from "@/components/animations";
 import { CaseStatusCard } from "@/components/case/CaseStatusCard";
 import { InventoryCard } from "@/components/case/InventoryCard";
-import { Plus, Settings, TrendingUp } from "lucide-react";
+import { RefillSheet } from "@/components/case/RefillSheet";
+import { Plus, Settings, TrendingUp, Package } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-
-const mockInventory = [
-  { id: "1", name: "Lisinopril", strength: "10mg", remaining: 14, refillThreshold: 2 },
-  { id: "2", name: "Metformin", strength: "500mg", remaining: 2, refillThreshold: 2 },
-  { id: "3", name: "Atorvastatin", strength: "20mg", remaining: 8, refillThreshold: 2 },
-];
+import { useMedication, Medication } from "@/contexts/MedicationContext";
 
 export default function Case() {
   const navigate = useNavigate();
+  const { medications } = useMedication();
   const [isConnected, setIsConnected] = useState(true);
   const [batteryLevel] = useState(78);
+  const [refillSheetOpen, setRefillSheetOpen] = useState(false);
+  const [selectedMedication, setSelectedMedication] = useState<Medication | null>(null);
+
+  // Get medications stored in case
+  const caseMedications = medications.filter(m => m.isActive && m.storedInCase);
 
   const handleSync = () => {
     console.log("Syncing...");
+  };
+
+  const handleRefillClick = (medication?: Medication) => {
+    if (medication) {
+      setSelectedMedication(medication);
+    } else if (caseMedications.length > 0) {
+      // If no specific medication, open for first low-stock one or first one
+      const lowStock = caseMedications.find(m => m.remainingDoses <= m.refillThresholdDoses);
+      setSelectedMedication(lowStock || caseMedications[0]);
+    }
+    setRefillSheetOpen(true);
   };
 
   return (
@@ -42,27 +55,61 @@ export default function Case() {
             <FadeIn delay={0.15}>
               <div className="flex items-center justify-between mb-3">
                 <h2 className="text-section text-foreground">Inventory</h2>
-                <motion.button 
-                  className="btn-secondary text-sm"
-                  whileTap={{ scale: 0.95 }}
-                >
-                  <Plus className="h-4 w-4" />
-                  Log Refill
-                </motion.button>
+                {caseMedications.length > 0 && (
+                  <motion.button 
+                    className="btn-secondary text-sm"
+                    onClick={() => handleRefillClick()}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    <Plus className="h-4 w-4" />
+                    Log Refill
+                  </motion.button>
+                )}
               </div>
             </FadeIn>
-            <StaggerContainer className="space-y-3">
-              {mockInventory.map((item) => (
-                <StaggerItem key={item.id}>
-                  <InventoryCard
-                    medicationName={item.name}
-                    strength={item.strength}
-                    remaining={item.remaining}
-                    refillThreshold={item.refillThreshold}
-                  />
-                </StaggerItem>
-              ))}
-            </StaggerContainer>
+            
+            {caseMedications.length > 0 ? (
+              <StaggerContainer className="space-y-3">
+                {caseMedications.map((med) => (
+                  <StaggerItem key={med.id}>
+                    <motion.div
+                      onClick={() => handleRefillClick(med)}
+                      className="cursor-pointer"
+                      whileTap={{ scale: 0.98 }}
+                    >
+                      <InventoryCard
+                        medicationName={med.genericName}
+                        strength={`${med.strengthValue}${med.strengthUnit}`}
+                        remaining={med.remainingDoses}
+                        refillThreshold={med.refillThresholdDoses}
+                        compartment={med.compartment}
+                        refillQuantity={med.refillQuantityDoses}
+                      />
+                    </motion.div>
+                  </StaggerItem>
+                ))}
+              </StaggerContainer>
+            ) : (
+              <FadeIn delay={0.2}>
+                <div className="card-tarva flex flex-col items-center justify-center py-8 text-center">
+                  <div className="flex h-14 w-14 items-center justify-center rounded-full bg-muted">
+                    <Package className="h-7 w-7 text-muted-foreground" />
+                  </div>
+                  <h3 className="mt-4 font-semibold text-foreground">No medications in case</h3>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    Add medications and enable "Store in case" to track inventory
+                  </p>
+                  <motion.button 
+                    onClick={() => navigate("/add")} 
+                    className="btn-primary mt-4"
+                    whileTap={{ scale: 0.97 }}
+                  >
+                    <Plus className="h-4 w-4" />
+                    Add Medication
+                  </motion.button>
+                </div>
+              </FadeIn>
+            )}
           </section>
 
           <section>
@@ -117,6 +164,13 @@ export default function Case() {
           </FadeIn>
         </div>
       </div>
+
+      {/* Refill Sheet */}
+      <RefillSheet
+        open={refillSheetOpen}
+        onOpenChange={setRefillSheetOpen}
+        medication={selectedMedication}
+      />
     </AnimatedPage>
   );
 }
