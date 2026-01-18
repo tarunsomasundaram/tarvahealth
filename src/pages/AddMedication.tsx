@@ -5,7 +5,7 @@ import { PageHeader } from "@/components/layout/PageHeader";
 import { AnimatedPage } from "@/components/layout/AnimatedPage";
 import { FadeIn, StaggerContainer, StaggerItem } from "@/components/animations";
 import { StepIndicator } from "@/components/add/StepIndicator";
-import { Search, Pill, Clock, Box, Check, ChevronRight, X } from "lucide-react";
+import { Search, Pill, Clock, Box, Check, ChevronRight, X, Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useMedication } from "@/contexts/MedicationContext";
 import { triggerHaptic } from "@/hooks/use-haptics";
@@ -310,6 +310,8 @@ export default function AddMedication() {
   const [currentStep, setCurrentStep] = useState(0);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedMed, setSelectedMed] = useState<typeof medicationsDatabase[0] | null>(null);
+  const [customMedName, setCustomMedName] = useState("");
+  const [isCustomMed, setIsCustomMed] = useState(false);
   const [strength, setStrength] = useState("");
   const [strengthUnit, setStrengthUnit] = useState("mg");
   const [form, setForm] = useState<"tablet" | "capsule" | "liquid" | "injection" | "patch" | "other">("tablet");
@@ -320,6 +322,20 @@ export default function AddMedication() {
   const [storeInCase, setStoreInCase] = useState(true);
   const [compartment, setCompartment] = useState("1");
   const [refillQuantity, setRefillQuantity] = useState("30");
+
+  // Handler for selecting a custom medication
+  const handleCustomMedication = () => {
+    setIsCustomMed(true);
+    setCustomMedName(searchQuery);
+    setSelectedMed(null);
+    nextStep();
+  };
+
+  // Get medication name for display
+  const getMedicationName = () => {
+    if (isCustomMed) return customMedName;
+    return selectedMed?.name || "";
+  };
 
   // Only show medications when user types a search query
   const filteredMeds = searchQuery.length > 0 
@@ -343,15 +359,16 @@ export default function AddMedication() {
   };
 
   const handleSave = () => {
-    if (!selectedMed) return;
+    if (!selectedMed && !isCustomMed) return;
+    if (isCustomMed && !customMedName.trim()) return;
     
     triggerHaptic('success');
     
     // Add the medication to context
     addMedication(
       {
-        genericName: selectedMed.name,
-        altNames: selectedMed.alternates,
+        genericName: isCustomMed ? customMedName.trim() : selectedMed!.name,
+        altNames: isCustomMed ? [] : selectedMed!.alternates,
         strengthValue: strength,
         strengthUnit: strengthUnit,
         form: form,
@@ -414,40 +431,70 @@ export default function AddMedication() {
               </FadeIn>
             ) : filteredMeds.length === 0 ? (
               <FadeIn>
-                <div className="flex flex-col items-center justify-center py-12 text-center">
-                  <p className="text-muted-foreground">No medications found</p>
-                  <p className="text-sm text-muted-foreground/70 mt-1">Try a different search term</p>
+                <div className="flex flex-col items-center justify-center py-8 text-center">
+                  <p className="text-muted-foreground mb-4">No medications found for "{searchQuery}"</p>
+                  <motion.button
+                    onClick={handleCustomMedication}
+                    className="flex items-center gap-3 rounded-2xl border-2 border-dashed border-primary/30 bg-primary/5 px-6 py-4"
+                    whileTap={{ scale: 0.98 }}
+                  >
+                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-primary">
+                      <Plus className="h-5 w-5 text-white" />
+                    </div>
+                    <div className="text-left">
+                      <p className="font-semibold text-primary">Add "{searchQuery}"</p>
+                      <p className="text-xs text-muted-foreground">Add as custom medication</p>
+                    </div>
+                  </motion.button>
                 </div>
               </FadeIn>
             ) : (
-              <StaggerContainer className="space-y-2">
-                {filteredMeds.map((med) => (
-                  <StaggerItem key={med.id}>
-                    <motion.button
-                      onClick={() => {
-                        setSelectedMed(med);
-                        nextStep();
-                      }}
-                      className={cn(
-                        "card-tarva-interactive w-full text-left",
-                        selectedMed?.id === med.id && "ring-2 ring-primary"
-                      )}
-                      whileTap={{ scale: 0.98 }}
-                    >
-                      <div className="flex items-center gap-4">
-                        <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-accent">
-                          <Pill className="h-5 w-5 text-primary" />
+              <div className="space-y-2">
+                <StaggerContainer className="space-y-2">
+                  {filteredMeds.slice(0, 10).map((med) => (
+                    <StaggerItem key={med.id}>
+                      <motion.button
+                        onClick={() => {
+                          setIsCustomMed(false);
+                          setSelectedMed(med);
+                          nextStep();
+                        }}
+                        className={cn(
+                          "card-tarva-interactive w-full text-left",
+                          selectedMed?.id === med.id && "ring-2 ring-primary"
+                        )}
+                        whileTap={{ scale: 0.98 }}
+                      >
+                        <div className="flex items-center gap-4">
+                          <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-accent">
+                            <Pill className="h-5 w-5 text-primary" />
+                          </div>
+                          <div className="flex-1">
+                            <h4 className="font-semibold text-foreground">{med.name}</h4>
+                            <p className="text-caption">{med.alternates.join(", ")}</p>
+                          </div>
+                          <ChevronRight className="h-5 w-5 text-muted-foreground" />
                         </div>
-                        <div className="flex-1">
-                          <h4 className="font-semibold text-foreground">{med.name}</h4>
-                          <p className="text-caption">{med.alternates.join(", ")}</p>
-                        </div>
-                        <ChevronRight className="h-5 w-5 text-muted-foreground" />
-                      </div>
-                    </motion.button>
-                  </StaggerItem>
-                ))}
-              </StaggerContainer>
+                      </motion.button>
+                    </StaggerItem>
+                  ))}
+                </StaggerContainer>
+                
+                {/* Custom medication option at the bottom */}
+                <motion.button
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.2 }}
+                  onClick={handleCustomMedication}
+                  className="w-full flex items-center gap-3 rounded-xl border border-dashed border-muted-foreground/30 bg-muted/30 p-3 mt-4"
+                  whileTap={{ scale: 0.98 }}
+                >
+                  <Plus className="h-5 w-5 text-muted-foreground" />
+                  <span className="text-sm text-muted-foreground">
+                    Don't see your medication? Add "{searchQuery}" manually
+                  </span>
+                </motion.button>
+              </div>
             )}
           </motion.div>
         );
@@ -730,8 +777,11 @@ export default function AddMedication() {
                     <Pill className="h-6 w-6 text-white" />
                   </div>
                   <div>
-                    <h4 className="font-semibold text-foreground">{selectedMed?.name}</h4>
-                    <p className="text-caption">{strength} • {form}</p>
+                    <h4 className="font-semibold text-foreground">{getMedicationName()}</h4>
+                    <p className="text-caption">{strength}{strengthUnit} • {form}</p>
+                    {isCustomMed && (
+                      <span className="text-xs text-primary">Custom medication</span>
+                    )}
                   </div>
                 </motion.div>
                 <StaggerContainer className="grid grid-cols-2 gap-3">
