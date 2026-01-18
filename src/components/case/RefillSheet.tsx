@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { Pill, Check, Plus, Minus } from "lucide-react";
+import { motion } from "framer-motion";
+import { Pill, Check, Plus, Minus, History } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useMedication, Medication } from "@/contexts/MedicationContext";
 import { triggerHaptic } from "@/hooks/use-haptics";
@@ -10,6 +10,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
+import { RefillHistorySheet } from "./RefillHistorySheet";
 
 interface RefillSheetProps {
   open: boolean;
@@ -18,18 +19,18 @@ interface RefillSheetProps {
 }
 
 export function RefillSheet({ open, onOpenChange, medication }: RefillSheetProps) {
-  const { updateMedication } = useMedication();
+  const { logRefill, getRefillLogsForMedication } = useMedication();
   const [refillAmount, setRefillAmount] = useState(30);
+  const [historyOpen, setHistoryOpen] = useState(false);
+
+  const refillCount = medication ? getRefillLogsForMedication(medication.id).length : 0;
 
   const handleRefill = () => {
     if (!medication) return;
     
     triggerHaptic("success");
     
-    const newRemaining = medication.remainingDoses + refillAmount;
-    updateMedication(medication.id, { 
-      remainingDoses: newRemaining 
-    });
+    logRefill(medication.id, refillAmount);
     
     onOpenChange(false);
     setRefillAmount(30);
@@ -57,12 +58,22 @@ export function RefillSheet({ open, onOpenChange, medication }: RefillSheetProps
             <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/15">
               <Pill className="h-6 w-6 text-primary" />
             </div>
-            <div>
+            <div className="flex-1">
               <h4 className="font-semibold text-foreground">{medication.genericName}</h4>
               <p className="text-caption">
                 {medication.strengthValue}{medication.strengthUnit} • Currently {medication.remainingDoses} doses
               </p>
             </div>
+            {refillCount > 0 && (
+              <motion.button
+                onClick={() => setHistoryOpen(true)}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-secondary text-sm font-medium text-foreground"
+                whileTap={{ scale: 0.95 }}
+              >
+                <History className="h-4 w-4" />
+                {refillCount}
+              </motion.button>
+            )}
           </div>
 
           {/* Amount Selector */}
@@ -141,8 +152,25 @@ export function RefillSheet({ open, onOpenChange, medication }: RefillSheetProps
               Confirm Refill
             </motion.button>
           </div>
+
+          {/* View History Link */}
+          <motion.button
+            onClick={() => setHistoryOpen(true)}
+            className="w-full text-center text-sm text-primary font-medium py-2"
+            whileTap={{ scale: 0.98 }}
+          >
+            <History className="h-4 w-4 inline mr-1.5" />
+            View Refill History
+          </motion.button>
         </div>
       </SheetContent>
+
+      {/* Refill History Sheet */}
+      <RefillHistorySheet
+        open={historyOpen}
+        onOpenChange={setHistoryOpen}
+        medication={medication}
+      />
     </Sheet>
   );
 }
