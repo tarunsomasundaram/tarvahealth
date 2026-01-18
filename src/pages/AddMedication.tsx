@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { AnimatedPage } from "@/components/layout/AnimatedPage";
@@ -7,15 +7,55 @@ import { FadeIn, StaggerContainer, StaggerItem } from "@/components/animations";
 import { StepIndicator } from "@/components/add/StepIndicator";
 import { Search, Pill, Clock, Box, Check, ChevronRight, X } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useMedication } from "@/contexts/MedicationContext";
+import { triggerHaptic } from "@/hooks/use-haptics";
 
 const steps = ["Medication", "Strength", "Schedule", "Case", "Save"];
 
-const mockMedications = [
-  { id: "1", name: "Lisinopril", alternates: ["Prinivil", "Zestril"] },
-  { id: "2", name: "Metformin", alternates: ["Glucophage", "Fortamet"] },
-  { id: "3", name: "Atorvastatin", alternates: ["Lipitor"] },
-  { id: "4", name: "Omeprazole", alternates: ["Prilosec"] },
-  { id: "5", name: "Amlodipine", alternates: ["Norvasc"] },
+// US Generic medications database - users search and add from scratch
+const medicationsDatabase = [
+  { id: "lisinopril", name: "Lisinopril", alternates: ["Prinivil", "Zestril"] },
+  { id: "metformin", name: "Metformin", alternates: ["Glucophage", "Fortamet"] },
+  { id: "atorvastatin", name: "Atorvastatin", alternates: ["Lipitor"] },
+  { id: "omeprazole", name: "Omeprazole", alternates: ["Prilosec"] },
+  { id: "amlodipine", name: "Amlodipine", alternates: ["Norvasc"] },
+  { id: "metoprolol", name: "Metoprolol", alternates: ["Lopressor", "Toprol XL"] },
+  { id: "losartan", name: "Losartan", alternates: ["Cozaar"] },
+  { id: "gabapentin", name: "Gabapentin", alternates: ["Neurontin"] },
+  { id: "hydrochlorothiazide", name: "Hydrochlorothiazide", alternates: ["HCTZ", "Microzide"] },
+  { id: "sertraline", name: "Sertraline", alternates: ["Zoloft"] },
+  { id: "simvastatin", name: "Simvastatin", alternates: ["Zocor"] },
+  { id: "montelukast", name: "Montelukast", alternates: ["Singulair"] },
+  { id: "escitalopram", name: "Escitalopram", alternates: ["Lexapro"] },
+  { id: "pantoprazole", name: "Pantoprazole", alternates: ["Protonix"] },
+  { id: "acetaminophen", name: "Acetaminophen", alternates: ["Tylenol"] },
+  { id: "ibuprofen", name: "Ibuprofen", alternates: ["Advil", "Motrin"] },
+  { id: "levothyroxine", name: "Levothyroxine", alternates: ["Synthroid"] },
+  { id: "prednisone", name: "Prednisone", alternates: ["Deltasone"] },
+  { id: "albuterol", name: "Albuterol", alternates: ["Ventolin", "ProAir"] },
+  { id: "fluticasone", name: "Fluticasone", alternates: ["Flonase", "Flovent"] },
+  { id: "insulin-glargine", name: "Insulin Glargine", alternates: ["Lantus", "Basaglar"] },
+  { id: "amoxicillin", name: "Amoxicillin", alternates: ["Amoxil"] },
+  { id: "azithromycin", name: "Azithromycin", alternates: ["Zithromax", "Z-Pack"] },
+  { id: "alprazolam", name: "Alprazolam", alternates: ["Xanax"] },
+  { id: "trazodone", name: "Trazodone", alternates: ["Desyrel"] },
+  { id: "clopidogrel", name: "Clopidogrel", alternates: ["Plavix"] },
+  { id: "warfarin", name: "Warfarin", alternates: ["Coumadin"] },
+  { id: "furosemide", name: "Furosemide", alternates: ["Lasix"] },
+  { id: "carvedilol", name: "Carvedilol", alternates: ["Coreg"] },
+  { id: "tramadol", name: "Tramadol", alternates: ["Ultram"] },
+  { id: "duloxetine", name: "Duloxetine", alternates: ["Cymbalta"] },
+  { id: "bupropion", name: "Bupropion", alternates: ["Wellbutrin"] },
+  { id: "rosuvastatin", name: "Rosuvastatin", alternates: ["Crestor"] },
+  { id: "pravastatin", name: "Pravastatin", alternates: ["Pravachol"] },
+  { id: "levetiracetam", name: "Levetiracetam", alternates: ["Keppra"] },
+  { id: "lamotrigine", name: "Lamotrigine", alternates: ["Lamictal"] },
+  { id: "valproic-acid", name: "Valproic Acid", alternates: ["Depakote"] },
+  { id: "topiramate", name: "Topiramate", alternates: ["Topamax"] },
+  { id: "glipizide", name: "Glipizide", alternates: ["Glucotrol"] },
+  { id: "sitagliptin", name: "Sitagliptin", alternates: ["Januvia"] },
+  { id: "empagliflozin", name: "Empagliflozin", alternates: ["Jardiance"] },
+  { id: "liraglutide", name: "Liraglutide", alternates: ["Victoza"] },
 ];
 
 const stepVariants = {
@@ -32,24 +72,34 @@ const stepTransition = {
 
 export default function AddMedication() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const { addMedication } = useMedication();
+  
+  // Check if coming from onboarding
+  const isFromOnboarding = location.state?.fromOnboarding === true;
+  
   const [currentStep, setCurrentStep] = useState(0);
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedMed, setSelectedMed] = useState<typeof mockMedications[0] | null>(null);
+  const [selectedMed, setSelectedMed] = useState<typeof medicationsDatabase[0] | null>(null);
   const [strength, setStrength] = useState("");
-  const [form, setForm] = useState("Tablet");
+  const [strengthUnit, setStrengthUnit] = useState("mg");
+  const [form, setForm] = useState<"tablet" | "capsule" | "liquid" | "injection" | "patch" | "other">("tablet");
   const [instructions, setInstructions] = useState("");
-  const [frequency, setFrequency] = useState("Daily");
+  const [frequency, setFrequency] = useState<"daily" | "weekly" | "custom" | "as-needed">("daily");
   const [times, setTimes] = useState(["08:00"]);
   const [reminderWindow, setReminderWindow] = useState("30");
   const [storeInCase, setStoreInCase] = useState(true);
   const [compartment, setCompartment] = useState("1");
   const [refillQuantity, setRefillQuantity] = useState("30");
 
-  const filteredMeds = mockMedications.filter(
-    (med) =>
-      med.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      med.alternates.some((alt) => alt.toLowerCase().includes(searchQuery.toLowerCase()))
-  );
+  // Only show medications when user types a search query
+  const filteredMeds = searchQuery.length > 0 
+    ? medicationsDatabase.filter(
+        (med) =>
+          med.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          med.alternates.some((alt) => alt.toLowerCase().includes(searchQuery.toLowerCase()))
+      )
+    : [];
 
   const nextStep = () => {
     if (currentStep < steps.length - 1) {
@@ -64,8 +114,40 @@ export default function AddMedication() {
   };
 
   const handleSave = () => {
-    console.log("Saving medication...");
-    navigate("/");
+    if (!selectedMed) return;
+    
+    triggerHaptic('success');
+    
+    // Add the medication to context
+    addMedication(
+      {
+        genericName: selectedMed.name,
+        altNames: selectedMed.alternates,
+        strengthValue: strength,
+        strengthUnit: strengthUnit,
+        form: form,
+        instructions: instructions || undefined,
+        isActive: true,
+        storedInCase: storeInCase,
+        compartment: storeInCase ? compartment : undefined,
+        refillQuantityDoses: parseInt(refillQuantity) || 30,
+        refillThresholdDoses: 2,
+        remainingDoses: parseInt(refillQuantity) || 30,
+      },
+      {
+        frequencyType: frequency,
+        timesOfDay: times,
+        onTimeWindowMinutes: parseInt(reminderWindow) || 30,
+        startDate: new Date().toISOString(),
+      }
+    );
+    
+    // Navigate back to onboarding or home
+    if (isFromOnboarding) {
+      navigate("/onboarding/patient/medication", { state: { fromAdd: true } });
+    } else {
+      navigate("/");
+    }
   };
 
   const renderStep = () => {
@@ -91,34 +173,53 @@ export default function AddMedication() {
                 className="input-tarva pl-12"
               />
             </div>
-            <StaggerContainer className="space-y-2">
-              {filteredMeds.map((med) => (
-                <StaggerItem key={med.id}>
-                  <motion.button
-                    onClick={() => {
-                      setSelectedMed(med);
-                      nextStep();
-                    }}
-                    className={cn(
-                      "card-tarva-interactive w-full text-left",
-                      selectedMed?.id === med.id && "ring-2 ring-primary"
-                    )}
-                    whileTap={{ scale: 0.98 }}
-                  >
-                    <div className="flex items-center gap-4">
-                      <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-accent">
-                        <Pill className="h-5 w-5 text-primary" />
+            {searchQuery.length === 0 ? (
+              <FadeIn>
+                <div className="flex flex-col items-center justify-center py-12 text-center">
+                  <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-accent mb-4">
+                    <Search className="h-8 w-8 text-muted-foreground" />
+                  </div>
+                  <p className="text-muted-foreground">Start typing to search medications</p>
+                  <p className="text-sm text-muted-foreground/70 mt-1">Search from our database of US generics</p>
+                </div>
+              </FadeIn>
+            ) : filteredMeds.length === 0 ? (
+              <FadeIn>
+                <div className="flex flex-col items-center justify-center py-12 text-center">
+                  <p className="text-muted-foreground">No medications found</p>
+                  <p className="text-sm text-muted-foreground/70 mt-1">Try a different search term</p>
+                </div>
+              </FadeIn>
+            ) : (
+              <StaggerContainer className="space-y-2">
+                {filteredMeds.map((med) => (
+                  <StaggerItem key={med.id}>
+                    <motion.button
+                      onClick={() => {
+                        setSelectedMed(med);
+                        nextStep();
+                      }}
+                      className={cn(
+                        "card-tarva-interactive w-full text-left",
+                        selectedMed?.id === med.id && "ring-2 ring-primary"
+                      )}
+                      whileTap={{ scale: 0.98 }}
+                    >
+                      <div className="flex items-center gap-4">
+                        <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-accent">
+                          <Pill className="h-5 w-5 text-primary" />
+                        </div>
+                        <div className="flex-1">
+                          <h4 className="font-semibold text-foreground">{med.name}</h4>
+                          <p className="text-caption">{med.alternates.join(", ")}</p>
+                        </div>
+                        <ChevronRight className="h-5 w-5 text-muted-foreground" />
                       </div>
-                      <div className="flex-1">
-                        <h4 className="font-semibold text-foreground">{med.name}</h4>
-                        <p className="text-caption">{med.alternates.join(", ")}</p>
-                      </div>
-                      <ChevronRight className="h-5 w-5 text-muted-foreground" />
-                    </div>
-                  </motion.button>
-                </StaggerItem>
-              ))}
-            </StaggerContainer>
+                    </motion.button>
+                  </StaggerItem>
+                ))}
+              </StaggerContainer>
+            )}
           </motion.div>
         );
 
@@ -149,12 +250,12 @@ export default function AddMedication() {
                 <div>
                   <label className="text-sm font-medium text-foreground">Form</label>
                   <div className="mt-2 flex gap-2">
-                    {["Tablet", "Capsule", "Liquid"].map((f) => (
+                    {(["tablet", "capsule", "liquid"] as const).map((f) => (
                       <motion.button
                         key={f}
                         onClick={() => setForm(f)}
                         className={cn(
-                          "rounded-xl px-4 py-2 text-sm font-medium transition-all",
+                          "rounded-xl px-4 py-2 text-sm font-medium transition-all capitalize",
                           form === f
                             ? "bg-gradient-primary text-primary-foreground"
                             : "bg-secondary text-secondary-foreground"
@@ -198,19 +299,19 @@ export default function AddMedication() {
                 <div>
                   <label className="text-sm font-medium text-foreground">Frequency</label>
                   <div className="mt-2 flex flex-wrap gap-2">
-                    {["Daily", "Weekly", "Custom", "As-needed"].map((f) => (
+                    {(["daily", "weekly", "custom", "as-needed"] as const).map((f) => (
                       <motion.button
                         key={f}
                         onClick={() => setFrequency(f)}
                         className={cn(
-                          "rounded-xl px-4 py-2 text-sm font-medium transition-all",
+                          "rounded-xl px-4 py-2 text-sm font-medium transition-all capitalize",
                           frequency === f
                             ? "bg-gradient-primary text-primary-foreground"
                             : "bg-secondary text-secondary-foreground"
                         )}
                         whileTap={{ scale: 0.95 }}
                       >
-                        {f}
+                        {f === 'as-needed' ? 'As-needed' : f}
                       </motion.button>
                     ))}
                   </div>

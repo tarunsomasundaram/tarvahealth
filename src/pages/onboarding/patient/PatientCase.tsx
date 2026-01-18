@@ -35,13 +35,13 @@ export default function PatientCase() {
 
   const handleContinue = () => {
     triggerHaptic('medium');
-    navigate("/onboarding/patient/medication");
+    navigate("/onboarding/patient/conditions");
   };
 
   const handleSkip = () => {
     triggerHaptic('light');
     setHasCasePaired(false);
-    navigate("/onboarding/patient/medication");
+    navigate("/onboarding/patient/conditions");
   };
 
   const handleTryAgain = () => {
