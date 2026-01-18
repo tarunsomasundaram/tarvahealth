@@ -853,9 +853,17 @@ export default function AddMedication() {
           animate={{ y: 0 }}
           transition={{ type: "spring", stiffness: 400, damping: 30, delay: 0.2 }}
         >
-          {currentStep > 0 && (
+          {currentStep > 0 ? (
             <motion.button 
               onClick={prevStep} 
+              className="btn-secondary flex-1"
+              whileTap={{ scale: 0.97 }}
+            >
+              Back
+            </motion.button>
+          ) : (
+            <motion.button 
+              onClick={() => navigate(-1)} 
               className="btn-secondary flex-1"
               whileTap={{ scale: 0.97 }}
             >

@@ -104,7 +104,7 @@ export default function Profile() {
           <StaggerContainer className="space-y-3">
             <StaggerItem>
               <motion.button
-                onClick={() => navigate("/my-medications")}
+                onClick={() => navigate("/medications")}
                 className="card-tarva-interactive w-full text-left"
                 whileTap={{ scale: 0.98 }}
               >

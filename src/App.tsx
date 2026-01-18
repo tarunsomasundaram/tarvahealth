@@ -22,6 +22,7 @@ import Caregivers from "./pages/Caregivers";
 import Settings from "./pages/Settings";
 import Notifications from "./pages/Notifications";
 import MyMedications from "./pages/MyMedications";
+import EditMedication from "./pages/EditMedication";
 import ReminderPreferences from "./pages/ReminderPreferences";
 import EditProfile from "./pages/EditProfile";
 import NotFound from "./pages/NotFound";
@@ -113,7 +114,8 @@ function AppRoutes() {
         <Route path="/caregivers" element={<Caregivers />} />
         <Route path="/settings" element={<Settings />} />
         <Route path="/notifications" element={<Notifications />} />
-        <Route path="/my-medications" element={<MyMedications />} />
+        <Route path="/medications" element={<MyMedications />} />
+        <Route path="/medications/:id/edit" element={<EditMedication />} />
         <Route path="/reminder-preferences" element={<ReminderPreferences />} />
         <Route path="/edit-profile" element={<EditProfile />} />
         <Route path="*" element={<NotFound />} />
