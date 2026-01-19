@@ -8,11 +8,12 @@ import { useOnboarding } from "@/contexts/OnboardingContext";
 import { useHealthProfile } from "@/contexts/HealthProfileContext";
 import { triggerHaptic } from "@/hooks/use-haptics";
 import { PinSetup } from "@/components/security/PinSetup";
+import { format } from "date-fns";
 import { 
   Box, Bell, Download, Link, Shield, 
   Bluetooth, Battery, Sliders, Volume2, 
   FileText, Calendar, Lock, Moon, Sun, Monitor,
-  ChevronRight, Fingerprint, Users, LogOut
+  ChevronRight, Fingerprint, Users, LogOut, Mail, CalendarDays
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
@@ -92,7 +93,7 @@ function SettingLink({ label, description, icon, onClick }: SettingLinkProps) {
 export default function Settings() {
   const navigate = useNavigate();
   const { theme, setTheme } = useTheme();
-  const { pinEnabled, faceIdEnabled, setFaceIdEnabled, notificationPreferences, resetOnboarding } = useOnboarding();
+  const { pinEnabled, faceIdEnabled, setFaceIdEnabled, notificationPreferences, resetOnboarding, userEmail, accountCreatedAt } = useOnboarding();
   const { shareProfileInForum, setShareProfileInForum } = useHealthProfile();
   const [batterySaver, setBatterySaver] = useState(false);
   const [showLogoutDialog, setShowLogoutDialog] = useState(false);
@@ -287,8 +288,40 @@ export default function Settings() {
             </section>
           </FadeIn>
 
-          {/* Log Out */}
+          {/* Account Info */}
           <FadeIn delay={0.4}>
+            <section className="card-tarva">
+              <h3 className="text-section text-foreground mb-2">Account</h3>
+              <div className="space-y-3">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-accent">
+                    <Mail className="h-5 w-5 text-primary" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm text-muted-foreground">Email</p>
+                    <p className="font-medium text-foreground">{userEmail || 'demo@tarvahealth.com'}</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-accent">
+                    <CalendarDays className="h-5 w-5 text-primary" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm text-muted-foreground">Member since</p>
+                    <p className="font-medium text-foreground">
+                      {accountCreatedAt 
+                        ? format(new Date(accountCreatedAt), 'MMMM d, yyyy')
+                        : format(new Date(), 'MMMM d, yyyy')
+                      }
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </section>
+          </FadeIn>
+
+          {/* Log Out */}
+          <FadeIn delay={0.45}>
             <motion.button
               onClick={() => setShowLogoutDialog(true)}
               className="w-full flex items-center justify-center gap-2 p-4 rounded-2xl bg-destructive/10 text-destructive font-medium"
