@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { ArrowLeft, User, Users, Check } from "lucide-react";
 import { triggerHaptic } from "@/hooks/use-haptics";
 import { useOnboarding, UserRole } from "@/contexts/OnboardingContext";
+import { InfoButton } from "@/components/onboarding/InfoButton";
 
 export default function RoleSelect() {
   const navigate = useNavigate();
@@ -53,7 +54,10 @@ export default function RoleSelect() {
         >
           <ArrowLeft className="h-5 w-5 text-foreground" />
         </motion.button>
-        <div />
+        <InfoButton 
+          title="Choose Your Role"
+          description="Select how you'll be using TARVA. Patients track their own medications, doses, and case status. Caregivers monitor linked patients and receive alerts about their medication adherence. You can change this later in Settings."
+        />
       </div>
 
       <div className="flex-1 flex flex-col px-6 pt-8">

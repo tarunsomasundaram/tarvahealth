@@ -6,6 +6,7 @@ import { triggerHaptic } from "@/hooks/use-haptics";
 import { useHealthProfile } from "@/contexts/HealthProfileContext";
 import { conditions, conditionCategories } from "@/data/conditions";
 import { cn } from "@/lib/utils";
+import { InfoButton } from "@/components/onboarding/InfoButton";
 
 // Main conditions to highlight
 const mainConditions = [
@@ -86,7 +87,10 @@ export default function PatientConditions() {
           ))}
         </div>
         
-        <div className="w-10" />
+        <InfoButton 
+          title="Your Health Conditions"
+          description="Select any medical conditions you have. This helps personalize your Community experience by connecting you with relevant support groups. Your conditions are included in shareable health reports for clinicians. You can add custom conditions if yours isn't listed."
+        />
       </div>
 
       <div className="flex-1 overflow-y-auto px-6 pt-6 pb-32">

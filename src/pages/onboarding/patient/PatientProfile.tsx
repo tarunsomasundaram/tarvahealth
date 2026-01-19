@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 import { triggerHaptic } from "@/hooks/use-haptics";
 import { useOnboarding } from "@/contexts/OnboardingContext";
+import { InfoButton } from "@/components/onboarding/InfoButton";
 
 export default function PatientProfile() {
   const navigate = useNavigate();
@@ -73,7 +74,10 @@ export default function PatientProfile() {
           ))}
         </div>
         
-        <div className="w-10" />
+        <InfoButton 
+          title="Your Profile"
+          description="Enter your basic information to personalize your TARVA experience. Your name is used for greetings and reports. Date of birth and allergies help create clinic-friendly exports. All fields except name are optional."
+        />
       </div>
 
       <div className="flex-1 flex flex-col px-6 pt-8">

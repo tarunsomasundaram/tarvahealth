@@ -6,6 +6,7 @@ import { triggerHaptic } from "@/hooks/use-haptics";
 import { useOnboarding, CaregiverPermissions } from "@/contexts/OnboardingContext";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { InfoButton } from "@/components/onboarding/InfoButton";
 
 const defaultPermissions: CaregiverPermissions = {
   viewCalendar: false,
@@ -118,7 +119,10 @@ export default function PatientCaregiver() {
             ))}
           </div>
           
-          <div className="w-10" />
+          <InfoButton 
+            title="Caregiver Sharing"
+            description="Invite a trusted caregiver (family member, partner, friend) to monitor your medication adherence. You control exactly what they can see and which alerts they receive. Caregivers get a view-only dashboard. You can manage or revoke access anytime."
+          />
         </div>
 
         <div className="flex-1 flex flex-col items-center justify-center px-6">

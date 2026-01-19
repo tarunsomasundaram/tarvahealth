@@ -5,6 +5,7 @@ import { ArrowLeft, Bell, Clock, Package, Battery, Users, Check } from "lucide-r
 import { triggerHaptic } from "@/hooks/use-haptics";
 import { useOnboarding } from "@/contexts/OnboardingContext";
 import { cn } from "@/lib/utils";
+import { InfoButton } from "@/components/onboarding/InfoButton";
 
 interface NotificationOption {
   id: keyof typeof defaultPrefs;
@@ -82,7 +83,10 @@ export default function PatientNotifications() {
           ))}
         </div>
         
-        <div className="w-10" />
+        <InfoButton 
+          title="Notification Preferences"
+          description="Choose which alerts you want to receive. Dose reminders notify you when it's time to take medication. Late alerts trigger if you miss the on-time window. Refill alerts warn when you're running low. You can adjust these anytime in Settings."
+        />
       </div>
 
       {/* Scrollable content */}
