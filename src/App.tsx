@@ -58,33 +58,35 @@ function AppRoutes() {
 
   if (!hasCompletedOnboarding) {
     return (
-      <Routes>
-        <Route path="/" element={<Splash />} />
-        <Route path="/welcome" element={<Welcome />} />
-        <Route path="/auth" element={<Auth />} />
-        <Route path="/role-select" element={<RoleSelect />} />
-        <Route path="/onboarding/patient/profile" element={<PatientProfile />} />
-        <Route path="/onboarding/patient/passcode" element={<PatientPasscode />} />
-        <Route path="/onboarding/patient/notifications" element={<PatientNotifications />} />
-        <Route path="/onboarding/patient/case" element={<PatientCase />} />
-        <Route path="/onboarding/patient/conditions" element={<PatientConditions />} />
-        <Route path="/onboarding/patient/medication" element={<PatientMedication />} />
-        <Route path="/add" element={<AddMedication />} />
-        <Route path="/onboarding/patient/caregiver" element={<PatientCaregiver />} />
-        <Route path="/onboarding/caregiver/profile" element={<CaregiverOnboardingProfile />} />
-        <Route path="/onboarding/caregiver/passcode" element={<CaregiverPasscode />} />
-        <Route path="/onboarding/caregiver/notifications" element={<CaregiverNotifications />} />
-        <Route path="/onboarding/caregiver/link" element={<CaregiverLink />} />
-        <Route path="/onboarding/complete" element={<OnboardingComplete />} />
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
+      <div className="app-gradient-bg">
+        <Routes>
+          <Route path="/" element={<Splash />} />
+          <Route path="/welcome" element={<Welcome />} />
+          <Route path="/auth" element={<Auth />} />
+          <Route path="/role-select" element={<RoleSelect />} />
+          <Route path="/onboarding/patient/profile" element={<PatientProfile />} />
+          <Route path="/onboarding/patient/passcode" element={<PatientPasscode />} />
+          <Route path="/onboarding/patient/notifications" element={<PatientNotifications />} />
+          <Route path="/onboarding/patient/case" element={<PatientCase />} />
+          <Route path="/onboarding/patient/conditions" element={<PatientConditions />} />
+          <Route path="/onboarding/patient/medication" element={<PatientMedication />} />
+          <Route path="/add" element={<AddMedication />} />
+          <Route path="/onboarding/patient/caregiver" element={<PatientCaregiver />} />
+          <Route path="/onboarding/caregiver/profile" element={<CaregiverOnboardingProfile />} />
+          <Route path="/onboarding/caregiver/passcode" element={<CaregiverPasscode />} />
+          <Route path="/onboarding/caregiver/notifications" element={<CaregiverNotifications />} />
+          <Route path="/onboarding/caregiver/link" element={<CaregiverLink />} />
+          <Route path="/onboarding/complete" element={<OnboardingComplete />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </div>
     );
   }
 
   // Caregiver dashboard routes
   if (userRole === 'caregiver') {
     return (
-      <>
+      <div className="app-gradient-bg">
         <Routes>
           <Route path="/" element={<Navigate to="/caregiver" replace />} />
           <Route path="/caregiver" element={<CaregiverHome />} />
@@ -96,7 +98,7 @@ function AppRoutes() {
           <Route path="*" element={<NotFound />} />
         </Routes>
         <CaregiverTabBar />
-      </>
+      </div>
     );
   }
 
@@ -135,7 +137,7 @@ const App = () => (
               <Toaster />
               <Sonner />
               <BrowserRouter>
-                <div className="mx-auto max-w-md min-h-screen bg-background">
+                <div className="mx-auto max-w-md min-h-screen app-gradient-bg">
                   <AppRoutes />
                 </div>
               </BrowserRouter>
