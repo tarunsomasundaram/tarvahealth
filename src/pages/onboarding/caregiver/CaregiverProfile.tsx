@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 import { triggerHaptic } from "@/hooks/use-haptics";
 import { useOnboarding } from "@/contexts/OnboardingContext";
+import { InfoButton } from "@/components/onboarding/InfoButton";
 
 export default function CaregiverProfile() {
   const navigate = useNavigate();
@@ -71,7 +72,10 @@ export default function CaregiverProfile() {
           ))}
         </div>
         
-        <div className="w-10" />
+        <InfoButton 
+          title="Caregiver Profile"
+          description="Set up your caregiver profile. Your name helps patients identify you, and the relationship field (optional) clarifies your role (parent, spouse, friend, etc.). After setup, you'll be able to link to patients who invite you."
+        />
       </div>
 
       <div className="flex-1 flex flex-col px-6 pt-8">

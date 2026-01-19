@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { ArrowLeft, Pill, Plus, Check } from "lucide-react";
 import { triggerHaptic } from "@/hooks/use-haptics";
 import { useMedication } from "@/contexts/MedicationContext";
+import { InfoButton } from "@/components/onboarding/InfoButton";
 
 export default function PatientMedication() {
   const navigate = useNavigate();
@@ -59,7 +60,10 @@ export default function PatientMedication() {
           ))}
         </div>
         
-        <div className="w-10" />
+        <InfoButton 
+          title="Your Medications"
+          description="Add the medications you take regularly. Search our database of US generics and brand names, or add custom entries. Each medication includes dosage, schedule, and optional case storage. You can add, edit, or remove medications anytime from My Medications."
+        />
       </div>
 
       <div className="flex-1 flex flex-col items-center justify-center px-6">

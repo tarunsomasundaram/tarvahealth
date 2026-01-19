@@ -575,7 +575,7 @@ export default function AddMedication() {
                 <div>
                   <label className="text-sm font-medium text-foreground">Frequency</label>
                   <div className="mt-2 flex flex-wrap gap-2">
-                    {(["daily", "weekly", "custom", "as-needed"] as const).map((f) => (
+                    {(["daily", "weekly", "as-needed"] as const).map((f) => (
                       <motion.button
                         key={f}
                         onClick={() => setFrequency(f)}

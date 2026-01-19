@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Bluetooth, Box, Check, Loader2, X } from "lucide-react";
 import { triggerHaptic } from "@/hooks/use-haptics";
 import { useOnboarding } from "@/contexts/OnboardingContext";
+import { InfoButton } from "@/components/onboarding/InfoButton";
 
 type PairingState = "prompt" | "scanning" | "found" | "success" | "failed";
 
@@ -77,7 +78,10 @@ export default function PatientCase() {
           ))}
         </div>
         
-        <div className="w-10" />
+        <InfoButton 
+          title="TARVA Case Pairing"
+          description="Connect your TARVA smart pill case via Bluetooth to enable automatic dose logging when you open the case. The case also tracks battery level, syncs in real-time, and helps manage your medication inventory. You can pair later from the Case tab."
+        />
       </div>
 
       <AnimatePresence mode="wait">

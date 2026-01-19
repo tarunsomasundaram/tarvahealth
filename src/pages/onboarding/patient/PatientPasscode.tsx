@@ -5,6 +5,7 @@ import { ArrowLeft, Lock, Fingerprint, Check } from "lucide-react";
 import { triggerHaptic } from "@/hooks/use-haptics";
 import { useOnboarding } from "@/contexts/OnboardingContext";
 import { cn } from "@/lib/utils";
+import { InfoButton } from "@/components/onboarding/InfoButton";
 
 export default function PatientPasscode() {
   const navigate = useNavigate();
@@ -106,7 +107,10 @@ export default function PatientPasscode() {
             ))}
           </div>
           
-          <div className="w-10" />
+          <InfoButton 
+            title="Secure Your App"
+            description="Add an optional 4-digit passcode to protect your health data. Face ID or Touch ID provides quick, secure access without entering the PIN each time. You can enable or disable this security feature later in Settings."
+          />
         </div>
 
         <div className="flex-1 flex flex-col items-center justify-center px-6">
