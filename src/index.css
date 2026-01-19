@@ -6,8 +6,8 @@
 
 @layer base {
   :root {
-    /* TARVA Design System - Light Mode */
-    --background: 0 0% 100%;
+    /* TARVA Design System - Light Mode (softer, less bright) */
+    --background: 240 10% 96%;
     --foreground: 240 10% 10%;
 
     --card: 0 0% 100%;
@@ -24,13 +24,13 @@
     --accent-pink: 320 70% 60%;
     --accent-pink-foreground: 0 0% 100%;
 
-    --secondary: 240 5% 96%;
+    --secondary: 240 6% 90%;
     --secondary-foreground: 240 10% 30%;
 
-    --muted: 240 5% 96%;
-    --muted-foreground: 240 5% 50%;
+    --muted: 240 6% 92%;
+    --muted-foreground: 240 5% 45%;
 
-    --accent: 258 30% 96%;
+    --accent: 258 30% 94%;
     --accent-foreground: 258 75% 45%;
 
     --destructive: 0 70% 55%;
@@ -42,18 +42,18 @@
     --warning: 38 95% 55%;
     --warning-foreground: 0 0% 10%;
 
-    --border: 240 5% 90%;
-    --input: 240 5% 90%;
+    --border: 240 8% 85%;
+    --input: 240 6% 90%;
     --ring: 258 75% 58%;
 
     --radius: 1rem;
 
-    /* TARVA Custom Variables */
+    /* TARVA Custom Variables - Enhanced shadows for light mode */
     --gradient-primary: linear-gradient(135deg, hsl(258 75% 58%) 0%, hsl(320 70% 60%) 100%);
     --gradient-primary-hover: linear-gradient(135deg, hsl(258 75% 52%) 0%, hsl(320 70% 54%) 100%);
-    --shadow-card: 0 2px 12px -2px hsl(258 30% 20% / 0.08);
-    --shadow-card-hover: 0 8px 24px -4px hsl(258 30% 20% / 0.12);
-    --shadow-button: 0 4px 14px -2px hsl(258 75% 45% / 0.35);
+    --shadow-card: 0 2px 16px -2px hsl(240 20% 20% / 0.12), 0 0 0 1px hsl(240 10% 80% / 0.5);
+    --shadow-card-hover: 0 8px 28px -4px hsl(240 20% 20% / 0.18), 0 0 0 1px hsl(240 10% 75% / 0.6);
+    --shadow-button: 0 4px 16px -2px hsl(258 75% 45% / 0.4), 0 0 0 1px hsl(258 50% 70% / 0.3);
 
     --sidebar-background: 0 0% 98%;
     --sidebar-foreground: 240 5.3% 26.1%;
