@@ -100,6 +100,8 @@ interface OnboardingState {
   notifications: Notification[];
   inviteCode: string | null;
   inviteCodeExpiry: string | null;
+  userEmail: string | null;
+  accountCreatedAt: string | null;
 }
 
 interface OnboardingContextType extends OnboardingState {
@@ -125,6 +127,7 @@ interface OnboardingContextType extends OnboardingState {
   markNotificationRead: (id: string) => void;
   generateInviteCode: () => string;
   clearInviteCode: () => void;
+  setUserEmail: (email: string) => void;
   resetOnboarding: () => void;
 }
 
@@ -214,6 +217,8 @@ const defaultState: OnboardingState = {
   notifications: generateMockNotifications(),
   inviteCode: null,
   inviteCodeExpiry: null,
+  userEmail: null,
+  accountCreatedAt: null,
 };
 
 const OnboardingContext = createContext<OnboardingContextType | undefined>(undefined);
@@ -350,6 +355,14 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
     setState(prev => ({ ...prev, inviteCode: null, inviteCodeExpiry: null }));
   };
 
+  const setUserEmail = (email: string) => {
+    setState(prev => ({ 
+      ...prev, 
+      userEmail: email,
+      accountCreatedAt: prev.accountCreatedAt || new Date().toISOString()
+    }));
+  };
+
   const resetOnboarding = () => {
     setState({ ...defaultState, notifications: generateMockNotifications() });
     localStorage.removeItem('tarva-onboarding');
@@ -381,6 +394,7 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
         markNotificationRead,
         generateInviteCode,
         clearInviteCode,
+        setUserEmail,
         resetOnboarding,
       }}
     >
