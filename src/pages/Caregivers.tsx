@@ -3,43 +3,30 @@ import { motion } from "framer-motion";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { AnimatedPage } from "@/components/layout/AnimatedPage";
 import { FadeIn, StaggerContainer, StaggerItem } from "@/components/animations";
-import { Plus, User, Calendar, AlertTriangle, RefreshCw, Lock, ChevronRight } from "lucide-react";
+import { Plus, User, Calendar, AlertTriangle, RefreshCw, Lock, ChevronRight, BarChart3, Battery } from "lucide-react";
 import { cn } from "@/lib/utils";
-
-interface Caregiver {
-  id: string;
-  name: string;
-  relationship: string;
-  accessLevel: "full" | "limited";
-  permissions: {
-    calendar: boolean;
-    missedAlerts: boolean;
-    refillAlerts: boolean;
-  };
-}
-
-const mockCaregivers: Caregiver[] = [
-  {
-    id: "1",
-    name: "Michael Johnson",
-    relationship: "Spouse",
-    accessLevel: "full",
-    permissions: { calendar: true, missedAlerts: true, refillAlerts: true },
-  },
-  {
-    id: "2",
-    name: "Dr. Emily Chen",
-    relationship: "Primary Care",
-    accessLevel: "limited",
-    permissions: { calendar: true, missedAlerts: false, refillAlerts: false },
-  },
-];
+import { useCaregiver, Caregiver } from "@/contexts/CaregiverContext";
+import { EditCaregiverSheet } from "@/components/caregiver/EditCaregiverSheet";
+import { useHaptics } from "@/hooks/use-haptics";
 
 export default function Caregivers() {
-  const [caregivers] = useState<Caregiver[]>(mockCaregivers);
+  const { caregivers } = useCaregiver();
+  const { trigger } = useHaptics();
+  const [selectedCaregiver, setSelectedCaregiver] = useState<Caregiver | null>(null);
+  const [editSheetOpen, setEditSheetOpen] = useState(false);
 
   const handleAddCaregiver = () => {
     console.log("Add caregiver");
+  };
+
+  const handleCaregiverClick = (caregiver: Caregiver) => {
+    trigger('light');
+    setSelectedCaregiver(caregiver);
+    setEditSheetOpen(true);
+  };
+
+  const getEnabledPermissionsCount = (caregiver: Caregiver) => {
+    return Object.values(caregiver.permissions).filter(Boolean).length;
   };
 
   return (
@@ -64,69 +51,100 @@ export default function Caregivers() {
               <h2 className="text-section text-foreground mb-3">Active Caregivers</h2>
             </FadeIn>
             <StaggerContainer className="space-y-3">
-              {caregivers.map((caregiver) => (
-                <StaggerItem key={caregiver.id}>
-                  <motion.div 
-                    className="card-tarva"
-                    whileTap={{ scale: 0.98 }}
-                  >
-                    <div className="flex items-start gap-4">
-                      <motion.div 
-                        className="flex h-12 w-12 items-center justify-center rounded-full bg-accent"
-                        whileHover={{ scale: 1.05 }}
-                      >
-                        <User className="h-6 w-6 text-primary" />
-                      </motion.div>
-                      <div className="flex-1">
-                        <div className="flex items-start justify-between">
-                          <div>
-                            <h4 className="font-semibold text-foreground">{caregiver.name}</h4>
-                            <p className="text-caption">{caregiver.relationship}</p>
+              {caregivers.length === 0 ? (
+                <FadeIn delay={0.2}>
+                  <div className="card-tarva text-center py-8">
+                    <User className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
+                    <p className="text-muted-foreground">No caregivers added yet</p>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      Add a caregiver to share your medication data
+                    </p>
+                  </div>
+                </FadeIn>
+              ) : (
+                caregivers.map((caregiver) => (
+                  <StaggerItem key={caregiver.id}>
+                    <motion.div 
+                      className="card-tarva cursor-pointer"
+                      whileTap={{ scale: 0.98 }}
+                      onClick={() => handleCaregiverClick(caregiver)}
+                    >
+                      <div className="flex items-start gap-4">
+                        <motion.div 
+                          className="flex h-12 w-12 items-center justify-center rounded-full bg-accent"
+                          whileHover={{ scale: 1.05 }}
+                        >
+                          <User className="h-6 w-6 text-primary" />
+                        </motion.div>
+                        <div className="flex-1">
+                          <div className="flex items-start justify-between">
+                            <div>
+                              <h4 className="font-semibold text-foreground">{caregiver.name}</h4>
+                              <p className="text-caption">{caregiver.relationship}</p>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <span className={cn(
+                                "badge-status",
+                                caregiver.accessLevel === "full" ? "bg-success/15 text-success" : "bg-accent text-accent-foreground"
+                              )}>
+                                {caregiver.accessLevel === "full" ? "Full Access" : "Limited"}
+                              </span>
+                              <ChevronRight className="h-5 w-5 text-muted-foreground" />
+                            </div>
                           </div>
-                          <span className={cn(
-                            "badge-status",
-                            caregiver.accessLevel === "full" ? "bg-success/15 text-success" : "bg-accent text-accent-foreground"
-                          )}>
-                            {caregiver.accessLevel === "full" ? "Full Access" : "Limited"}
-                          </span>
-                        </div>
-                        <div className="mt-3 flex flex-wrap gap-2">
-                          <motion.span 
-                            className={cn(
-                              "badge-pill text-xs",
-                              caregiver.permissions.calendar ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"
-                            )}
-                            whileHover={{ scale: 1.05 }}
-                          >
-                            <Calendar className="h-3 w-3" />
-                            Calendar
-                          </motion.span>
-                          <motion.span 
-                            className={cn(
-                              "badge-pill text-xs",
-                              caregiver.permissions.missedAlerts ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"
-                            )}
-                            whileHover={{ scale: 1.05 }}
-                          >
-                            <AlertTriangle className="h-3 w-3" />
-                            Missed Alerts
-                          </motion.span>
-                          <motion.span 
-                            className={cn(
-                              "badge-pill text-xs",
-                              caregiver.permissions.refillAlerts ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"
-                            )}
-                            whileHover={{ scale: 1.05 }}
-                          >
-                            <RefreshCw className="h-3 w-3" />
-                            Refill Alerts
-                          </motion.span>
+                          <div className="mt-3 flex flex-wrap gap-2">
+                            <motion.span 
+                              className={cn(
+                                "badge-pill text-xs",
+                                caregiver.permissions.calendar ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"
+                              )}
+                            >
+                              <Calendar className="h-3 w-3" />
+                              Calendar
+                            </motion.span>
+                            <motion.span 
+                              className={cn(
+                                "badge-pill text-xs",
+                                caregiver.permissions.stats ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"
+                              )}
+                            >
+                              <BarChart3 className="h-3 w-3" />
+                              Stats
+                            </motion.span>
+                            <motion.span 
+                              className={cn(
+                                "badge-pill text-xs",
+                                caregiver.permissions.missedAlerts ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"
+                              )}
+                            >
+                              <AlertTriangle className="h-3 w-3" />
+                              Missed
+                            </motion.span>
+                            <motion.span 
+                              className={cn(
+                                "badge-pill text-xs",
+                                caregiver.permissions.refillAlerts ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"
+                              )}
+                            >
+                              <RefreshCw className="h-3 w-3" />
+                              Refills
+                            </motion.span>
+                            <motion.span 
+                              className={cn(
+                                "badge-pill text-xs",
+                                caregiver.permissions.lowBattery ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"
+                              )}
+                            >
+                              <Battery className="h-3 w-3" />
+                              Battery
+                            </motion.span>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  </motion.div>
-                </StaggerItem>
-              ))}
+                    </motion.div>
+                  </StaggerItem>
+                ))
+              )}
             </StaggerContainer>
           </section>
 
@@ -152,6 +170,12 @@ export default function Caregivers() {
           </FadeIn>
         </div>
       </div>
+
+      <EditCaregiverSheet
+        caregiver={selectedCaregiver}
+        open={editSheetOpen}
+        onOpenChange={setEditSheetOpen}
+      />
     </AnimatedPage>
   );
 }

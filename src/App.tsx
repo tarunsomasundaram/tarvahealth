@@ -7,6 +7,7 @@ import { ThemeProvider } from "@/hooks/use-theme";
 import { OnboardingProvider, useOnboarding } from "@/contexts/OnboardingContext";
 import { MedicationProvider } from "@/contexts/MedicationContext";
 import { HealthProfileProvider } from "@/contexts/HealthProfileContext";
+import { CaregiverProvider } from "@/contexts/CaregiverContext";
 import { FloatingBottomNav } from "@/components/layout/FloatingBottomNav";
 import { CaregiverTabBar } from "@/components/layout/CaregiverTabBar";
 
@@ -133,15 +134,17 @@ const App = () => (
       <OnboardingProvider>
         <HealthProfileProvider>
           <MedicationProvider>
-            <TooltipProvider>
-              <Toaster />
-              <Sonner />
-              <BrowserRouter>
-                <div className="mx-auto max-w-md min-h-screen app-gradient-bg">
-                  <AppRoutes />
-                </div>
-              </BrowserRouter>
-            </TooltipProvider>
+            <CaregiverProvider>
+              <TooltipProvider>
+                <Toaster />
+                <Sonner />
+                <BrowserRouter>
+                  <div className="mx-auto max-w-md min-h-screen app-gradient-bg">
+                    <AppRoutes />
+                  </div>
+                </BrowserRouter>
+              </TooltipProvider>
+            </CaregiverProvider>
           </MedicationProvider>
         </HealthProfileProvider>
       </OnboardingProvider>
