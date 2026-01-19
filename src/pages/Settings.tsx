@@ -12,7 +12,7 @@ import {
   Box, Bell, Download, Link, Shield, 
   Bluetooth, Battery, Sliders, Volume2, 
   FileText, Calendar, Lock, Moon, Sun, Monitor,
-  ChevronRight, Fingerprint, Users
+  ChevronRight, Fingerprint, Users, LogOut
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
@@ -92,9 +92,10 @@ function SettingLink({ label, description, icon, onClick }: SettingLinkProps) {
 export default function Settings() {
   const navigate = useNavigate();
   const { theme, setTheme } = useTheme();
-  const { pinEnabled, faceIdEnabled, setFaceIdEnabled, notificationPreferences } = useOnboarding();
+  const { pinEnabled, faceIdEnabled, setFaceIdEnabled, notificationPreferences, resetOnboarding } = useOnboarding();
   const { shareProfileInForum, setShareProfileInForum } = useHealthProfile();
   const [batterySaver, setBatterySaver] = useState(false);
+  const [showLogoutDialog, setShowLogoutDialog] = useState(false);
   
   const [pinModalOpen, setPinModalOpen] = useState(false);
   const [pinMode, setPinMode] = useState<"setup" | "change" | "disable">("setup");
@@ -285,6 +286,18 @@ export default function Settings() {
               </div>
             </section>
           </FadeIn>
+
+          {/* Log Out */}
+          <FadeIn delay={0.4}>
+            <motion.button
+              onClick={() => setShowLogoutDialog(true)}
+              className="w-full flex items-center justify-center gap-2 p-4 rounded-2xl bg-destructive/10 text-destructive font-medium"
+              whileTap={{ scale: 0.97 }}
+            >
+              <LogOut className="h-5 w-5" />
+              Log Out
+            </motion.button>
+          </FadeIn>
         </div>
       </div>
 
@@ -293,6 +306,42 @@ export default function Settings() {
         onClose={() => setPinModalOpen(false)}
         mode={pinMode}
       />
+
+      {/* Logout Confirmation Dialog */}
+      {showLogoutDialog && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <motion.div 
+            className="w-full max-w-sm rounded-2xl bg-card p-6 shadow-xl"
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+          >
+            <h3 className="text-lg font-semibold text-foreground">Log Out?</h3>
+            <p className="mt-2 text-sm text-muted-foreground">
+              Are you sure you want to log out? You'll need to sign in again to access your account.
+            </p>
+            <div className="mt-6 flex gap-3">
+              <motion.button
+                onClick={() => setShowLogoutDialog(false)}
+                className="flex-1 rounded-xl bg-secondary py-3 font-medium text-secondary-foreground"
+                whileTap={{ scale: 0.97 }}
+              >
+                Cancel
+              </motion.button>
+              <motion.button
+                onClick={() => {
+                  triggerHaptic('medium');
+                  resetOnboarding();
+                  navigate('/auth');
+                }}
+                className="flex-1 rounded-xl bg-destructive py-3 font-medium text-destructive-foreground"
+                whileTap={{ scale: 0.97 }}
+              >
+                Log Out
+              </motion.button>
+            </div>
+          </motion.div>
+        </div>
+      )}
     </AnimatedPage>
   );
 }
