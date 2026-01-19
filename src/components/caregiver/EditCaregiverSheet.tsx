@@ -17,7 +17,8 @@ import {
   Battery,
   Trash2,
   Mail,
-  Clock
+  Clock,
+  Check
 } from "lucide-react";
 import { Caregiver, CaregiverPermissions, useCaregiver } from "@/contexts/CaregiverContext";
 import { useToast } from "@/hooks/use-toast";
@@ -74,6 +75,12 @@ const permissionItems: {
     label: "Low Battery Alerts", 
     description: "Get notified when case battery is low",
     icon: Battery 
+  },
+  { 
+    key: "doseTaken", 
+    label: "Dose Taken Notifications", 
+    description: "Get notified when doses are taken",
+    icon: Check 
   },
 ];
 

@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { AnimatedPage } from "@/components/layout/AnimatedPage";
 import { FadeIn, StaggerContainer, StaggerItem } from "@/components/animations";
-import { Plus, User, Calendar, AlertTriangle, RefreshCw, Lock, ChevronRight, BarChart3, Battery } from "lucide-react";
+import { Plus, User, Calendar, AlertTriangle, RefreshCw, Lock, ChevronRight, BarChart3, Battery, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useCaregiver, Caregiver } from "@/contexts/CaregiverContext";
 import { EditCaregiverSheet } from "@/components/caregiver/EditCaregiverSheet";
@@ -137,6 +137,15 @@ export default function Caregivers() {
                             >
                               <Battery className="h-3 w-3" />
                               Battery
+                            </motion.span>
+                            <motion.span 
+                              className={cn(
+                                "badge-pill text-xs",
+                                caregiver.permissions.doseTaken ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"
+                              )}
+                            >
+                              <Check className="h-3 w-3" />
+                              Taken
                             </motion.span>
                           </div>
                         </div>
