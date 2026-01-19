@@ -11,7 +11,7 @@ export function ProgressCard({ taken, total }: ProgressCardProps) {
   const percentage = total > 0 ? Math.round((taken / total) * 100) : 0;
 
   return (
-    <div className="card-hero animate-slide-up">
+    <div className="card-hero glow-primary animate-slide-up">
       <div className="flex items-start justify-between">
         <div>
           <p className="text-sm font-medium text-white/80">Today's Progress</p>
