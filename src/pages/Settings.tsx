@@ -6,6 +6,7 @@ import { FadeIn, StaggerItem } from "@/components/animations";
 import { useTheme } from "@/hooks/use-theme";
 import { useOnboarding } from "@/contexts/OnboardingContext";
 import { useHealthProfile } from "@/contexts/HealthProfileContext";
+import { useAuth } from "@/hooks/use-auth";
 import { triggerHaptic } from "@/hooks/use-haptics";
 import { PinSetup } from "@/components/security/PinSetup";
 import { format } from "date-fns";
@@ -95,6 +96,7 @@ export default function Settings() {
   const { theme, setTheme } = useTheme();
   const { pinEnabled, faceIdEnabled, setFaceIdEnabled, notificationPreferences, resetOnboarding, userEmail, accountCreatedAt } = useOnboarding();
   const { shareProfileInForum, setShareProfileInForum } = useHealthProfile();
+  const { signOut, user } = useAuth();
   const [batterySaver, setBatterySaver] = useState(false);
   const [showLogoutDialog, setShowLogoutDialog] = useState(false);
   
@@ -299,7 +301,7 @@ export default function Settings() {
                   </div>
                   <div className="flex-1">
                     <p className="text-sm text-muted-foreground">Email</p>
-                    <p className="font-medium text-foreground">{userEmail || 'demo@tarvahealth.com'}</p>
+                    <p className="font-medium text-foreground">{user?.email || userEmail || 'demo@tarvahealth.com'}</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
@@ -361,8 +363,9 @@ export default function Settings() {
                 Cancel
               </motion.button>
               <motion.button
-                onClick={() => {
+                onClick={async () => {
                   triggerHaptic('medium');
+                  await signOut();
                   resetOnboarding();
                   navigate('/auth');
                 }}

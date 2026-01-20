@@ -1,14 +1,19 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { ArrowLeft, Mail, Eye, EyeOff, Check } from "lucide-react";
+import { ArrowLeft, Mail, Eye, EyeOff, Check, Loader2 } from "lucide-react";
 import { triggerHaptic } from "@/hooks/use-haptics";
+import { useAuth } from "@/hooks/use-auth";
+import { useOnboarding } from "@/contexts/OnboardingContext";
 
 type AuthMode = "landing" | "signup" | "signin" | "forgot";
 
 export default function Auth() {
   const navigate = useNavigate();
   const location = useLocation();
+  const { signUp, signIn, resetPassword } = useAuth();
+  const { setUserEmail } = useOnboarding();
+  
   const initialMode = (location.state as { mode?: string })?.mode === "signin" ? "signin" : "landing";
   
   const [mode, setMode] = useState<AuthMode>(initialMode);
@@ -18,6 +23,7 @@ export default function Auth() {
   const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [error, setError] = useState("");
   const [resetSent, setResetSent] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleBack = () => {
     triggerHaptic('light');
@@ -48,7 +54,29 @@ export default function Auth() {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
   };
 
-  const handleSubmit = () => {
+  const getErrorMessage = (error: Error): string => {
+    const message = error.message.toLowerCase();
+    
+    if (message.includes('user already registered')) {
+      return 'This email is already registered. Try signing in instead.';
+    }
+    if (message.includes('invalid login credentials')) {
+      return 'Invalid email or password. Please try again.';
+    }
+    if (message.includes('email not confirmed')) {
+      return 'Please check your email and confirm your account.';
+    }
+    if (message.includes('too many requests')) {
+      return 'Too many attempts. Please wait a moment and try again.';
+    }
+    if (message.includes('password')) {
+      return 'Password must be at least 6 characters.';
+    }
+    
+    return error.message || 'An error occurred. Please try again.';
+  };
+
+  const handleSubmit = async () => {
     triggerHaptic('medium');
     setError("");
 
@@ -58,12 +86,21 @@ export default function Auth() {
     }
 
     if (mode === "forgot") {
+      setIsLoading(true);
+      const { error } = await resetPassword(email);
+      setIsLoading(false);
+      
+      if (error) {
+        setError(getErrorMessage(error));
+        return;
+      }
+      
       setResetSent(true);
       return;
     }
 
-    if (password.length < 8) {
-      setError("Use at least 8 characters.");
+    if (password.length < 6) {
+      setError("Password must be at least 6 characters.");
       return;
     }
 
@@ -72,8 +109,37 @@ export default function Auth() {
       return;
     }
 
-    // Success - navigate to role selection
-    navigate("/role-select");
+    setIsLoading(true);
+
+    if (mode === "signup") {
+      const { error } = await signUp(email, password);
+      setIsLoading(false);
+      
+      if (error) {
+        setError(getErrorMessage(error));
+        return;
+      }
+      
+      // Save email to context
+      setUserEmail(email);
+      
+      // Navigate to role selection on successful signup
+      navigate("/role-select");
+    } else if (mode === "signin") {
+      const { error } = await signIn(email, password);
+      setIsLoading(false);
+      
+      if (error) {
+        setError(getErrorMessage(error));
+        return;
+      }
+      
+      // Save email to context
+      setUserEmail(email);
+      
+      // Navigate to role selection (or home if onboarding complete)
+      navigate("/role-select");
+    }
   };
 
   const renderLanding = () => (
@@ -94,8 +160,8 @@ export default function Auth() {
 
       <div className="px-6 pb-10 pt-4 space-y-3">
         <motion.button
-          className="flex w-full items-center justify-center gap-3 rounded-xl bg-foreground py-4 text-background font-semibold"
-          whileTap={{ scale: 0.98 }}
+          className="flex w-full items-center justify-center gap-3 rounded-xl bg-foreground py-4 text-background font-semibold opacity-50 cursor-not-allowed"
+          disabled
         >
           <svg className="h-5 w-5" viewBox="0 0 24 24" fill="currentColor">
             <path d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09l.01-.01zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"/>
@@ -104,8 +170,8 @@ export default function Auth() {
         </motion.button>
 
         <motion.button
-          className="flex w-full items-center justify-center gap-3 rounded-xl border border-border bg-background py-4 font-semibold text-foreground"
-          whileTap={{ scale: 0.98 }}
+          className="flex w-full items-center justify-center gap-3 rounded-xl border border-border bg-background py-4 font-semibold text-foreground opacity-50 cursor-not-allowed"
+          disabled
         >
           <svg className="h-5 w-5" viewBox="0 0 24 24">
             <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
@@ -193,6 +259,7 @@ export default function Auth() {
                 onChange={(e) => setEmail(e.target.value)}
                 className="input-tarva mt-1.5"
                 placeholder="you@example.com"
+                disabled={isLoading}
               />
             </div>
 
@@ -206,17 +273,19 @@ export default function Auth() {
                     onChange={(e) => setPassword(e.target.value)}
                     className="input-tarva pr-12"
                     placeholder="••••••••"
+                    disabled={isLoading}
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
                     className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground"
+                    disabled={isLoading}
                   >
                     {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                   </button>
                 </div>
                 {mode === "signup" && (
-                  <p className="mt-1.5 text-xs text-muted-foreground">At least 8 characters.</p>
+                  <p className="mt-1.5 text-xs text-muted-foreground">At least 6 characters.</p>
                 )}
               </div>
             )}
@@ -226,6 +295,7 @@ export default function Auth() {
                 onClick={() => setAgreedToTerms(!agreedToTerms)}
                 className="flex items-start gap-3 text-left"
                 whileTap={{ scale: 0.99 }}
+                disabled={isLoading}
               >
                 <div className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded border transition-all ${
                   agreedToTerms ? "bg-primary border-primary" : "border-border"
@@ -244,6 +314,7 @@ export default function Auth() {
               <button
                 onClick={handleForgotPassword}
                 className="text-sm text-primary font-medium"
+                disabled={isLoading}
               >
                 Forgot password?
               </button>
@@ -263,17 +334,25 @@ export default function Auth() {
           <div className="mt-auto pb-10 pt-8">
             <motion.button
               onClick={handleSubmit}
-              className="btn-primary w-full py-4"
+              className="btn-primary w-full py-4 flex items-center justify-center gap-2"
               whileTap={{ scale: 0.98 }}
+              disabled={isLoading}
             >
-              {mode === "signup" && "Create account"}
-              {mode === "signin" && "Sign in"}
-              {mode === "forgot" && "Send link"}
+              {isLoading ? (
+                <Loader2 className="h-5 w-5 animate-spin" />
+              ) : (
+                <>
+                  {mode === "signup" && "Create account"}
+                  {mode === "signin" && "Sign in"}
+                  {mode === "forgot" && "Send link"}
+                </>
+              )}
             </motion.button>
 
             <button
               onClick={handleBack}
               className="mt-4 w-full text-center text-sm font-medium text-muted-foreground"
+              disabled={isLoading}
             >
               Back
             </button>
@@ -291,6 +370,7 @@ export default function Auth() {
           onClick={handleBack}
           className="flex h-10 w-10 items-center justify-center rounded-full bg-secondary"
           whileTap={{ scale: 0.9 }}
+          disabled={isLoading}
         >
           <ArrowLeft className="h-5 w-5 text-foreground" />
         </motion.button>

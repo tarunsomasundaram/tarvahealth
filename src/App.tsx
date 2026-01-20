@@ -8,9 +8,9 @@ import { OnboardingProvider, useOnboarding } from "@/contexts/OnboardingContext"
 import { MedicationProvider } from "@/contexts/MedicationContext";
 import { HealthProfileProvider } from "@/contexts/HealthProfileContext";
 import { CaregiverProvider } from "@/contexts/CaregiverContext";
+import { AuthProvider } from "@/hooks/use-auth";
 import { FloatingBottomNav } from "@/components/layout/FloatingBottomNav";
 import { CaregiverTabBar } from "@/components/layout/CaregiverTabBar";
-
 // Main app pages
 import Home from "./pages/Home";
 import Case from "./pages/Case";
@@ -131,23 +131,25 @@ function AppRoutes() {
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <ThemeProvider>
-      <OnboardingProvider>
-        <HealthProfileProvider>
-          <MedicationProvider>
-            <CaregiverProvider>
-              <TooltipProvider>
-                <Toaster />
-                <Sonner />
-                <BrowserRouter>
-                  <div className="mx-auto max-w-md min-h-screen app-gradient-bg">
-                    <AppRoutes />
-                  </div>
-                </BrowserRouter>
-              </TooltipProvider>
-            </CaregiverProvider>
-          </MedicationProvider>
-        </HealthProfileProvider>
-      </OnboardingProvider>
+      <AuthProvider>
+        <OnboardingProvider>
+          <HealthProfileProvider>
+            <MedicationProvider>
+              <CaregiverProvider>
+                <TooltipProvider>
+                  <Toaster />
+                  <Sonner />
+                  <BrowserRouter>
+                    <div className="mx-auto max-w-md min-h-screen app-gradient-bg">
+                      <AppRoutes />
+                    </div>
+                  </BrowserRouter>
+                </TooltipProvider>
+              </CaregiverProvider>
+            </MedicationProvider>
+          </HealthProfileProvider>
+        </OnboardingProvider>
+      </AuthProvider>
     </ThemeProvider>
   </QueryClientProvider>
 );
