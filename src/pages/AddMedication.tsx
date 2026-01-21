@@ -5,10 +5,12 @@ import { PageHeader } from "@/components/layout/PageHeader";
 import { AnimatedPage } from "@/components/layout/AnimatedPage";
 import { FadeIn, StaggerContainer, StaggerItem } from "@/components/animations";
 import { StepIndicator } from "@/components/add/StepIndicator";
-import { Search, Pill, Clock, Box, Check, ChevronRight, X, Plus } from "lucide-react";
+import { Search, Pill, Clock, Box, Check, ChevronRight, X, Plus, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useData } from "@/contexts/DataContext";
 import { triggerHaptic } from "@/hooks/use-haptics";
+import { toast } from "sonner";
+import { useAuth } from "@/hooks/use-auth";
 
 const steps = ["Medication", "Strength", "Schedule", "Case", "Save"];
 
@@ -303,6 +305,7 @@ export default function AddMedication() {
   const navigate = useNavigate();
   const location = useLocation();
   const { addMedication } = useData();
+  const { user } = useAuth();
   
   // Check if coming from onboarding
   const isFromOnboarding = location.state?.fromOnboarding === true;
@@ -322,6 +325,7 @@ export default function AddMedication() {
   const [storeInCase, setStoreInCase] = useState(true);
   const [compartment, setCompartment] = useState("1");
   const [refillQuantity, setRefillQuantity] = useState("30");
+  const [isSaving, setIsSaving] = useState(false);
 
   // Handler for selecting a custom medication
   const handleCustomMedication = () => {
@@ -362,6 +366,18 @@ export default function AddMedication() {
     if (!selectedMed && !isCustomMed) return;
     if (isCustomMed && !customMedName.trim()) return;
     
+    // Check if user is authenticated
+    if (!user) {
+      toast.error("Please sign in to save medications", {
+        action: {
+          label: "Sign In",
+          onClick: () => navigate("/auth"),
+        },
+      });
+      return;
+    }
+    
+    setIsSaving(true);
     triggerHaptic('success');
     
     // Parse strength value
@@ -393,10 +409,15 @@ export default function AddMedication() {
       }
     );
     
+    setIsSaving(false);
+    
     if (error) {
       console.error("Failed to add medication:", error);
+      toast.error("Failed to save medication. Please try again.");
       return;
     }
+    
+    toast.success("Medication added successfully!");
     
     // Navigate back to onboarding or home
     if (isFromOnboarding) {
@@ -894,9 +915,14 @@ export default function AddMedication() {
               onClick={handleSave} 
               className="btn-primary flex-1"
               whileTap={{ scale: 0.97 }}
+              disabled={isSaving}
             >
-              <Check className="h-4 w-4" />
-              Save Medication
+              {isSaving ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Check className="h-4 w-4" />
+              )}
+              {isSaving ? "Saving..." : "Save Medication"}
             </motion.button>
           )}
         </motion.div>
