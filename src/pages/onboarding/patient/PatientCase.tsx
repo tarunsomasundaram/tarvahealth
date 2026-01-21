@@ -239,7 +239,7 @@ export default function PatientCase() {
       </AnimatePresence>
 
       {/* Bottom buttons */}
-      <div className="px-6 pb-10 pt-4">
+      <div className="relative z-50 px-6 pb-12 pt-4 bg-background" style={{ paddingBottom: 'max(3rem, env(safe-area-inset-bottom))' }}>
         {pairingState === "prompt" && (
           <>
             <motion.button
@@ -272,6 +272,7 @@ export default function PatientCase() {
             onClick={handleContinue}
             className="btn-primary w-full py-4"
             whileTap={{ scale: 0.98 }}
+            type="button"
           >
             Continue
           </motion.button>
