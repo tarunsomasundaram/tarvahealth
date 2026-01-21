@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { ArrowLeft, Mail, Eye, EyeOff, Check, Loader2 } from "lucide-react";
 import { triggerHaptic } from "@/hooks/use-haptics";
@@ -21,10 +21,26 @@ export default function Auth() {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [agreedToTerms, setAgreedToTerms] = useState(false);
+  const [rememberMe, setRememberMe] = useState(true);
   const [error, setError] = useState("");
   const [resetSent, setResetSent] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+
+  // Handle session cleanup on browser close if "Remember me" is unchecked
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      if (!rememberMe) {
+        // Clear session on browser close
+        import('@/integrations/supabase/client').then(({ supabase }) => {
+          supabase.auth.signOut();
+        });
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [rememberMe]);
   const handleBack = () => {
     triggerHaptic('light');
     if (mode === "landing") {
@@ -345,13 +361,30 @@ export default function Auth() {
             )}
 
             {mode === "signin" && (
-              <button
-                onClick={handleForgotPassword}
-                className="text-sm text-primary font-medium"
-                disabled={isLoading}
-              >
-                Forgot password?
-              </button>
+              <div className="flex items-center justify-between">
+                <motion.button
+                  onClick={() => setRememberMe(!rememberMe)}
+                  className="flex items-center gap-2"
+                  whileTap={{ scale: 0.99 }}
+                  disabled={isLoading}
+                  type="button"
+                >
+                  <div className={`flex h-5 w-5 items-center justify-center rounded border transition-all ${
+                    rememberMe ? "bg-primary border-primary" : "border-border"
+                  }`}>
+                    {rememberMe && <Check className="h-3 w-3 text-white" />}
+                  </div>
+                  <span className="text-sm text-muted-foreground">Remember me</span>
+                </motion.button>
+                <button
+                  onClick={handleForgotPassword}
+                  className="text-sm text-primary font-medium"
+                  disabled={isLoading}
+                  type="button"
+                >
+                  Forgot password?
+                </button>
+              </div>
             )}
 
             {error && (
