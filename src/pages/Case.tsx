@@ -8,18 +8,18 @@ import { InventoryCard } from "@/components/case/InventoryCard";
 import { RefillSheet } from "@/components/case/RefillSheet";
 import { Plus, Settings, TrendingUp, Package } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { useMedication, Medication } from "@/contexts/MedicationContext";
+import { useData, Medication } from "@/contexts/DataContext";
 
 export default function Case() {
   const navigate = useNavigate();
-  const { medications } = useMedication();
+  const { activeMedications, getInventoryForMedication } = useData();
   const [isConnected, setIsConnected] = useState(true);
   const [batteryLevel] = useState(78);
   const [refillSheetOpen, setRefillSheetOpen] = useState(false);
   const [selectedMedication, setSelectedMedication] = useState<Medication | null>(null);
 
   // Get medications stored in case
-  const caseMedications = medications.filter(m => m.isActive && m.storedInCase);
+  const caseMedications = activeMedications.filter((m) => !!m.stored_in_case);
 
   const handleSync = () => {
     console.log("Syncing...");
@@ -30,7 +30,12 @@ export default function Case() {
       setSelectedMedication(medication);
     } else if (caseMedications.length > 0) {
       // If no specific medication, open for first low-stock one or first one
-      const lowStock = caseMedications.find(m => m.remainingDoses <= m.refillThresholdDoses);
+      const lowStock = caseMedications.find((m) => {
+        const inv = getInventoryForMedication(m.id);
+        const remaining = inv?.doses_remaining ?? 0;
+        const threshold = m.refill_threshold_doses ?? 2;
+        return remaining <= threshold;
+      });
       setSelectedMedication(lowStock || caseMedications[0]);
     }
     setRefillSheetOpen(true);
@@ -78,12 +83,12 @@ export default function Case() {
                       whileTap={{ scale: 0.98 }}
                     >
                       <InventoryCard
-                        medicationName={med.genericName}
-                        strength={`${med.strengthValue}${med.strengthUnit}`}
-                        remaining={med.remainingDoses}
-                        refillThreshold={med.refillThresholdDoses}
-                        compartment={med.compartment}
-                        refillQuantity={med.refillQuantityDoses}
+                        medicationName={med.generic_name}
+                        strength={`${med.strength_value ?? ""}${med.strength_unit ?? ""}`}
+                        remaining={getInventoryForMedication(med.id)?.doses_remaining ?? 0}
+                        refillThreshold={med.refill_threshold_doses ?? 2}
+                        compartment={med.compartment?.toString()}
+                        refillQuantity={med.refill_quantity_doses ?? undefined}
                       />
                     </motion.div>
                   </StaggerItem>

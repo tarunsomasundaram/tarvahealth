@@ -2,7 +2,7 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { Pill, Check, Plus, Minus, History } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useMedication, Medication } from "@/contexts/MedicationContext";
+import { useData, Medication } from "@/contexts/DataContext";
 import { triggerHaptic } from "@/hooks/use-haptics";
 import {
   Sheet,
@@ -19,18 +19,21 @@ interface RefillSheetProps {
 }
 
 export function RefillSheet({ open, onOpenChange, medication }: RefillSheetProps) {
-  const { logRefill, getRefillLogsForMedication } = useMedication();
+  const { logRefill, getRefillLogsForMedication, getInventoryForMedication } = useData();
   const [refillAmount, setRefillAmount] = useState(30);
   const [historyOpen, setHistoryOpen] = useState(false);
 
   const refillCount = medication ? getRefillLogsForMedication(medication.id).length : 0;
+  const remainingDoses = medication ? (getInventoryForMedication(medication.id)?.doses_remaining ?? 0) : 0;
 
   const handleRefill = () => {
     if (!medication) return;
     
     triggerHaptic("success");
     
-    logRefill(medication.id, refillAmount);
+    const previousQuantity = remainingDoses;
+    const newQuantity = remainingDoses + refillAmount;
+    logRefill(medication.id, refillAmount, previousQuantity, newQuantity);
     
     onOpenChange(false);
     setRefillAmount(30);
@@ -59,9 +62,9 @@ export function RefillSheet({ open, onOpenChange, medication }: RefillSheetProps
               <Pill className="h-6 w-6 text-primary" />
             </div>
             <div className="flex-1">
-              <h4 className="font-semibold text-foreground">{medication.genericName}</h4>
+              <h4 className="font-semibold text-foreground">{medication.generic_name}</h4>
               <p className="text-caption">
-                {medication.strengthValue}{medication.strengthUnit} • Currently {medication.remainingDoses} doses
+                {medication.strength_value ?? ""}{medication.strength_unit ?? ""} • Currently {remainingDoses} doses
               </p>
             </div>
             {refillCount > 0 && (
@@ -130,7 +133,7 @@ export function RefillSheet({ open, onOpenChange, medication }: RefillSheetProps
           <div className="p-4 rounded-xl bg-secondary text-center">
             <p className="text-caption mb-1">New Total</p>
             <p className="text-2xl font-bold text-foreground">
-              {medication.remainingDoses + refillAmount} doses
+              {remainingDoses + refillAmount} doses
             </p>
           </div>
 
