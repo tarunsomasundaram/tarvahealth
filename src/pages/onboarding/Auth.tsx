@@ -163,6 +163,7 @@ export default function Auth() {
     setIsGuestMode(true);
     setUserRole('patient');
     setHasCompletedOnboarding(true);
+    navigate('/');
   };
 
   const handleGoogleSignIn = async () => {
