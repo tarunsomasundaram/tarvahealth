@@ -8,13 +8,14 @@ import {
   SheetDescription,
 } from "@/components/ui/sheet";
 import { triggerHaptic } from "@/hooks/use-haptics";
-import type { ScheduledDose } from "@/contexts/MedicationContext";
+import type { ScheduledDose } from "@/contexts/DataContext";
+import { format } from "date-fns";
 
 interface CaseSelectionSheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   doses: ScheduledDose[];
-  onSelect: (dose: ScheduledDose) => void;
+  onSelect: (dose: ScheduledDose) => void | Promise<void>;
 }
 
 export function CaseSelectionSheet({ 
@@ -23,9 +24,9 @@ export function CaseSelectionSheet({
   doses, 
   onSelect 
 }: CaseSelectionSheetProps) {
-  const handleSelect = (dose: ScheduledDose) => {
+  const handleSelect = async (dose: ScheduledDose) => {
     triggerHaptic('success');
-    onSelect(dose);
+    await onSelect(dose);
     onOpenChange(false);
   };
 
@@ -59,14 +60,13 @@ export function CaseSelectionSheet({
               </div>
               <div className="flex-1">
                 <p className="font-semibold text-foreground">
-                  {dose.medication.genericName}
+                  {dose.medicationName}
                 </p>
                 <p className="text-sm text-muted-foreground">
-                  {dose.medication.strengthValue}{dose.medication.strengthUnit}
-                  {dose.medication.compartment && ` • Compartment ${dose.medication.compartment}`}
+                  {dose.strengthValue}{dose.strengthUnit}
                 </p>
               </div>
-              <span className="badge-time">{dose.scheduledTime}</span>
+              <span className="badge-time">{format(dose.scheduledTime, "h:mm a")}</span>
             </motion.button>
           ))}
         </div>

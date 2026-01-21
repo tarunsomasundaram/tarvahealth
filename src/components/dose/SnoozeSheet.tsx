@@ -7,13 +7,13 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { triggerHaptic } from "@/hooks/use-haptics";
-import type { ScheduledDose } from "@/contexts/MedicationContext";
+import type { ScheduledDose } from "@/contexts/DataContext";
 
 interface SnoozeSheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   dose: ScheduledDose | null;
-  onSnooze: (minutes: number) => void;
+  onSnooze: (minutes: number) => void | Promise<void>;
 }
 
 const snoozeOptions = [
@@ -24,9 +24,9 @@ const snoozeOptions = [
 ];
 
 export function SnoozeSheet({ open, onOpenChange, dose, onSnooze }: SnoozeSheetProps) {
-  const handleSnooze = (minutes: number) => {
+  const handleSnooze = async (minutes: number) => {
     triggerHaptic('light');
-    onSnooze(minutes);
+    await onSnooze(minutes);
     onOpenChange(false);
   };
 
@@ -41,7 +41,7 @@ export function SnoozeSheet({ open, onOpenChange, dose, onSnooze }: SnoozeSheetP
               <Bell className="h-5 w-5 text-primary" />
             </div>
             <div className="text-left">
-              <p className="font-semibold">{dose.medication.genericName}</p>
+              <p className="font-semibold">{dose.medicationName}</p>
               <p className="text-sm text-muted-foreground font-normal">
                 Snooze reminder
               </p>

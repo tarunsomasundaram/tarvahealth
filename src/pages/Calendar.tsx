@@ -22,7 +22,7 @@ export default function Calendar() {
 
   // Generate dose markers for the calendar
   const dosesByDate = useMemo(() => {
-    const markers: Record<string, { taken: number; missed: number; pending: number }> = {};
+    const markers: Record<string, { id: string; status: "taken" | "missed" | "late" | "pending" | "skipped" | "snoozed" }[]> = {};
     
     // Get all days with doses in the current month
     const year = selectedDate.getFullYear();
@@ -35,11 +35,12 @@ export default function Calendar() {
       
       if (dayDoses.length > 0) {
         const dateStr = format(date, 'yyyy-MM-dd');
-        markers[dateStr] = {
-          taken: dayDoses.filter(d => d.status === 'taken').length,
-          missed: dayDoses.filter(d => d.status === 'missed' || d.status === 'skipped').length,
-          pending: dayDoses.filter(d => d.status === 'pending').length,
-        };
+        markers[dateStr] = dayDoses.map((d) => ({
+          id: d.id,
+          status:
+            d.status === 'taken' && d.isLate ? 'late' :
+            d.status,
+        }));
       }
     }
     
