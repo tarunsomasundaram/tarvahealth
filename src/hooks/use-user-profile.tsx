@@ -58,7 +58,47 @@ export function useUserProfile() {
         throw profileError;
       }
 
-      setProfile(profileData as UserProfile | null);
+      // If profile exists but is missing name/avatar, sync from Google OAuth metadata
+      if (profileData) {
+        const googleMetadata = user.user_metadata;
+        const needsSync = 
+          (!profileData.full_name && googleMetadata?.full_name) ||
+          (!profileData.avatar_url && googleMetadata?.avatar_url);
+
+        if (needsSync) {
+          const updates: Partial<UserProfile> = {};
+          if (!profileData.full_name && googleMetadata?.full_name) {
+            updates.full_name = googleMetadata.full_name;
+          }
+          if (!profileData.avatar_url && googleMetadata?.avatar_url) {
+            updates.avatar_url = googleMetadata.avatar_url;
+          }
+
+          // Update the database with Google metadata
+          const { error: updateError } = await supabase
+            .from('user_profiles')
+            .update(updates)
+            .eq('user_id', user.id);
+
+          if (!updateError) {
+            setProfile({ ...profileData, ...updates } as UserProfile);
+          } else {
+            setProfile(profileData as UserProfile);
+          }
+        } else {
+          setProfile(profileData as UserProfile);
+        }
+      } else {
+        // No profile exists yet, use Google metadata as fallback display
+        const googleMetadata = user.user_metadata;
+        if (googleMetadata) {
+          setProfile({
+            user_id: user.id,
+            full_name: googleMetadata.full_name || googleMetadata.name || null,
+            avatar_url: googleMetadata.avatar_url || googleMetadata.picture || null,
+          } as UserProfile);
+        }
+      }
 
       // Fetch user conditions
       const { data: userConditionsData, error: conditionsError } = await supabase
