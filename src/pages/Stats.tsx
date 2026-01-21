@@ -7,7 +7,7 @@ import { FilterChips } from "@/components/common/FilterChips";
 import { StatCard } from "@/components/stats/StatCard";
 import { AdherenceChart } from "@/components/stats/AdherenceChart";
 import { Target, Clock, Zap, AlertTriangle, Smartphone, RefreshCw, Moon, Watch } from "lucide-react";
-import { useMedication } from "@/contexts/MedicationContext";
+import { useData } from "@/contexts/DataContext";
 import { subDays, subMonths, subYears, format, eachDayOfInterval } from "date-fns";
 
 const timeFilters = [
@@ -19,7 +19,7 @@ const timeFilters = [
 
 export default function Stats() {
   const [timeFilter, setTimeFilter] = useState("7d");
-  const { calculateAdherenceRate, calculateOnTimeRate, getCurrentStreak, getAverageDelay, getScheduledDosesForDate, doseLogs } = useMedication();
+  const { getAdherenceRate, getOnTimeRate, getScheduledDosesForDate, doseLogs } = useData();
 
   const dateRange = useMemo(() => {
     const endDate = new Date();
@@ -45,10 +45,49 @@ export default function Stats() {
     return { startDate, endDate };
   }, [timeFilter]);
 
-  const adherenceRate = calculateAdherenceRate(dateRange.startDate, dateRange.endDate);
-  const onTimeRate = calculateOnTimeRate(dateRange.startDate, dateRange.endDate);
-  const currentStreak = getCurrentStreak();
-  const avgDelay = getAverageDelay(dateRange.startDate, dateRange.endDate);
+  const adherenceRate = getAdherenceRate(dateRange.startDate, dateRange.endDate);
+  const onTimeRate = getOnTimeRate(dateRange.startDate, dateRange.endDate);
+  
+  // Calculate current streak
+  const currentStreak = useMemo(() => {
+    let streak = 0;
+    let date = new Date();
+    
+    for (let i = 0; i < 365; i++) {
+      const doses = getScheduledDosesForDate(date);
+      const hasDoses = doses.length > 0;
+      const allTaken = doses.every(d => d.status === 'taken');
+      
+      if (hasDoses && allTaken) {
+        streak++;
+        date = subDays(date, 1);
+      } else if (hasDoses) {
+        break;
+      } else {
+        date = subDays(date, 1);
+      }
+    }
+    
+    return streak;
+  }, [getScheduledDosesForDate]);
+
+  // Calculate average delay
+  const avgDelay = useMemo(() => {
+    const takenLogs = doseLogs.filter(l => 
+      l.event_type === 'taken' && 
+      l.status === 'late'
+    );
+    
+    if (takenLogs.length === 0) return 0;
+    
+    const totalDelay = takenLogs.reduce((sum, log) => {
+      const scheduled = new Date(log.scheduled_datetime);
+      const actual = new Date(log.event_datetime);
+      return sum + (actual.getTime() - scheduled.getTime()) / (1000 * 60);
+    }, 0);
+    
+    return Math.round(totalDelay / takenLogs.length);
+  }, [doseLogs]);
 
   // Calculate weekly chart data
   const weeklyData = useMemo(() => {
@@ -59,8 +98,8 @@ export default function Stats() {
     
     return days.map(day => {
       const doses = getScheduledDosesForDate(day);
-      const takenCount = doses.filter(d => d.displayStatus === 'taken' || d.displayStatus === 'late').length;
-      const totalCount = doses.filter(d => d.displayStatus !== 'skipped' && d.displayStatus !== 'pending').length;
+      const takenCount = doses.filter(d => d.status === 'taken').length;
+      const totalCount = doses.filter(d => d.status !== 'pending').length;
       const adherence = totalCount > 0 ? Math.round((takenCount / totalCount) * 100) : 100;
       
       return {
@@ -72,7 +111,7 @@ export default function Stats() {
 
   // Calculate case detection rate
   const caseDetectionRate = useMemo(() => {
-    const takenLogs = doseLogs.filter(l => l.eventType === 'taken');
+    const takenLogs = doseLogs.filter(l => l.event_type === 'taken');
     if (takenLogs.length === 0) return 0;
     const caseCount = takenLogs.filter(l => l.source === 'case').length;
     return Math.round((caseCount / takenLogs.length) * 100);

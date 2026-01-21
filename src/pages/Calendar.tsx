@@ -1,14 +1,12 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { format, subMonths } from "date-fns";
+import { format } from "date-fns";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { AnimatedPage } from "@/components/layout/AnimatedPage";
 import { FadeIn, StaggerContainer, StaggerItem } from "@/components/animations";
 import { CalendarGrid } from "@/components/calendar/CalendarGrid";
 import { Download, Check, X, Clock, Loader2 } from "lucide-react";
-import { useMedication } from "@/contexts/MedicationContext";
-import { useOnboarding } from "@/contexts/OnboardingContext";
-import { generateAdherencePDF } from "@/lib/pdfExport";
+import { useData } from "@/contexts/DataContext";
 import { toast } from "sonner";
 
 export default function Calendar() {
@@ -16,17 +14,42 @@ export default function Calendar() {
   const [showExportMenu, setShowExportMenu] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   
-  const { getScheduledDosesForDate, getDoseMarkersForMonth, medications } = useMedication();
-  const { patientProfile } = useOnboarding();
+  const { getScheduledDosesForDate } = useData();
 
-  const doses = getScheduledDosesForDate(selectedDate);
-  const dosesByDate = getDoseMarkersForMonth(selectedDate.getFullYear(), selectedDate.getMonth());
+  const doses = useMemo(() => {
+    return getScheduledDosesForDate(selectedDate);
+  }, [getScheduledDosesForDate, selectedDate]);
+
+  // Generate dose markers for the calendar
+  const dosesByDate = useMemo(() => {
+    const markers: Record<string, { taken: number; missed: number; pending: number }> = {};
+    
+    // Get all days with doses in the current month
+    const year = selectedDate.getFullYear();
+    const month = selectedDate.getMonth();
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    
+    for (let day = 1; day <= daysInMonth; day++) {
+      const date = new Date(year, month, day);
+      const dayDoses = getScheduledDosesForDate(date);
+      
+      if (dayDoses.length > 0) {
+        const dateStr = format(date, 'yyyy-MM-dd');
+        markers[dateStr] = {
+          taken: dayDoses.filter(d => d.status === 'taken').length,
+          missed: dayDoses.filter(d => d.status === 'missed' || d.status === 'skipped').length,
+          pending: dayDoses.filter(d => d.status === 'pending').length,
+        };
+      }
+    }
+    
+    return markers;
+  }, [selectedDate, getScheduledDosesForDate]);
 
   const getStatusIcon = (status: string) => {
     switch (status) {
       case "taken": return <Check className="h-3 w-3" />;
       case "missed": return <X className="h-3 w-3" />;
-      case "late": return <Clock className="h-3 w-3" />;
       case "skipped": return <Clock className="h-3 w-3" />;
       default: return null;
     }
@@ -37,38 +60,10 @@ export default function Calendar() {
     setShowExportMenu(false);
     
     try {
-      const endDate = new Date();
-      let startDate: Date;
-      
-      switch (range) {
-        case "Last 1 month":
-          startDate = subMonths(endDate, 1);
-          break;
-        case "Last 3 months":
-          startDate = subMonths(endDate, 3);
-          break;
-        case "Last 6 months":
-          startDate = subMonths(endDate, 6);
-          break;
-        default:
-          startDate = subMonths(endDate, 1);
-      }
-      
-      await generateAdherencePDF({
-        patientName: patientProfile?.fullName || 'Patient',
-        startDate,
-        endDate,
-        getDosesForDate: getScheduledDosesForDate,
-        medications,
-      });
-      
-      toast.success("PDF ready", {
-        description: "Your adherence report is ready for printing or saving."
-      });
+      // Export functionality needs refactoring for new data model
+      toast.info("PDF export coming soon with cloud data");
     } catch (error) {
-      toast.error("Export failed", {
-        description: "Please allow popups and try again."
-      });
+      toast.error("Export failed");
     } finally {
       setIsExporting(false);
     }
@@ -150,34 +145,33 @@ export default function Calendar() {
                       <div className="flex items-center gap-4">
                         <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-accent">
                           <span className={`badge-status ${
-                            dose.displayStatus === "taken" ? "badge-taken" :
-                            dose.displayStatus === "missed" ? "badge-missed" :
-                            dose.displayStatus === "late" ? "badge-late" :
-                            dose.displayStatus === "skipped" ? "badge-pill" :
+                            dose.status === "taken" ? "badge-taken" :
+                            dose.status === "missed" ? "badge-missed" :
+                            dose.status === "skipped" ? "badge-pill" :
                             "badge-pending"
                           }`}>
-                            {getStatusIcon(dose.displayStatus)}
+                            {getStatusIcon(dose.status)}
                           </span>
                         </div>
                         <div className="flex-1">
                           <div className="flex items-center justify-between">
-                            <h4 className="font-semibold text-foreground">{dose.medication.genericName}</h4>
-                            <span className="badge-time">{dose.scheduledTime}</span>
+                            <h4 className="font-semibold text-foreground">{dose.medicationName}</h4>
+                            <span className="badge-time">{format(dose.scheduledTime, 'h:mm a')}</span>
                           </div>
-                          <p className="text-caption">{dose.medication.strengthValue}{dose.medication.strengthUnit}</p>
-                          {dose.displayStatus === "taken" && dose.takenTime && (
+                          <p className="text-caption">{dose.strengthValue}{dose.strengthUnit}</p>
+                          {dose.status === "taken" && dose.eventTime && (
                             <p className="text-small mt-1">
-                              Taken at {dose.takenTime} • {dose.source === "case" ? "Case" : "Manual"}
+                              Taken at {format(dose.eventTime, 'h:mm a')} • {dose.source === "case" ? "Case" : "Manual"}
                             </p>
                           )}
-                          {dose.displayStatus === "late" && dose.takenTime && (
+                          {dose.isLate && dose.eventTime && (
                             <p className="text-small mt-1 text-warning">
-                              Late - taken at {dose.takenTime}
+                              Late - taken at {format(dose.eventTime, 'h:mm a')}
                             </p>
                           )}
-                          {dose.displayStatus === "skipped" && dose.skippedTime && (
+                          {dose.status === "skipped" && dose.eventTime && (
                             <p className="text-small mt-1 text-muted-foreground">
-                              Skipped at {dose.skippedTime}
+                              Skipped at {format(dose.eventTime, 'h:mm a')}
                             </p>
                           )}
                         </div>
