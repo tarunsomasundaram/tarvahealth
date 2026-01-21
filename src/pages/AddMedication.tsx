@@ -13,6 +13,7 @@ import { toast } from "sonner";
 import { useAuth } from "@/hooks/use-auth";
 import { useOnboarding } from "@/contexts/OnboardingContext";
 import { SignInPromptSheet } from "@/components/auth/SignInPromptSheet";
+import { supabase } from "@/integrations/supabase/client";
 
 const steps = ["Medication", "Strength", "Schedule", "Case", "Save"];
 
@@ -307,11 +308,14 @@ export default function AddMedication() {
   const navigate = useNavigate();
   const location = useLocation();
   const { addMedication } = useData();
-  const { user } = useAuth();
-  const { isGuestMode } = useOnboarding();
+  const { user, loading: authLoading } = useAuth();
+  const { isGuestMode, exitGuestMode } = useOnboarding();
   
   // Check if coming from onboarding
-  const isFromOnboarding = location.state?.fromOnboarding === true;
+  const searchParams = new URLSearchParams(location.search);
+  const isFromOnboarding =
+    location.state?.fromOnboarding === true ||
+    searchParams.get("fromOnboarding") === "1";
   
   const [currentStep, setCurrentStep] = useState(0);
   const [searchQuery, setSearchQuery] = useState("");
@@ -369,12 +373,35 @@ export default function AddMedication() {
   const handleSave = async () => {
     if (!selectedMed && !isCustomMed) return;
     if (isCustomMed && !customMedName.trim()) return;
+
+    // Avoid false "create account" prompts while auth state is still restoring.
+    if (authLoading) {
+      toast.message("Finishing sign-in…", {
+        description: "Please wait a moment and try again.",
+      });
+      return;
+    }
+
+    // If a user signs in after exploring as guest, clear guest mode automatically.
+    if (user && isGuestMode) {
+      exitGuestMode();
+    }
     
     // Check if user is authenticated (show prompt for guests)
     // Skip this check during onboarding - user should already be authenticated
-    if (!isFromOnboarding && (!user || isGuestMode)) {
-      setShowSignInPrompt(true);
-      return;
+    if (!isFromOnboarding) {
+      // Sometimes the auth context can lag right after signup/signin; fall back to session.
+      let effectiveUser = user;
+      if (!effectiveUser) {
+        const { data } = await supabase.auth.getSession();
+        effectiveUser = data.session?.user ?? null;
+      }
+
+      // If the user is authenticated, allow saving (even if guest-mode flag was left on).
+      if (!effectiveUser) {
+        setShowSignInPrompt(true);
+        return;
+      }
     }
     
     setIsSaving(true);
