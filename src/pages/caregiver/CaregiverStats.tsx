@@ -70,6 +70,7 @@ export default function CaregiverStats() {
                 value="89%"
                 subtitle="doses taken"
                 icon={<Target className="h-5 w-5 text-success" />}
+                iconBgClassName="bg-success/15"
                 trend="up"
                 trendValue="+5%"
               />
@@ -80,6 +81,7 @@ export default function CaregiverStats() {
                 value="76%"
                 subtitle="within window"
                 icon={<Clock className="h-5 w-5 text-primary" />}
+                iconBgClassName="bg-primary/15"
                 trend="neutral"
                 trendValue="same"
               />
@@ -90,6 +92,7 @@ export default function CaregiverStats() {
                 value="12"
                 subtitle="days"
                 icon={<Zap className="h-5 w-5 text-warning" />}
+                iconBgClassName="bg-warning/15"
                 trend="up"
                 trendValue="best yet!"
               />
@@ -100,6 +103,7 @@ export default function CaregiverStats() {
                 value="8m"
                 subtitle="minutes late"
                 icon={<AlertTriangle className="h-5 w-5 text-destructive" />}
+                iconBgClassName="bg-destructive/15"
                 trend="down"
                 trendValue="-3m"
               />

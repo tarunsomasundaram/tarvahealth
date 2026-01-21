@@ -6,6 +6,7 @@ interface StatCardProps {
   value: string | number;
   subtitle?: string;
   icon?: ReactNode;
+  iconBgClassName?: string;
   trend?: "up" | "down" | "neutral";
   trendValue?: string;
   className?: string;
@@ -16,6 +17,7 @@ export function StatCard({
   value,
   subtitle,
   icon,
+  iconBgClassName,
   trend,
   trendValue,
   className,
@@ -43,7 +45,10 @@ export function StatCard({
           )}
         </div>
         {icon && (
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-accent">
+          <div className={cn(
+            "flex h-10 w-10 items-center justify-center rounded-xl",
+            iconBgClassName || "bg-accent"
+          )}>
             {icon}
           </div>
         )}
