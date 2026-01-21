@@ -5,10 +5,8 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { ThemeProvider } from "@/hooks/use-theme";
 import { OnboardingProvider, useOnboarding } from "@/contexts/OnboardingContext";
-import { MedicationProvider } from "@/contexts/MedicationContext";
-import { HealthProfileProvider } from "@/contexts/HealthProfileContext";
-import { CaregiverProvider } from "@/contexts/CaregiverContext";
 import { AuthProvider } from "@/hooks/use-auth";
+import { DataProvider } from "@/contexts/DataContext";
 import { FloatingBottomNav } from "@/components/layout/FloatingBottomNav";
 import { CaregiverTabBar } from "@/components/layout/CaregiverTabBar";
 // Main app pages
@@ -132,23 +130,19 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <ThemeProvider>
       <AuthProvider>
-        <OnboardingProvider>
-          <HealthProfileProvider>
-            <MedicationProvider>
-              <CaregiverProvider>
-                <TooltipProvider>
-                  <Toaster />
-                  <Sonner />
-                  <BrowserRouter>
-                    <div className="mx-auto max-w-md min-h-screen app-gradient-bg">
-                      <AppRoutes />
-                    </div>
-                  </BrowserRouter>
-                </TooltipProvider>
-              </CaregiverProvider>
-            </MedicationProvider>
-          </HealthProfileProvider>
-        </OnboardingProvider>
+        <DataProvider>
+          <OnboardingProvider>
+            <TooltipProvider>
+              <Toaster />
+              <Sonner />
+              <BrowserRouter>
+                <div className="mx-auto max-w-md min-h-screen app-gradient-bg">
+                  <AppRoutes />
+                </div>
+              </BrowserRouter>
+            </TooltipProvider>
+          </OnboardingProvider>
+        </DataProvider>
       </AuthProvider>
     </ThemeProvider>
   </QueryClientProvider>
