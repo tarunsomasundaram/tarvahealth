@@ -138,6 +138,7 @@ export default function Stats() {
                 value={`${adherenceRate}%`}
                 subtitle="doses taken"
                 icon={<Target className="h-5 w-5 text-success" />}
+                iconBgClassName="bg-success/15"
                 trend={adherenceRate >= 80 ? "up" : "down"}
                 trendValue={adherenceRate >= 80 ? "Good" : "Needs work"}
               />
@@ -148,6 +149,7 @@ export default function Stats() {
                 value={`${onTimeRate}%`}
                 subtitle="within window"
                 icon={<Clock className="h-5 w-5 text-primary" />}
+                iconBgClassName="bg-primary/15"
                 trend={onTimeRate >= 70 ? "up" : "neutral"}
                 trendValue={onTimeRate >= 70 ? "Great" : "Improve"}
               />
@@ -158,6 +160,7 @@ export default function Stats() {
                 value={`${currentStreak}`}
                 subtitle="days"
                 icon={<Zap className="h-5 w-5 text-warning" />}
+                iconBgClassName="bg-warning/15"
                 trend="up"
                 trendValue={currentStreak > 7 ? "Best yet!" : "Keep going"}
               />
@@ -168,6 +171,7 @@ export default function Stats() {
                 value={`${avgDelay}m`}
                 subtitle="minutes late"
                 icon={<AlertTriangle className="h-5 w-5 text-destructive" />}
+                iconBgClassName="bg-destructive/15"
                 trend={avgDelay <= 10 ? "down" : "up"}
                 trendValue={avgDelay <= 10 ? "On track" : "Late"}
               />
