@@ -135,6 +135,11 @@ export default function Auth() {
         setError(getErrorMessage(error));
         return;
       }
+
+      // If the user previously explored as guest, ensure we exit guest mode on signup.
+      setIsGuestMode(false);
+      setHasCompletedOnboarding(false);
+      setUserRole(null);
       
       // Save email to context
       setUserEmail(email);
@@ -149,6 +154,11 @@ export default function Auth() {
         setError(getErrorMessage(error));
         return;
       }
+
+      // If the user previously explored as guest, ensure we exit guest mode on signin.
+      setIsGuestMode(false);
+      setHasCompletedOnboarding(false);
+      setUserRole(null);
       
       // Save email to context
       setUserEmail(email);

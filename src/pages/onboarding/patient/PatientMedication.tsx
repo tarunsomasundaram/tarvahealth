@@ -23,7 +23,7 @@ export default function PatientMedication() {
   const handleAddMedication = () => {
     triggerHaptic('medium');
     // Navigate to the add medication page with onboarding flag
-    navigate("/add", { state: { fromOnboarding: true } });
+    navigate("/add?fromOnboarding=1", { state: { fromOnboarding: true } });
   };
 
   const handleContinue = () => {
