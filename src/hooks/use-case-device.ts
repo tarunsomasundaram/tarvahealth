@@ -1,5 +1,5 @@
-import { useState, useEffect, useCallback } from 'react';
-import { useMedication, ScheduledDose } from '@/contexts/MedicationContext';
+import { useState, useCallback } from 'react';
+import { useData, ScheduledDose } from '@/contexts/DataContext';
 import { useOnboarding } from '@/contexts/OnboardingContext';
 import { useNotifications } from './use-notifications';
 import { triggerHaptic } from './use-haptics';
@@ -11,13 +11,16 @@ export interface CaseOpenEvent {
 }
 
 export function useCaseDevice() {
-  const { 
-    medications, 
-    getUpcomingDoses, 
-    markDoseTaken, 
-    updateMedication 
-  } = useMedication();
-  const { caseDevice, addNotification } = useOnboarding();
+  const {
+    medications,
+    getScheduledDosesForDate,
+    getScheduleForMedication,
+    logDose,
+    decrementDose,
+    createNotification,
+  } = useData();
+
+  const { caseDevice } = useOnboarding();
   const { cancelNotification } = useNotifications();
   
   const [pendingCaseSelection, setPendingCaseSelection] = useState<ScheduledDose[] | null>(null);
@@ -26,19 +29,22 @@ export function useCaseDevice() {
   // Find doses that are currently due (within configurable window)
   const getDueDoses = useCallback((windowMinutes: number = 60): ScheduledDose[] => {
     const now = new Date();
-    const upcomingDoses = getUpcomingDoses(now);
-    
-    return upcomingDoses.filter(dose => {
+    const todaysDoses = getScheduledDosesForDate(now);
+
+    return todaysDoses.filter((dose) => {
       // Only consider doses stored in case
-      if (!dose.medication.storedInCase) return false;
-      
-      const scheduledTime = parseISO(dose.scheduledDatetime);
-      const windowStart = subMinutes(scheduledTime, windowMinutes);
-      const windowEnd = addMinutes(scheduledTime, windowMinutes);
-      
+      const med = medications.find((m) => m.id === dose.medicationId);
+      if (!med?.stored_in_case) return false;
+
+      // Only pending/snoozed are eligible for auto-mark from case opening
+      if (dose.status !== 'pending' && dose.status !== 'snoozed') return false;
+
+      const windowStart = subMinutes(dose.scheduledTime, windowMinutes);
+      const windowEnd = addMinutes(dose.scheduledTime, windowMinutes);
+
       return isWithinInterval(now, { start: windowStart, end: windowEnd });
     });
-  }, [getUpcomingDoses]);
+  }, [getScheduledDosesForDate, medications]);
 
   // Handle case open event - auto-mark dose if single match, else show chooser
   const handleCaseOpen = useCallback(async (event: CaseOpenEvent) => {
@@ -70,31 +76,35 @@ export function useCaseDevice() {
   // Mark a dose as taken from case (decrements inventory)
   const markDoseFromCase = useCallback(async (dose: ScheduledDose) => {
     const now = new Date();
-    const scheduledTime = parseISO(dose.scheduledDatetime);
-    const windowEnd = addMinutes(scheduledTime, dose.onTimeWindowMinutes);
+    const schedule = getScheduleForMedication(dose.medicationId);
+    const onTimeWindowMinutes = schedule?.on_time_window_minutes ?? 30;
+    const windowEnd = addMinutes(dose.scheduledTime, onTimeWindowMinutes);
     const isLate = now > windowEnd;
 
-    // Create dose log with source = case
-    markDoseTaken(dose, 'case');
-    
-    // Cancel the pending reminder notification
-    await cancelNotification(dose.medicationId, dose.scheduledDatetime);
-    
-    // Add notification event
-    addNotification({
-      id: `taken_${dose.id}_${Date.now()}`,
-      type: isLate ? 'dose_late' : 'dose_taken',
-      title: isLate ? 'Dose taken late' : 'Dose marked taken',
-      subtitle: 'Detected from case',
-      medicationName: `${dose.medication.genericName} ${dose.medication.strengthValue}${dose.medication.strengthUnit}`,
-      timestamp: new Date().toISOString(),
-      status: isLate ? 'late' : 'sent',
-      read: false,
+    // 1) Log dose with source=case
+    await logDose(
+      dose.medicationId,
+      dose.scheduledTime,
+      'taken',
+      { status: isLate ? 'late' : 'on_time', source: 'case' }
+    );
+
+    // 2) Decrement inventory (if tracked)
+    await decrementDose(dose.medicationId);
+
+    // 3) Cancel the pending reminder notification
+    await cancelNotification(dose.medicationId, dose.scheduledTime.toISOString());
+
+    // 4) Create an in-app notification event
+    await createNotification(isLate ? 'dose_late' : 'dose_taken', {
+      medication_id: dose.medicationId,
+      scheduled_datetime: dose.scheduledTime,
+      metadata: { source: 'case' },
     });
 
     triggerHaptic('success');
     setPendingCaseSelection(null);
-  }, [markDoseTaken, cancelNotification, addNotification]);
+  }, [getScheduleForMedication, logDose, decrementDose, cancelNotification, createNotification]);
 
   // Confirm dose selection from case chooser
   const confirmCaseSelection = useCallback(async (dose: ScheduledDose) => {
