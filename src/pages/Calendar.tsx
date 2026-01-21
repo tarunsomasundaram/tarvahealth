@@ -1,6 +1,6 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { format } from "date-fns";
+import { format, subMonths, startOfDay, endOfDay } from "date-fns";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { AnimatedPage } from "@/components/layout/AnimatedPage";
 import { FadeIn, StaggerContainer, StaggerItem } from "@/components/animations";
@@ -8,13 +8,14 @@ import { CalendarGrid } from "@/components/calendar/CalendarGrid";
 import { Download, Check, X, Clock, Loader2 } from "lucide-react";
 import { useData } from "@/contexts/DataContext";
 import { toast } from "sonner";
+import { generateAdherencePDF } from "@/lib/pdfExport";
 
 export default function Calendar() {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [showExportMenu, setShowExportMenu] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   
-  const { getScheduledDosesForDate } = useData();
+  const { profile, getScheduledDosesForDate, activeMedications } = useData();
 
   const doses = useMemo(() => {
     return getScheduledDosesForDate(selectedDate);
@@ -56,15 +57,45 @@ export default function Calendar() {
     }
   };
 
+  // Create a callback wrapper for getDosesForDate to pass to PDF export
+  const getDosesForDateCallback = useCallback((date: Date) => {
+    return getScheduledDosesForDate(date);
+  }, [getScheduledDosesForDate]);
+
   const handleExport = async (range: string) => {
     setIsExporting(true);
     setShowExportMenu(false);
     
     try {
-      // Export functionality needs refactoring for new data model
-      toast.info("PDF export coming soon with cloud data");
+      const endDate = endOfDay(new Date());
+      let startDate: Date;
+      
+      switch (range) {
+        case "Last 1 month":
+          startDate = startOfDay(subMonths(new Date(), 1));
+          break;
+        case "Last 3 months":
+          startDate = startOfDay(subMonths(new Date(), 3));
+          break;
+        case "Last 6 months":
+          startDate = startOfDay(subMonths(new Date(), 6));
+          break;
+        default:
+          startDate = startOfDay(subMonths(new Date(), 1));
+      }
+
+      await generateAdherencePDF({
+        patientName: profile?.full_name || "Patient",
+        startDate,
+        endDate,
+        getDosesForDate: getDosesForDateCallback,
+        medications: activeMedications,
+      });
+
+      toast.success("PDF report generated!");
     } catch (error) {
-      toast.error("Export failed");
+      console.error("Export failed:", error);
+      toast.error("Export failed. Please allow popups and try again.");
     } finally {
       setIsExporting(false);
     }

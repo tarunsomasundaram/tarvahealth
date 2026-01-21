@@ -1,5 +1,5 @@
 import { format, eachDayOfInterval, startOfMonth, endOfMonth, getDay } from 'date-fns';
-import type { ScheduledDose, DoseLog, Medication } from '@/contexts/MedicationContext';
+import type { ScheduledDose, Medication } from '@/contexts/DataContext';
 import tarvaLogoBase64 from '@/assets/tarva-logo.png';
 
 interface ExportData {
@@ -15,6 +15,7 @@ const STATUS_COLORS = {
   late: '#f59e0b',
   missed: '#ef4444',
   skipped: '#6b7280',
+  snoozed: '#3b82f6',
   pending: '#a1a1aa',
 };
 
@@ -23,8 +24,16 @@ const STATUS_LABELS = {
   late: 'Late',
   missed: 'Missed',
   skipped: 'Skipped',
+  snoozed: 'Snoozed',
   pending: 'Pending',
 };
+
+type DoseStatus = keyof typeof STATUS_COLORS;
+
+function getDisplayStatus(dose: ScheduledDose): DoseStatus {
+  if (dose.status === 'taken' && dose.isLate) return 'late';
+  return dose.status as DoseStatus;
+}
 
 export async function generateAdherencePDF(data: ExportData): Promise<Blob> {
   const { patientName, startDate, endDate, getDosesForDate, medications } = data;
@@ -68,11 +77,12 @@ export async function generateAdherencePDF(data: ExportData): Promise<Blob> {
   allDays.forEach(day => {
     const doses = getDosesForDate(day);
     doses.forEach(dose => {
+      const displayStatus = getDisplayStatus(dose);
       totalDoses++;
-      if (dose.displayStatus === 'taken') takenDoses++;
-      if (dose.displayStatus === 'late') { takenDoses++; lateDoses++; }
-      if (dose.displayStatus === 'missed') missedDoses++;
-      if (dose.displayStatus === 'skipped') skippedDoses++;
+      if (displayStatus === 'taken') takenDoses++;
+      if (displayStatus === 'late') { takenDoses++; lateDoses++; }
+      if (displayStatus === 'missed') missedDoses++;
+      if (displayStatus === 'skipped') skippedDoses++;
     });
   });
 
@@ -83,11 +93,11 @@ export async function generateAdherencePDF(data: ExportData): Promise<Blob> {
   summary.style.cssText = 'display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 32px;';
   summary.innerHTML = `
     <div style="background: #f3f4f6; padding: 16px; border-radius: 12px; text-align: center;">
-      <p style="font-size: 28px; font-weight: 700; color: #8b5cf6; margin: 0;">${adherenceRate}%</p>
+      <p style="font-size: 28px; font-weight: 700; color: #8b5cf6; margin: 0;">${isNaN(adherenceRate) ? 0 : adherenceRate}%</p>
       <p style="font-size: 12px; color: #6b7280; margin: 4px 0 0 0;">Adherence Rate</p>
     </div>
     <div style="background: #f3f4f6; padding: 16px; border-radius: 12px; text-align: center;">
-      <p style="font-size: 28px; font-weight: 700; color: #22c55e; margin: 0;">${onTimeRate}%</p>
+      <p style="font-size: 28px; font-weight: 700; color: #22c55e; margin: 0;">${isNaN(onTimeRate) ? 0 : onTimeRate}%</p>
       <p style="font-size: 12px; color: #6b7280; margin: 4px 0 0 0;">On-Time Rate</p>
     </div>
     <div style="background: #f3f4f6; padding: 16px; border-radius: 12px; text-align: center;">
@@ -146,9 +156,9 @@ export async function generateAdherencePDF(data: ExportData): Promise<Blob> {
       
       let statusColor = '#e5e7eb';
       if (doses.length > 0) {
-        const hasMissed = doses.some(d => d.displayStatus === 'missed');
-        const hasLate = doses.some(d => d.displayStatus === 'late');
-        const allTaken = doses.every(d => d.displayStatus === 'taken' || d.displayStatus === 'late' || d.displayStatus === 'skipped');
+        const hasMissed = doses.some(d => getDisplayStatus(d) === 'missed');
+        const hasLate = doses.some(d => getDisplayStatus(d) === 'late');
+        const allTaken = doses.every(d => ['taken', 'late', 'skipped'].includes(getDisplayStatus(d)));
         
         if (hasMissed) statusColor = STATUS_COLORS.missed;
         else if (hasLate) statusColor = STATUS_COLORS.late;
@@ -160,7 +170,7 @@ export async function generateAdherencePDF(data: ExportData): Promise<Blob> {
           <span style="font-size: 12px; font-weight: 500;">${format(day, 'd')}</span>
           ${doses.length > 0 ? `
             <div style="display: flex; justify-content: center; gap: 2px; margin-top: 2px;">
-              ${doses.slice(0, 4).map(d => `<div style="width: 4px; height: 4px; border-radius: 50%; background: ${STATUS_COLORS[d.displayStatus]};"></div>`).join('')}
+              ${doses.slice(0, 4).map(d => `<div style="width: 4px; height: 4px; border-radius: 50%; background: ${STATUS_COLORS[getDisplayStatus(d)]};"></div>`).join('')}
             </div>
           ` : ''}
         </div>
@@ -199,21 +209,24 @@ export async function generateAdherencePDF(data: ExportData): Promise<Blob> {
   // Only show entries with events (not pending)
   allDays.forEach(day => {
     const doses = getDosesForDate(day);
-    doses.filter(d => d.displayStatus !== 'pending').forEach(dose => {
+    doses.filter(d => getDisplayStatus(d) !== 'pending').forEach(dose => {
+      const displayStatus = getDisplayStatus(dose);
+      const actualTime = dose.eventTime ? format(dose.eventTime, 'h:mm a') : '—';
+      
       const row = document.createElement('tr');
       row.innerHTML = `
         <td style="padding: 8px 10px; border-bottom: 1px solid #f3f4f6;">${format(day, 'MMM d, yyyy')}</td>
         <td style="padding: 8px 10px; border-bottom: 1px solid #f3f4f6;">
-          ${dose.medication.genericName}<br>
-          <span style="color: #9ca3af; font-size: 11px;">${dose.medication.strengthValue}${dose.medication.strengthUnit}</span>
+          ${dose.medicationName}<br>
+          <span style="color: #9ca3af; font-size: 11px;">${dose.strengthValue || ''}${dose.strengthUnit || ''}</span>
         </td>
-        <td style="padding: 8px 10px; border-bottom: 1px solid #f3f4f6;">${dose.scheduledTime}</td>
+        <td style="padding: 8px 10px; border-bottom: 1px solid #f3f4f6;">${format(dose.scheduledTime, 'h:mm a')}</td>
         <td style="padding: 8px 10px; border-bottom: 1px solid #f3f4f6;">
-          <span style="display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 12px; background: ${STATUS_COLORS[dose.displayStatus]}20; color: ${STATUS_COLORS[dose.displayStatus]}; font-weight: 500;">
-            ${STATUS_LABELS[dose.displayStatus]}
+          <span style="display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 12px; background: ${STATUS_COLORS[displayStatus]}20; color: ${STATUS_COLORS[displayStatus]}; font-weight: 500;">
+            ${STATUS_LABELS[displayStatus]}
           </span>
         </td>
-        <td style="padding: 8px 10px; border-bottom: 1px solid #f3f4f6;">${dose.takenTime || dose.skippedTime || '—'}</td>
+        <td style="padding: 8px 10px; border-bottom: 1px solid #f3f4f6;">${actualTime}</td>
       `;
       tbody.appendChild(row);
     });
@@ -254,10 +267,10 @@ export async function generateAdherencePDF(data: ExportData): Promise<Blob> {
       ${medications.map(med => `
         <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; background: white; border-radius: 8px;">
           <div>
-            <span style="font-weight: 500; font-size: 13px;">${med.genericName}</span>
-            <span style="color: #6b7280; font-size: 12px; margin-left: 8px;">${med.strengthValue}${med.strengthUnit}</span>
+            <span style="font-weight: 500; font-size: 13px;">${med.generic_name}</span>
+            <span style="color: #6b7280; font-size: 12px; margin-left: 8px;">${med.strength_value || ''}${med.strength_unit || ''}</span>
           </div>
-          <span style="font-size: 11px; color: #8b5cf6; background: #f3e8ff; padding: 2px 8px; border-radius: 10px;">${med.form}</span>
+          <span style="font-size: 11px; color: #8b5cf6; background: #f3e8ff; padding: 2px 8px; border-radius: 10px;">${med.form || 'tablet'}</span>
         </div>
       `).join('')}
     </div>
