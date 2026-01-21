@@ -119,6 +119,21 @@ function AppRoutes() {
         <Route path="/medications/:id/edit" element={<EditMedication />} />
         <Route path="/reminder-preferences" element={<ReminderPreferences />} />
         <Route path="/edit-profile" element={<EditProfile />} />
+        {/* Auth routes for guest mode users */}
+        <Route path="/auth" element={<Auth />} />
+        <Route path="/role-select" element={<RoleSelect />} />
+        <Route path="/onboarding/patient/profile" element={<PatientProfile />} />
+        <Route path="/onboarding/patient/passcode" element={<PatientPasscode />} />
+        <Route path="/onboarding/patient/notifications" element={<PatientNotifications />} />
+        <Route path="/onboarding/patient/case" element={<PatientCase />} />
+        <Route path="/onboarding/patient/conditions" element={<PatientConditions />} />
+        <Route path="/onboarding/patient/medication" element={<PatientMedication />} />
+        <Route path="/onboarding/patient/caregiver" element={<PatientCaregiver />} />
+        <Route path="/onboarding/caregiver/profile" element={<CaregiverOnboardingProfile />} />
+        <Route path="/onboarding/caregiver/passcode" element={<CaregiverPasscode />} />
+        <Route path="/onboarding/caregiver/notifications" element={<CaregiverNotifications />} />
+        <Route path="/onboarding/caregiver/link" element={<CaregiverLink />} />
+        <Route path="/onboarding/complete" element={<OnboardingComplete />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
       <FloatingBottomNav />
