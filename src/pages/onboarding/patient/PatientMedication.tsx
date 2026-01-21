@@ -2,13 +2,13 @@ import { motion } from "framer-motion";
 import { useNavigate, useLocation } from "react-router-dom";
 import { ArrowLeft, Pill, Plus, Check } from "lucide-react";
 import { triggerHaptic } from "@/hooks/use-haptics";
-import { useMedication } from "@/contexts/MedicationContext";
+import { useData } from "@/contexts/DataContext";
 import { InfoButton } from "@/components/onboarding/InfoButton";
 
 export default function PatientMedication() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { medications } = useMedication();
+  const { activeMedications } = useData();
 
   // Check if user just added a medication (coming back from /add)
   const justAdded = location.state?.fromAdd === true;
@@ -34,7 +34,7 @@ export default function PatientMedication() {
     navigate("/onboarding/patient/caregiver");
   };
 
-  const hasMedications = medications.length > 0;
+  const hasMedications = activeMedications.length > 0;
 
   return (
     <div className="fixed inset-0 flex flex-col bg-background">
@@ -86,7 +86,7 @@ export default function PatientMedication() {
           </h1>
           <p className="mt-3 text-body text-muted-foreground max-w-xs">
             {hasMedications 
-              ? `You've added ${medications.length} medication${medications.length > 1 ? 's' : ''}`
+              ? `You've added ${activeMedications.length} medication${activeMedications.length > 1 ? 's' : ''}`
               : "Add the medications you take regularly"
             }
           </p>
@@ -100,7 +100,7 @@ export default function PatientMedication() {
             transition={{ delay: 0.15 }}
             className="mt-6 w-full space-y-2"
           >
-            {medications.map((med) => (
+            {activeMedications.map((med) => (
               <div
                 key={med.id}
                 className="flex items-center gap-3 p-3 rounded-xl bg-secondary"
@@ -109,9 +109,9 @@ export default function PatientMedication() {
                   <Check className="h-5 w-5 text-primary" />
                 </div>
                 <div className="flex-1">
-                  <p className="font-medium text-foreground">{med.genericName}</p>
+                  <p className="font-medium text-foreground">{med.generic_name}</p>
                   <p className="text-xs text-muted-foreground">
-                    {med.strengthValue}{med.strengthUnit} • {med.form}
+                    {med.strength_value ?? ""}{med.strength_unit ?? ""} • {med.form || "tablet"}
                   </p>
                 </div>
               </div>
