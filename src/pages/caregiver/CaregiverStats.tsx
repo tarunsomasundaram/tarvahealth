@@ -69,7 +69,7 @@ export default function CaregiverStats() {
                 title="Adherence Rate"
                 value="89%"
                 subtitle="doses taken"
-                icon={<Target className="h-5 w-5 text-primary" />}
+                icon={<Target className="h-5 w-5 text-success" />}
                 trend="up"
                 trendValue="+5%"
               />
@@ -89,7 +89,7 @@ export default function CaregiverStats() {
                 title="Current Streak"
                 value="12"
                 subtitle="days"
-                icon={<Zap className="h-5 w-5 text-primary" />}
+                icon={<Zap className="h-5 w-5 text-warning" />}
                 trend="up"
                 trendValue="best yet!"
               />
@@ -99,7 +99,7 @@ export default function CaregiverStats() {
                 title="Avg. Delay"
                 value="8m"
                 subtitle="minutes late"
-                icon={<AlertTriangle className="h-5 w-5 text-primary" />}
+                icon={<AlertTriangle className="h-5 w-5 text-destructive" />}
                 trend="down"
                 trendValue="-3m"
               />
