@@ -6,6 +6,7 @@ import { triggerHaptic } from "@/hooks/use-haptics";
 import { useOnboarding } from "@/contexts/OnboardingContext";
 import { InfoButton } from "@/components/onboarding/InfoButton";
 import { OnboardingProgress } from "@/components/onboarding/OnboardingProgress";
+import { OnboardingPageWrapper } from "@/components/onboarding/OnboardingPageWrapper";
 type PairingState = "prompt" | "scanning" | "found" | "success" | "failed";
 
 export default function PatientCase() {
@@ -55,7 +56,8 @@ export default function PatientCase() {
   };
 
   return (
-    <div className="fixed inset-0 flex flex-col bg-background">
+    <OnboardingPageWrapper>
+      <div className="flex h-full flex-col bg-background">
       {/* Header */}
       <div className="flex items-center justify-between px-4 pt-4">
         <motion.button
@@ -288,5 +290,6 @@ export default function PatientCase() {
         )}
       </div>
     </div>
+    </OnboardingPageWrapper>
   );
 }
