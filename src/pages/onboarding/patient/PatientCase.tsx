@@ -5,7 +5,7 @@ import { ArrowLeft, Bluetooth, Box, Check, Loader2, X } from "lucide-react";
 import { triggerHaptic } from "@/hooks/use-haptics";
 import { useOnboarding } from "@/contexts/OnboardingContext";
 import { InfoButton } from "@/components/onboarding/InfoButton";
-
+import { OnboardingProgress } from "@/components/onboarding/OnboardingProgress";
 type PairingState = "prompt" | "scanning" | "found" | "success" | "failed";
 
 export default function PatientCase() {
@@ -67,16 +67,7 @@ export default function PatientCase() {
         </motion.button>
         
         {/* Progress indicator */}
-        <div className="flex gap-1.5">
-          {[0, 1, 2, 3, 4].map((i) => (
-            <div
-              key={i}
-              className={`h-1.5 w-6 rounded-full ${
-                i <= 2 ? "bg-primary" : "bg-muted"
-              }`}
-            />
-          ))}
-        </div>
+        <OnboardingProgress currentStep={2} totalSteps={5} />
         
         <InfoButton 
           title="TARVA Case Pairing"
