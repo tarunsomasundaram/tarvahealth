@@ -137,7 +137,7 @@ export default function Stats() {
                 title="Adherence Rate"
                 value={`${adherenceRate}%`}
                 subtitle="doses taken"
-                icon={<Target className="h-5 w-5 text-primary" />}
+                icon={<Target className="h-5 w-5 text-success" />}
                 trend={adherenceRate >= 80 ? "up" : "down"}
                 trendValue={adherenceRate >= 80 ? "Good" : "Needs work"}
               />
@@ -157,7 +157,7 @@ export default function Stats() {
                 title="Current Streak"
                 value={`${currentStreak}`}
                 subtitle="days"
-                icon={<Zap className="h-5 w-5 text-primary" />}
+                icon={<Zap className="h-5 w-5 text-warning" />}
                 trend="up"
                 trendValue={currentStreak > 7 ? "Best yet!" : "Keep going"}
               />
@@ -167,7 +167,7 @@ export default function Stats() {
                 title="Avg. Delay"
                 value={`${avgDelay}m`}
                 subtitle="minutes late"
-                icon={<AlertTriangle className="h-5 w-5 text-primary" />}
+                icon={<AlertTriangle className="h-5 w-5 text-destructive" />}
                 trend={avgDelay <= 10 ? "down" : "up"}
                 trendValue={avgDelay <= 10 ? "On track" : "Late"}
               />
