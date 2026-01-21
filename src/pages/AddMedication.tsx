@@ -7,7 +7,7 @@ import { FadeIn, StaggerContainer, StaggerItem } from "@/components/animations";
 import { StepIndicator } from "@/components/add/StepIndicator";
 import { Search, Pill, Clock, Box, Check, ChevronRight, X, Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useMedication } from "@/contexts/MedicationContext";
+import { useData } from "@/contexts/DataContext";
 import { triggerHaptic } from "@/hooks/use-haptics";
 
 const steps = ["Medication", "Strength", "Schedule", "Case", "Save"];
@@ -302,7 +302,7 @@ const stepTransition = {
 export default function AddMedication() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { addMedication } = useMedication();
+  const { addMedication } = useData();
   
   // Check if coming from onboarding
   const isFromOnboarding = location.state?.fromOnboarding === true;
@@ -358,35 +358,45 @@ export default function AddMedication() {
     }
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!selectedMed && !isCustomMed) return;
     if (isCustomMed && !customMedName.trim()) return;
     
     triggerHaptic('success');
     
-    // Add the medication to context
-    addMedication(
+    // Parse strength value
+    const strengthVal = parseFloat(strength) || null;
+    
+    // Add the medication to cloud
+    const { error } = await addMedication(
       {
-        genericName: isCustomMed ? customMedName.trim() : selectedMed!.name,
-        altNames: isCustomMed ? [] : selectedMed!.alternates,
-        strengthValue: strength,
-        strengthUnit: strengthUnit,
+        generic_name: isCustomMed ? customMedName.trim() : selectedMed!.name,
+        alt_names: isCustomMed ? [] : selectedMed!.alternates,
+        strength_value: strengthVal,
+        strength_unit: strengthUnit || null,
         form: form,
-        instructions: instructions || undefined,
-        isActive: true,
-        storedInCase: storeInCase,
-        compartment: storeInCase ? compartment : undefined,
-        refillQuantityDoses: parseInt(refillQuantity) || 30,
-        refillThresholdDoses: 2,
-        remainingDoses: parseInt(refillQuantity) || 30,
+        instructions: instructions || null,
+        notes: null,
+        is_active: true,
+        stored_in_case: storeInCase,
+        compartment: storeInCase ? parseInt(compartment) : null,
+        refill_quantity_doses: parseInt(refillQuantity) || 30,
+        refill_threshold_doses: 2,
       },
       {
-        frequencyType: frequency,
-        timesOfDay: times,
-        onTimeWindowMinutes: parseInt(reminderWindow) || 30,
-        startDate: new Date().toISOString(),
+        frequency_type: frequency,
+        times_of_day: times,
+        on_time_window_minutes: parseInt(reminderWindow) || 30,
+        start_date: new Date().toISOString().split('T')[0],
+        days_of_week: null,
+        end_date: null,
       }
     );
+    
+    if (error) {
+      console.error("Failed to add medication:", error);
+      return;
+    }
     
     // Navigate back to onboarding or home
     if (isFromOnboarding) {

@@ -6,7 +6,7 @@ import { AnimatedPage } from "@/components/layout/AnimatedPage";
 import { FadeIn, StaggerContainer, StaggerItem } from "@/components/animations";
 import { Pill, Clock, Box, Check, Trash2, X } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useMedication } from "@/contexts/MedicationContext";
+import { useData } from "@/contexts/DataContext";
 import { triggerHaptic } from "@/hooks/use-haptics";
 import {
   AlertDialog,
@@ -22,10 +22,10 @@ import {
 export default function EditMedication() {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
-  const { medications, schedules, updateMedication, updateSchedule, removeMedication } = useMedication();
+  const { medications, schedules, updateMedication, updateSchedule, deleteMedication, getScheduleForMedication } = useData();
   
   const medication = medications.find(m => m.id === id);
-  const schedule = schedules.find(s => s.medicationId === id);
+  const schedule = medication ? getScheduleForMedication(medication.id) : undefined;
 
   // Form state
   const [strength, setStrength] = useState("");
@@ -43,16 +43,16 @@ export default function EditMedication() {
   // Load medication data
   useEffect(() => {
     if (medication && schedule) {
-      setStrength(medication.strengthValue);
-      setStrengthUnit(medication.strengthUnit);
-      setForm(medication.form);
+      setStrength(String(medication.strength_value || ""));
+      setStrengthUnit(medication.strength_unit || "mg");
+      setForm((medication.form as typeof form) || "tablet");
       setInstructions(medication.instructions || "");
-      setFrequency(schedule.frequencyType);
-      setTimes(schedule.timesOfDay);
-      setReminderWindow(schedule.onTimeWindowMinutes.toString());
-      setStoreInCase(medication.storedInCase);
-      setCompartment(medication.compartment || "1");
-      setRefillQuantity(medication.refillQuantityDoses.toString());
+      setFrequency((schedule.frequency_type as typeof frequency) || "daily");
+      setTimes(schedule.times_of_day || ["08:00"]);
+      setReminderWindow(String(schedule.on_time_window_minutes || 30));
+      setStoreInCase(medication.stored_in_case || false);
+      setCompartment(String(medication.compartment || "1"));
+      setRefillQuantity(String(medication.refill_quantity_doses || 30));
     }
   }, [medication, schedule]);
 
@@ -77,38 +77,38 @@ export default function EditMedication() {
     );
   }
 
-  const handleSave = () => {
+  const handleSave = async () => {
     triggerHaptic("success");
     
-    // Parse strength value and unit
-    const strengthMatch = strength.match(/^(\d+\.?\d*)\s*(\w+)?$/);
-    const strengthVal = strengthMatch ? strengthMatch[1] : strength;
-    const strengthU = strengthMatch?.[2] || strengthUnit;
+    // Parse strength value
+    const strengthVal = parseFloat(strength) || null;
 
     // Update medication
-    updateMedication(medication.id, {
-      strengthValue: strengthVal,
-      strengthUnit: strengthU,
+    await updateMedication(medication.id, {
+      strength_value: strengthVal,
+      strength_unit: strengthUnit,
       form,
-      instructions: instructions || undefined,
-      storedInCase: storeInCase,
-      compartment: storeInCase ? compartment : undefined,
-      refillQuantityDoses: parseInt(refillQuantity) || 30,
+      instructions: instructions || null,
+      stored_in_case: storeInCase,
+      compartment: storeInCase ? parseInt(compartment) : null,
+      refill_quantity_doses: parseInt(refillQuantity) || 30,
     });
 
     // Update schedule
-    updateSchedule(medication.id, {
-      frequencyType: frequency,
-      timesOfDay: times,
-      onTimeWindowMinutes: parseInt(reminderWindow) || 30,
-    });
+    if (schedule) {
+      await updateSchedule(schedule.id, {
+        frequency_type: frequency,
+        times_of_day: times,
+        on_time_window_minutes: parseInt(reminderWindow) || 30,
+      });
+    }
 
     navigate("/medications");
   };
 
-  const handleDelete = () => {
+  const handleDelete = async () => {
     triggerHaptic("warning");
-    removeMedication(medication.id);
+    await deleteMedication(medication.id);
     setShowDeleteDialog(false);
     navigate("/medications");
   };
@@ -126,7 +126,7 @@ export default function EditMedication() {
       <div className="page-padding pb-36">
         <PageHeader 
           title="Edit Medication" 
-          subtitle={medication.genericName}
+          subtitle={medication.generic_name}
         />
 
         <div className="section-gap">
@@ -138,9 +138,9 @@ export default function EditMedication() {
                   <Pill className="h-6 w-6 text-primary" />
                 </div>
                 <div>
-                  <h3 className="font-semibold text-foreground">{medication.genericName}</h3>
-                  {medication.altNames && medication.altNames.length > 0 && (
-                    <p className="text-caption">{medication.altNames.join(", ")}</p>
+                  <h3 className="font-semibold text-foreground">{medication.generic_name}</h3>
+                  {medication.alt_names && medication.alt_names.length > 0 && (
+                    <p className="text-caption">{medication.alt_names.join(", ")}</p>
                   )}
                 </div>
               </div>
@@ -412,7 +412,7 @@ export default function EditMedication() {
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Medication</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete {medication.genericName}? This action cannot be undone. Your dose history will be preserved.
+              Are you sure you want to delete {medication.generic_name}? This action cannot be undone. Your dose history will be preserved.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

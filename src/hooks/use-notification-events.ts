@@ -1,5 +1,5 @@
 import { useOnboarding, Notification } from '@/contexts/OnboardingContext';
-import { useMedication } from '@/contexts/MedicationContext';
+import { useData } from '@/contexts/DataContext';
 
 export type NotificationEventType = 
   | 'reminder_sent'
@@ -28,7 +28,7 @@ interface CreateEventParams {
 
 export function useNotificationEvents() {
   const { addNotification, notificationPreferences } = useOnboarding();
-  const { medications } = useMedication();
+  const { medications } = useData();
 
   const createEvent = ({
     type,
@@ -42,7 +42,7 @@ export function useNotificationEvents() {
     if (!shouldNotify) return;
 
     const medName = medicationName || 
-      medications.find(m => m.id === medicationId)?.genericName || 
+      medications.find(m => m.id === medicationId)?.generic_name || 
       undefined;
 
     const notification = buildNotification(type, medName, metadata);
