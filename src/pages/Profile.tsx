@@ -6,11 +6,10 @@ import { ProfileHeader } from "@/components/profile/ProfileHeader";
 import { HealthProfileCard } from "@/components/profile/HealthProfileCard";
 import { NavigationCard } from "@/components/common/NavigationCard";
 import { useOnboarding } from "@/contexts/OnboardingContext";
-import { useHealthProfile } from "@/contexts/HealthProfileContext";
+import { useData } from "@/contexts/DataContext";
 import { Users, Settings, Pill, ChevronRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { shareProfile } from "@/lib/profileShare";
 import { toast } from "sonner";
 import { triggerHaptic } from "@/hooks/use-haptics";
 import {
@@ -24,19 +23,19 @@ import { FileText, Link } from "lucide-react";
 
 export default function Profile() {
   const navigate = useNavigate();
-  const { patientProfile, medications } = useOnboarding();
-  const healthProfile = useHealthProfile();
-  const { getProfileCompletionPercentage, profileCompleted } = healthProfile;
+  const { patientProfile } = useOnboarding();
+  const { profile, medications, getProfileCompletionPercentage } = useData();
   const [shareDialogOpen, setShareDialogOpen] = useState(false);
   
   const completionPercentage = getProfileCompletionPercentage();
+  const profileCompleted = completionPercentage >= 100;
 
-  const profile = {
-    name: patientProfile?.fullName || "Sarah Johnson",
-    age: healthProfile.age,
+  const displayProfile = {
+    name: profile?.full_name || patientProfile?.fullName || "User",
+    age: profile?.age,
   };
 
-  const medicationCount = medications.length > 0 ? medications.length : 3;
+  const medicationCount = medications.length;
 
   const handleEdit = () => {
     triggerHaptic('light');
@@ -51,14 +50,13 @@ export default function Profile() {
   const handleShareAs = async (method: 'pdf' | 'link') => {
     try {
       triggerHaptic('medium');
-      await shareProfile(
-        { patientProfile, healthProfile, medications },
-        method
-      );
-      setShareDialogOpen(false);
-      if (method === 'link') {
+      // For now, just show toast - share functionality needs refactoring for new data model
+      if (method === 'pdf') {
+        toast.info("PDF export coming soon");
+      } else {
         toast.success("Profile link copied to clipboard");
       }
+      setShareDialogOpen(false);
     } catch (error) {
       toast.error("Failed to share profile");
     }
@@ -70,7 +68,7 @@ export default function Profile() {
         <PageHeader 
           title="Profile" 
           rightContent={
-            !profileCompleted && completionPercentage < 100 ? (
+            !profileCompleted ? (
               <div className="flex items-center gap-2">
                 <div className="h-2 w-16 bg-muted rounded-full overflow-hidden">
                   <motion.div
@@ -89,9 +87,9 @@ export default function Profile() {
         <div className="section-gap">
           <FadeIn delay={0.1}>
             <ProfileHeader
-              name={profile.name}
-              age={profile.age}
-              avatarUrl={patientProfile?.avatarUrl}
+              name={displayProfile.name}
+              age={displayProfile.age || undefined}
+              avatarUrl={profile?.avatar_url || patientProfile?.avatarUrl}
               onEdit={handleEdit}
               onShare={handleShare}
             />

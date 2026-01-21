@@ -5,13 +5,11 @@ import { FadeIn, StaggerContainer, StaggerItem } from "@/components/animations";
 import { useNavigate } from "react-router-dom";
 import { Plus, Pill, Clock, ChevronRight, Package } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useMedication } from "@/contexts/MedicationContext";
+import { useData } from "@/contexts/DataContext";
 
 export default function MyMedications() {
   const navigate = useNavigate();
-  const { medications, schedules } = useMedication();
-
-  const activeMedications = medications.filter(m => m.isActive);
+  const { activeMedications, schedules, inventory } = useData();
 
   const formatTime = (time: string) => {
     const [hours, minutes] = time.split(':');
@@ -22,7 +20,11 @@ export default function MyMedications() {
   };
 
   const getScheduleForMed = (medId: string) => {
-    return schedules.find(s => s.medicationId === medId);
+    return schedules.find(s => s.medication_id === medId);
+  };
+
+  const getInventoryForMed = (medId: string) => {
+    return inventory.find(i => i.medication_id === medId);
   };
 
   return (
@@ -48,7 +50,9 @@ export default function MyMedications() {
           <StaggerContainer className="space-y-3">
             {activeMedications.map((med) => {
               const schedule = getScheduleForMed(med.id);
-              const isLowStock = med.remainingDoses <= med.refillThresholdDoses;
+              const inv = getInventoryForMed(med.id);
+              const remainingDoses = inv?.doses_remaining || 0;
+              const isLowStock = med.stored_in_case && remainingDoses <= (med.refill_threshold_doses || 2);
               
               return (
                 <StaggerItem key={med.id}>
@@ -70,8 +74,8 @@ export default function MyMedications() {
                       <div className="flex-1 min-w-0">
                         <div className="flex items-start justify-between">
                           <div>
-                            <h4 className="font-semibold text-foreground">{med.genericName}</h4>
-                            <p className="text-caption">{med.strengthValue}{med.strengthUnit} • {med.form}</p>
+                            <h4 className="font-semibold text-foreground">{med.generic_name}</h4>
+                            <p className="text-caption">{med.strength_value}{med.strength_unit} • {med.form}</p>
                           </div>
                           <ChevronRight className="h-5 w-5 text-muted-foreground shrink-0" />
                         </div>
@@ -80,12 +84,12 @@ export default function MyMedications() {
                           <div className="mt-3 flex flex-wrap gap-2">
                             <span className="badge-time">
                               <Clock className="h-3 w-3" />
-                              {schedule.timesOfDay.map(formatTime).join(', ')}
+                              {schedule.times_of_day.map(formatTime).join(', ')}
                             </span>
                             <span className="badge-pill">
-                              {schedule.frequencyType.charAt(0).toUpperCase() + schedule.frequencyType.slice(1)}
+                              {schedule.frequency_type.charAt(0).toUpperCase() + schedule.frequency_type.slice(1)}
                             </span>
-                            {med.storedInCase && med.compartment && (
+                            {med.stored_in_case && med.compartment && (
                               <span className="badge-pill">
                                 <Package className="h-3 w-3" />
                                 Slot {med.compartment}
@@ -94,14 +98,14 @@ export default function MyMedications() {
                           </div>
                         )}
 
-                        {med.storedInCase && (
+                        {med.stored_in_case && (
                           <div className="mt-3">
                             <div className="flex items-center justify-between text-xs mb-1">
                               <span className={cn(
                                 "font-medium",
                                 isLowStock ? "text-warning" : "text-muted-foreground"
                               )}>
-                                {med.remainingDoses} doses remaining
+                                {remainingDoses} doses remaining
                               </span>
                               {isLowStock && (
                                 <span className="text-warning font-medium">Refill soon</span>
@@ -114,7 +118,7 @@ export default function MyMedications() {
                                   isLowStock && "critical"
                                 )}
                                 style={{ 
-                                  width: `${Math.min(100, (med.remainingDoses / med.refillQuantityDoses) * 100)}%` 
+                                  width: `${Math.min(100, (remainingDoses / (med.refill_quantity_doses || 30)) * 100)}%` 
                                 }}
                               />
                             </div>
