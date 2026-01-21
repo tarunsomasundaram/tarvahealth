@@ -12,7 +12,7 @@ export default function Auth() {
   const navigate = useNavigate();
   const location = useLocation();
   const { signUp, signIn, resetPassword } = useAuth();
-  const { setUserEmail } = useOnboarding();
+  const { setUserEmail, setIsGuestMode, setUserRole, setHasCompletedOnboarding } = useOnboarding();
   
   const initialMode = (location.state as { mode?: string })?.mode === "signin" ? "signin" : "landing";
   
@@ -142,6 +142,13 @@ export default function Auth() {
     }
   };
 
+  const handleContinueAsGuest = () => {
+    triggerHaptic('medium');
+    setIsGuestMode(true);
+    setUserRole('patient');
+    setHasCompletedOnboarding(true);
+  };
+
   const renderLanding = () => (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -195,6 +202,14 @@ export default function Auth() {
         >
           <Mail className="h-5 w-5" />
           Continue with email
+        </motion.button>
+
+        <motion.button
+          onClick={handleContinueAsGuest}
+          className="flex w-full items-center justify-center gap-3 rounded-xl bg-secondary py-4 font-semibold text-foreground"
+          whileTap={{ scale: 0.98 }}
+        >
+          Explore as guest
         </motion.button>
 
         <p className="text-center text-sm text-muted-foreground pt-2">

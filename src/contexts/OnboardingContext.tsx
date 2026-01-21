@@ -84,6 +84,7 @@ export interface CaseDevice {
 
 interface OnboardingState {
   hasCompletedOnboarding: boolean;
+  isGuestMode: boolean;
   userRole: UserRole;
   patientProfile: PatientProfile | null;
   caregiverProfile: CaregiverProfile | null;
@@ -106,6 +107,7 @@ interface OnboardingState {
 
 interface OnboardingContextType extends OnboardingState {
   setHasCompletedOnboarding: (value: boolean) => void;
+  setIsGuestMode: (value: boolean) => void;
   setUserRole: (role: UserRole) => void;
   setPatientProfile: (profile: PatientProfile) => void;
   setCaregiverProfile: (profile: CaregiverProfile) => void;
@@ -128,6 +130,7 @@ interface OnboardingContextType extends OnboardingState {
   generateInviteCode: () => string;
   clearInviteCode: () => void;
   setUserEmail: (email: string) => void;
+  exitGuestMode: () => void;
   resetOnboarding: () => void;
 }
 
@@ -201,6 +204,7 @@ const generateMockNotifications = (): Notification[] => [
 
 const defaultState: OnboardingState = {
   hasCompletedOnboarding: false,
+  isGuestMode: false,
   userRole: null,
   patientProfile: null,
   caregiverProfile: null,
@@ -243,6 +247,10 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
 
   const setHasCompletedOnboarding = (value: boolean) => {
     setState(prev => ({ ...prev, hasCompletedOnboarding: value }));
+  };
+
+  const setIsGuestMode = (value: boolean) => {
+    setState(prev => ({ ...prev, isGuestMode: value }));
   };
 
   const setUserRole = (role: UserRole) => {
@@ -363,6 +371,10 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
     }));
   };
 
+  const exitGuestMode = () => {
+    setState(prev => ({ ...prev, isGuestMode: false }));
+  };
+
   const resetOnboarding = () => {
     setState({ ...defaultState, notifications: generateMockNotifications() });
     localStorage.removeItem('tarva-onboarding');
@@ -373,6 +385,7 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
       value={{
         ...state,
         setHasCompletedOnboarding,
+        setIsGuestMode,
         setUserRole,
         setPatientProfile,
         setCaregiverProfile,
@@ -395,6 +408,7 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
         generateInviteCode,
         clearInviteCode,
         setUserEmail,
+        exitGuestMode,
         resetOnboarding,
       }}
     >
