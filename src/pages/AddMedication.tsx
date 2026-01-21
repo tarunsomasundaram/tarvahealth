@@ -11,6 +11,8 @@ import { useData } from "@/contexts/DataContext";
 import { triggerHaptic } from "@/hooks/use-haptics";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/use-auth";
+import { useOnboarding } from "@/contexts/OnboardingContext";
+import { SignInPromptSheet } from "@/components/auth/SignInPromptSheet";
 
 const steps = ["Medication", "Strength", "Schedule", "Case", "Save"];
 
@@ -306,6 +308,7 @@ export default function AddMedication() {
   const location = useLocation();
   const { addMedication } = useData();
   const { user } = useAuth();
+  const { isGuestMode } = useOnboarding();
   
   // Check if coming from onboarding
   const isFromOnboarding = location.state?.fromOnboarding === true;
@@ -326,6 +329,7 @@ export default function AddMedication() {
   const [compartment, setCompartment] = useState("1");
   const [refillQuantity, setRefillQuantity] = useState("30");
   const [isSaving, setIsSaving] = useState(false);
+  const [showSignInPrompt, setShowSignInPrompt] = useState(false);
 
   // Handler for selecting a custom medication
   const handleCustomMedication = () => {
@@ -366,14 +370,9 @@ export default function AddMedication() {
     if (!selectedMed && !isCustomMed) return;
     if (isCustomMed && !customMedName.trim()) return;
     
-    // Check if user is authenticated
-    if (!user) {
-      toast.error("Please sign in to save medications", {
-        action: {
-          label: "Sign In",
-          onClick: () => navigate("/auth"),
-        },
-      });
+    // Check if user is authenticated (show prompt for guests)
+    if (!user || isGuestMode) {
+      setShowSignInPrompt(true);
       return;
     }
     
@@ -927,6 +926,13 @@ export default function AddMedication() {
           )}
         </motion.div>
       </div>
+
+      <SignInPromptSheet 
+        open={showSignInPrompt} 
+        onOpenChange={setShowSignInPrompt}
+        title="Create an account to save"
+        description="Sign up to save your medications and keep them synced across all your devices."
+      />
     </AnimatedPage>
   );
 }
