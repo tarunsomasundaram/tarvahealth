@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
 import { Pill, Package, Calendar, TrendingUp } from "lucide-react";
 import { format, parseISO } from "date-fns";
-import { useMedication, Medication, RefillLog } from "@/contexts/MedicationContext";
+import { useData, Medication } from "@/contexts/DataContext";
 import {
   Sheet,
   SheetContent,
@@ -17,19 +17,15 @@ interface RefillHistorySheetProps {
 }
 
 export function RefillHistorySheet({ open, onOpenChange, medication }: RefillHistorySheetProps) {
-  const { getRefillLogsForMedication } = useMedication();
+  const { getRefillLogsForMedication, getInventoryForMedication } = useData();
 
   if (!medication) return null;
 
   const refillHistory = getRefillLogsForMedication(medication.id);
+  const remainingDoses = getInventoryForMedication(medication.id)?.doses_remaining ?? 0;
 
-  const formatDate = (datetime: string) => {
-    return format(parseISO(datetime), "MMM d, yyyy");
-  };
-
-  const formatTime = (datetime: string) => {
-    return format(parseISO(datetime), "h:mm a");
-  };
+  const formatDate = (datetime: string) => format(parseISO(datetime), "MMM d, yyyy");
+  const formatTime = (datetime: string) => format(parseISO(datetime), "h:mm a");
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -45,9 +41,9 @@ export function RefillHistorySheet({ open, onOpenChange, medication }: RefillHis
               <Pill className="h-6 w-6 text-primary" />
             </div>
             <div>
-              <h4 className="font-semibold text-foreground">{medication.genericName}</h4>
+              <h4 className="font-semibold text-foreground">{medication.generic_name}</h4>
               <p className="text-caption">
-                {medication.strengthValue}{medication.strengthUnit} • Currently {medication.remainingDoses} doses
+                {medication.strength_value ?? ""}{medication.strength_unit ?? ""} • Currently {remainingDoses} doses
               </p>
             </div>
           </div>
@@ -63,7 +59,7 @@ export function RefillHistorySheet({ open, onOpenChange, medication }: RefillHis
               <div className="p-3 rounded-xl bg-secondary text-center">
                 <Package className="h-5 w-5 mx-auto text-primary mb-1" />
                 <p className="text-lg font-bold text-foreground">
-                  {refillHistory.reduce((sum, log) => sum + log.refillAmount, 0)}
+                    {refillHistory.reduce((sum, log) => sum + (log.quantity_added ?? 0), 0)}
                 </p>
                 <p className="text-xs text-muted-foreground">Total Doses Added</p>
               </div>
@@ -87,17 +83,17 @@ export function RefillHistorySheet({ open, onOpenChange, medication }: RefillHis
                         </div>
                         <div>
                           <p className="font-medium text-foreground">
-                            +{log.refillAmount} doses
+                            +{log.quantity_added} doses
                           </p>
                           <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                             <Calendar className="h-3 w-3" />
-                            {formatDate(log.refillDatetime)} at {formatTime(log.refillDatetime)}
+                            {formatDate(log.refilled_at)} at {formatTime(log.refilled_at)}
                           </div>
                         </div>
                       </div>
                       <div className="text-right">
                         <p className="text-xs text-muted-foreground">
-                          {log.previousDoses} → {log.newTotalDoses}
+                          {log.previous_quantity ?? 0} → {log.new_quantity ?? 0}
                         </p>
                       </div>
                     </div>
