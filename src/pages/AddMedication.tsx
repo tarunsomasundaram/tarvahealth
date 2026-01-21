@@ -371,7 +371,8 @@ export default function AddMedication() {
     if (isCustomMed && !customMedName.trim()) return;
     
     // Check if user is authenticated (show prompt for guests)
-    if (!user || isGuestMode) {
+    // Skip this check during onboarding - user should already be authenticated
+    if (!isFromOnboarding && (!user || isGuestMode)) {
       setShowSignInPrompt(true);
       return;
     }
