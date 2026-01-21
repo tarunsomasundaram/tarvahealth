@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { AnimatedPage } from "@/components/layout/AnimatedPage";
 import { FadeIn, StaggerContainer, StaggerItem } from "@/components/animations";
@@ -7,6 +7,7 @@ import { FilterChips } from "@/components/common/FilterChips";
 import { StatCard } from "@/components/stats/StatCard";
 import { AdherenceChart } from "@/components/stats/AdherenceChart";
 import { Target, Clock, Zap, AlertTriangle, Eye } from "lucide-react";
+import { useCaregiverAccessLog } from "@/hooks/use-caregiver-access-log";
 
 const mockPatients = [
   { id: "1", name: "John Smith", lastActive: "5 min ago" },
@@ -32,6 +33,20 @@ const weeklyData = [
 export default function CaregiverStats() {
   const [selectedPatientId, setSelectedPatientId] = useState(mockPatients[0]?.id || "");
   const [timeFilter, setTimeFilter] = useState("7d");
+  const { logAccess } = useCaregiverAccessLog();
+  const hasLoggedAccess = useRef(false);
+
+  // Log access when viewing patient stats
+  useEffect(() => {
+    if (selectedPatientId && !hasLoggedAccess.current) {
+      logAccess({
+        patientUserId: selectedPatientId,
+        resourceType: 'stats',
+        metadata: { timeFilter },
+      });
+      hasLoggedAccess.current = true;
+    }
+  }, [selectedPatientId, logAccess, timeFilter]);
 
   return (
     <AnimatedPage>

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import { format, formatDistanceToNow } from "date-fns";
 import { PageHeader } from "@/components/layout/PageHeader";
@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import { useCaregiver, CaregiverNotification } from "@/contexts/CaregiverContext";
 import { cn } from "@/lib/utils";
+import { useCaregiverAccessLog } from "@/hooks/use-caregiver-access-log";
 
 // Mock data for linked patients
 const mockPatients = [
@@ -97,6 +98,20 @@ export default function CaregiverHome() {
   const [selectedPatientId, setSelectedPatientId] = useState(mockPatients[0]?.id || "");
   const [showAllNotifications, setShowAllNotifications] = useState(false);
   const { caregivers, caregiverNotifications, markAllNotificationsRead } = useCaregiver();
+  const { logAccess } = useCaregiverAccessLog();
+  const hasLoggedAccess = useRef(false);
+
+  // Log access when viewing patient data on the home dashboard
+  useEffect(() => {
+    if (selectedPatientId && !hasLoggedAccess.current) {
+      logAccess({
+        patientUserId: selectedPatientId,
+        resourceType: 'dose_logs',
+        metadata: { viewType: 'dashboard' },
+      });
+      hasLoggedAccess.current = true;
+    }
+  }, [selectedPatientId, logAccess]);
 
   // Get the permissions for this caregiver
   const linkedCaregiver = caregivers.find(cg => cg.id === mockPatients[0]?.caregiverId);

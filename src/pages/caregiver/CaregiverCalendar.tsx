@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import { format } from "date-fns";
 import { PageHeader } from "@/components/layout/PageHeader";
@@ -8,6 +8,7 @@ import { PatientSelector } from "@/components/caregiver/PatientSelector";
 import { CalendarGrid } from "@/components/calendar/CalendarGrid";
 import { Medication } from "@/components/home/MedicationCard";
 import { Check, X, Clock, Eye } from "lucide-react";
+import { useCaregiverAccessLog } from "@/hooks/use-caregiver-access-log";
 
 const mockPatients = [
   { id: "1", name: "John Smith", lastActive: "5 min ago" },
@@ -65,6 +66,20 @@ const getMedicationsForDate = (date: Date): Medication[] => {
 export default function CaregiverCalendar() {
   const [selectedPatientId, setSelectedPatientId] = useState(mockPatients[0]?.id || "");
   const [selectedDate, setSelectedDate] = useState(new Date());
+  const { logAccess } = useCaregiverAccessLog();
+  const hasLoggedAccess = useRef(false);
+
+  // Log access when viewing patient calendar/dose logs
+  useEffect(() => {
+    if (selectedPatientId && !hasLoggedAccess.current) {
+      logAccess({
+        patientUserId: selectedPatientId,
+        resourceType: 'dose_logs',
+        metadata: { viewType: 'calendar' },
+      });
+      hasLoggedAccess.current = true;
+    }
+  }, [selectedPatientId, logAccess]);
 
   const medications = getMedicationsForDate(selectedDate);
 
