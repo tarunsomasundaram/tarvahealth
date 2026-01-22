@@ -4,6 +4,7 @@ import { AnimatedPage } from "@/components/layout/AnimatedPage";
 import { FadeIn, StaggerContainer, StaggerItem } from "@/components/animations";
 import { ProfileHeader } from "@/components/profile/ProfileHeader";
 import { HealthProfileCard } from "@/components/profile/HealthProfileCard";
+import { PrivacyAccessCard } from "@/components/profile/PrivacyAccessCard";
 import { NavigationCard } from "@/components/common/NavigationCard";
 import { useOnboarding } from "@/contexts/OnboardingContext";
 import { useData } from "@/contexts/DataContext";
@@ -97,6 +98,10 @@ export default function Profile() {
 
           <FadeIn delay={0.15}>
             <HealthProfileCard />
+          </FadeIn>
+
+          <FadeIn delay={0.2}>
+            <PrivacyAccessCard />
           </FadeIn>
 
           <StaggerContainer className="space-y-3">
