@@ -6,7 +6,7 @@ import { FadeIn, StaggerContainer, StaggerItem } from "@/components/animations";
 import { CaseStatusCard } from "@/components/case/CaseStatusCard";
 import { InventoryCard } from "@/components/case/InventoryCard";
 import { RefillSheet } from "@/components/case/RefillSheet";
-import { Plus, Settings, TrendingUp, Package } from "lucide-react";
+import { Plus, Settings, Package } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useData, Medication } from "@/contexts/DataContext";
 
@@ -122,23 +122,6 @@ export default function Case() {
               <h2 className="text-section text-foreground mb-3">Case Info</h2>
             </FadeIn>
             <StaggerContainer className="space-y-3">
-              <StaggerItem>
-                <motion.div 
-                  className="card-tarva-interactive" 
-                  onClick={() => navigate("/stats")}
-                  whileTap={{ scale: 0.98 }}
-                >
-                  <div className="flex items-center gap-4">
-                    <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-accent">
-                      <TrendingUp className="h-5 w-5 text-primary" />
-                    </div>
-                    <div>
-                      <h4 className="font-semibold text-foreground">Battery Trends</h4>
-                      <p className="text-caption">View usage patterns</p>
-                    </div>
-                  </div>
-                </motion.div>
-              </StaggerItem>
               <StaggerItem>
                 <motion.div 
                   className="card-tarva-interactive" 
