@@ -11,8 +11,8 @@ import { triggerHaptic } from "@/hooks/use-haptics";
 import { PinSetup } from "@/components/security/PinSetup";
 import { format } from "date-fns";
 import { 
-  Box, Bell, Download, Link, Shield, 
-  Bluetooth, Battery, Sliders, Volume2, 
+  Bell, Download, Link, 
+  Bluetooth, 
   FileText, Calendar, Lock, Moon, Sun, Monitor,
   ChevronRight, Fingerprint, Users, LogOut, Mail, CalendarDays
 } from "lucide-react";
@@ -97,7 +97,7 @@ export default function Settings() {
   const { pinEnabled, faceIdEnabled, setFaceIdEnabled, notificationPreferences, resetOnboarding, userEmail, accountCreatedAt } = useOnboarding();
   const { shareProfileInForum, setShareProfileInForum } = useHealthProfile();
   const { signOut, user } = useAuth();
-  const [batterySaver, setBatterySaver] = useState(false);
+  
   const [showLogoutDialog, setShowLogoutDialog] = useState(false);
   
   const [pinModalOpen, setPinModalOpen] = useState(false);
@@ -147,25 +147,6 @@ export default function Settings() {
                   description="Bluetooth pairing"
                   icon={<Bluetooth className="h-5 w-5 text-primary" />}
                   onClick={() => console.log("Connect case")}
-                />
-                <SettingLink
-                  label="Sync Frequency"
-                  description="Every 5 minutes"
-                  icon={<Sliders className="h-5 w-5 text-primary" />}
-                  onClick={() => console.log("Sync frequency")}
-                />
-                <SettingLink
-                  label="Calibration"
-                  description="Adjust sensor sensitivity"
-                  icon={<Box className="h-5 w-5 text-primary" />}
-                  onClick={() => console.log("Calibration")}
-                />
-                <SettingToggle
-                  label="Battery Saver"
-                  description="Reduce sync frequency"
-                  icon={<Battery className="h-5 w-5 text-primary" />}
-                  enabled={batterySaver}
-                  onToggle={() => setBatterySaver(!batterySaver)}
                 />
               </div>
             </section>
