@@ -7,6 +7,7 @@ import { ThemeProvider } from "@/hooks/use-theme";
 import { OnboardingProvider, useOnboarding } from "@/contexts/OnboardingContext";
 import { AuthProvider } from "@/hooks/use-auth";
 import { DataProvider } from "@/contexts/DataContext";
+import { CaregiverProvider } from "@/contexts/CaregiverContext";
 import { FloatingBottomNav } from "@/components/layout/FloatingBottomNav";
 import { CaregiverTabBar } from "@/components/layout/CaregiverTabBar";
 // Main app pages
@@ -146,17 +147,19 @@ const App = () => (
     <ThemeProvider>
       <AuthProvider>
         <DataProvider>
-          <OnboardingProvider>
-            <TooltipProvider>
-              <Toaster />
-              <Sonner />
-              <BrowserRouter>
-                <div className="mx-auto max-w-md min-h-screen app-gradient-bg">
-                  <AppRoutes />
-                </div>
-              </BrowserRouter>
-            </TooltipProvider>
-          </OnboardingProvider>
+          <CaregiverProvider>
+            <OnboardingProvider>
+              <TooltipProvider>
+                <Toaster />
+                <Sonner />
+                <BrowserRouter>
+                  <div className="mx-auto max-w-md min-h-screen app-gradient-bg">
+                    <AppRoutes />
+                  </div>
+                </BrowserRouter>
+              </TooltipProvider>
+            </OnboardingProvider>
+          </CaregiverProvider>
         </DataProvider>
       </AuthProvider>
     </ThemeProvider>
