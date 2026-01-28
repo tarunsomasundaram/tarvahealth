@@ -329,11 +329,15 @@ export default function AddMedication() {
   const [frequency, setFrequency] = useState<"daily" | "weekly" | "custom" | "as-needed">("daily");
   const [times, setTimes] = useState(["08:00"]);
   const [reminderWindow, setReminderWindow] = useState("30");
+  const [quantityPerDose, setQuantityPerDose] = useState("1");
   const [storeInCase, setStoreInCase] = useState(true);
   const [compartment, setCompartment] = useState("1");
   const [refillQuantity, setRefillQuantity] = useState("30");
   const [isSaving, setIsSaving] = useState(false);
   const [showSignInPrompt, setShowSignInPrompt] = useState(false);
+
+  // Validation helpers
+  const isStrengthValid = strength.trim().length > 0;
 
   // Handler for selecting a custom medication
   const handleCustomMedication = () => {
@@ -410,6 +414,11 @@ export default function AddMedication() {
     // Parse strength value
     const strengthVal = parseFloat(strength) || null;
     
+    // Build instructions with quantity info
+    const qty = parseInt(quantityPerDose) || 1;
+    const quantityText = qty > 1 ? `Take ${qty} ${form}s` : null;
+    const fullInstructions = [quantityText, instructions].filter(Boolean).join(". ") || null;
+    
     // Add the medication to cloud
     const { error } = await addMedication(
       {
@@ -418,7 +427,7 @@ export default function AddMedication() {
         strength_value: strengthVal,
         strength_unit: strengthUnit || null,
         form: form,
-        instructions: instructions || null,
+        instructions: fullInstructions,
         notes: null,
         is_active: true,
         stored_in_case: storeInCase,
@@ -717,6 +726,27 @@ export default function AddMedication() {
                     ))}
                   </div>
                 </div>
+                <div>
+                  <label className="text-sm font-medium text-foreground">Quantity per dose</label>
+                  <p className="text-xs text-muted-foreground mt-1">How many pills/tablets to take each time</p>
+                  <div className="mt-2 flex gap-2">
+                    {["1", "2", "3", "4"].map((q) => (
+                      <motion.button
+                        key={q}
+                        onClick={() => setQuantityPerDose(q)}
+                        className={cn(
+                          "flex-1 rounded-xl px-4 py-2 text-sm font-medium transition-all",
+                          quantityPerDose === q
+                            ? "bg-gradient-primary text-primary-foreground"
+                            : "bg-secondary text-secondary-foreground"
+                        )}
+                        whileTap={{ scale: 0.95 }}
+                      >
+                        {q}
+                      </motion.button>
+                    ))}
+                  </div>
+                </div>
               </div>
             </div>
           </motion.div>
@@ -836,7 +866,7 @@ export default function AddMedication() {
                   </div>
                   <div>
                     <h4 className="font-semibold text-foreground">{getMedicationName()}</h4>
-                    <p className="text-caption">{strength}{strengthUnit} • {form}</p>
+                    <p className="text-caption">{strength}{strengthUnit} • {form} • {quantityPerDose} per dose</p>
                     {isCustomMed && (
                       <span className="text-xs text-primary">Custom medication</span>
                     )}
@@ -931,8 +961,11 @@ export default function AddMedication() {
           {currentStep < steps.length - 1 ? (
             <motion.button
               onClick={nextStep}
-              disabled={currentStep === 0 && !selectedMed}
-              className={cn("btn-primary flex-1", currentStep === 0 && !selectedMed && "opacity-50")}
+              disabled={(currentStep === 0 && !selectedMed) || (currentStep === 1 && !isStrengthValid)}
+              className={cn(
+                "btn-primary flex-1", 
+                ((currentStep === 0 && !selectedMed) || (currentStep === 1 && !isStrengthValid)) && "opacity-50"
+              )}
               whileTap={{ scale: 0.97 }}
             >
               Continue
