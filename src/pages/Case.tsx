@@ -151,7 +151,7 @@ export default function Case() {
                     </div>
                     <div>
                       <h4 className="font-semibold text-foreground">Case Settings</h4>
-                      <p className="text-caption">Calibration, sync, notifications</p>
+                      <p className="text-caption">Bluetooth, notifications</p>
                     </div>
                   </div>
                 </motion.div>
