@@ -61,7 +61,7 @@ export function PrivacyAccessCard() {
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium text-foreground truncate">
-                    Viewed {config.label}
+                    {log.caregiver_name || "Caregiver"} viewed {config.label}
                   </p>
                   <div className="flex items-center gap-1 text-xs text-muted-foreground">
                     <Clock className="h-3 w-3" />
