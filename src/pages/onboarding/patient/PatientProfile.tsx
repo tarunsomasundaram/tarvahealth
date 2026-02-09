@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 import { triggerHaptic } from "@/hooks/use-haptics";
@@ -7,6 +7,31 @@ import { useOnboarding } from "@/contexts/OnboardingContext";
 import { InfoButton } from "@/components/onboarding/InfoButton";
 import { OnboardingProgress } from "@/components/onboarding/OnboardingProgress";
 import { OnboardingPageWrapper } from "@/components/onboarding/OnboardingPageWrapper";
+
+function TypewriterTitle({ text }: { text: string }) {
+  const [displayed, setDisplayed] = useState("");
+
+  useEffect(() => {
+    let i = 0;
+    const interval = setInterval(() => {
+      i++;
+      setDisplayed(text.slice(0, i));
+      if (i >= text.length) clearInterval(interval);
+    }, 45);
+    return () => clearInterval(interval);
+  }, [text]);
+
+  return (
+    <h1 className="text-title-large text-foreground">
+      {displayed}
+      <motion.span
+        animate={{ opacity: [1, 0] }}
+        transition={{ repeat: Infinity, duration: 0.6, ease: "linear", repeatType: "reverse" }}
+        className="inline-block w-[2px] h-[1.1em] bg-primary ml-0.5 align-text-bottom"
+      />
+    </h1>
+  );
+}
 
 export default function PatientProfile() {
   const navigate = useNavigate();
@@ -75,14 +100,7 @@ export default function PatientProfile() {
         </div>
 
         <div className="flex-1 flex flex-col px-6 pt-8">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-          >
-            <h1 className="text-title-large text-foreground">
-              Set up your profile
-            </h1>
-          </motion.div>
+          <TypewriterTitle text="Set up your profile" />
 
           <motion.div
             initial={{ opacity: 0, y: 20 }}
