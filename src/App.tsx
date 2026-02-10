@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -5,11 +6,12 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { ThemeProvider } from "@/hooks/use-theme";
 import { OnboardingProvider, useOnboarding } from "@/contexts/OnboardingContext";
-import { AuthProvider } from "@/hooks/use-auth";
+import { AuthProvider, useAuth } from "@/hooks/use-auth";
 import { DataProvider } from "@/contexts/DataContext";
 import { CaregiverProvider } from "@/contexts/CaregiverContext";
 import { FloatingBottomNav } from "@/components/layout/FloatingBottomNav";
 import { CaregiverTabBar } from "@/components/layout/CaregiverTabBar";
+import { supabase } from "@/integrations/supabase/client";
 // Main app pages
 import Home from "./pages/Home";
 import Case from "./pages/Case";
@@ -55,7 +57,27 @@ import OnboardingComplete from "./pages/onboarding/OnboardingComplete";
 const queryClient = new QueryClient();
 
 function AppRoutes() {
-  const { hasCompletedOnboarding, userRole } = useOnboarding();
+  const { hasCompletedOnboarding, userRole, setUserRole } = useOnboarding();
+  const { user } = useAuth();
+
+  // Sync role from database to prevent client-side role tampering
+  useEffect(() => {
+    if (!user || !hasCompletedOnboarding) return;
+
+    const syncRole = async () => {
+      const { data: profile } = await supabase
+        .from('user_profiles')
+        .select('role')
+        .eq('user_id', user.id)
+        .single();
+
+      if (profile?.role && profile.role !== userRole) {
+        setUserRole(profile.role as 'patient' | 'caregiver');
+      }
+    };
+
+    syncRole();
+  }, [user, hasCompletedOnboarding]);
 
   if (!hasCompletedOnboarding) {
     return (
