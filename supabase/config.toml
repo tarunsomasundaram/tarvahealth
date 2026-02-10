@@ -1,1 +1,7 @@
 project_id = "saqrfvlkgxgtflppmaeh"
+
+[functions.send-caregiver-confirmation]
+verify_jwt = false
+
+[functions.confirm-caregiver]
+verify_jwt = false

@@ -112,27 +112,36 @@ export type Database = {
       caregiver_links: {
         Row: {
           caregiver_user_id: string
+          confirmation_expires_at: string | null
+          confirmation_token: string | null
           created_at: string
           id: string
           invite_code: string | null
+          invite_expires_at: string | null
           patient_user_id: string
           status: string | null
           updated_at: string
         }
         Insert: {
           caregiver_user_id: string
+          confirmation_expires_at?: string | null
+          confirmation_token?: string | null
           created_at?: string
           id?: string
           invite_code?: string | null
+          invite_expires_at?: string | null
           patient_user_id: string
           status?: string | null
           updated_at?: string
         }
         Update: {
           caregiver_user_id?: string
+          confirmation_expires_at?: string | null
+          confirmation_token?: string | null
           created_at?: string
           id?: string
           invite_code?: string | null
+          invite_expires_at?: string | null
           patient_user_id?: string
           status?: string | null
           updated_at?: string
