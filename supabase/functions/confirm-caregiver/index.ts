@@ -15,7 +15,9 @@ serve(async (req) => {
   try {
     const { token } = await req.json();
 
-    if (!token || typeof token !== "string" || token.length > 100) {
+    // Validate token: must be a valid UUID v4 format
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+    if (!token || typeof token !== "string" || !uuidRegex.test(token)) {
       return new Response(JSON.stringify({ error: "Invalid token" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -88,9 +90,8 @@ serve(async (req) => {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (error: unknown) {
-    console.error("Error:", error);
-    const message = error instanceof Error ? error.message : "Unknown error";
-    return new Response(JSON.stringify({ error: message }), {
+    console.error("Confirm caregiver error:", error);
+    return new Response(JSON.stringify({ error: "Confirmation failed" }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });

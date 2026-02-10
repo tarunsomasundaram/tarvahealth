@@ -321,9 +321,9 @@ export function MedicationProvider({ children }: { children: ReactNode }) {
   const [doseLogs, setDoseLogs] = useState<DoseLog[]>([]);
   const [refillLogs, setRefillLogs] = useState<RefillLog[]>([]);
 
-  // Load from localStorage on mount
+  // Load from sessionStorage on mount
   useEffect(() => {
-    const saved = localStorage.getItem('tarva-medications');
+    const saved = sessionStorage.getItem('tarva-medications');
     if (saved) {
       const parsed = JSON.parse(saved);
       setMedications(parsed.medications || []);
@@ -334,10 +334,10 @@ export function MedicationProvider({ children }: { children: ReactNode }) {
     // Start with empty medications - user adds during onboarding or later
   }, []);
 
-  // Persist to localStorage
+  // Persist to sessionStorage (clears when browser tab closes)
   useEffect(() => {
     if (medications.length > 0 || schedules.length > 0 || doseLogs.length > 0 || refillLogs.length > 0) {
-      localStorage.setItem('tarva-medications', JSON.stringify({ medications, schedules, doseLogs, refillLogs }));
+      sessionStorage.setItem('tarva-medications', JSON.stringify({ medications, schedules, doseLogs, refillLogs }));
     }
   }, [medications, schedules, doseLogs, refillLogs]);
 

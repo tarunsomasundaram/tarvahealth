@@ -48,7 +48,7 @@ const HealthProfileContext = createContext<HealthProfileContextType | undefined>
 
 export function HealthProfileProvider({ children }: { children: ReactNode }) {
   const [profile, setProfile] = useState<HealthProfile>(() => {
-    const saved = localStorage.getItem('tarva-health-profile');
+    const saved = sessionStorage.getItem('tarva-health-profile');
     if (saved) {
       return { ...defaultHealthProfile, ...JSON.parse(saved) };
     }
@@ -56,7 +56,7 @@ export function HealthProfileProvider({ children }: { children: ReactNode }) {
   });
 
   useEffect(() => {
-    localStorage.setItem('tarva-health-profile', JSON.stringify(profile));
+    sessionStorage.setItem('tarva-health-profile', JSON.stringify(profile));
   }, [profile]);
 
   const setAge = (age: number | undefined) => {
