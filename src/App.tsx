@@ -26,6 +26,7 @@ import EditMedication from "./pages/EditMedication";
 import ReminderPreferences from "./pages/ReminderPreferences";
 import EditProfile from "./pages/EditProfile";
 import NotFound from "./pages/NotFound";
+import ConfirmCaregiver from "./pages/ConfirmCaregiver";
 
 // Caregiver pages
 import CaregiverHome from "./pages/caregiver/CaregiverHome";
@@ -77,6 +78,7 @@ function AppRoutes() {
           <Route path="/onboarding/caregiver/notifications" element={<CaregiverNotifications />} />
           <Route path="/onboarding/caregiver/link" element={<CaregiverLink />} />
           <Route path="/onboarding/complete" element={<OnboardingComplete />} />
+          <Route path="/confirm-caregiver" element={<ConfirmCaregiver />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </div>
@@ -95,6 +97,7 @@ function AppRoutes() {
           <Route path="/caregiver/profile" element={<CaregiverProfilePage />} />
           <Route path="/notifications" element={<Notifications />} />
           <Route path="/settings" element={<Settings />} />
+          <Route path="/confirm-caregiver" element={<ConfirmCaregiver />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
         <CaregiverTabBar />
@@ -135,6 +138,7 @@ function AppRoutes() {
         <Route path="/onboarding/caregiver/notifications" element={<CaregiverNotifications />} />
         <Route path="/onboarding/caregiver/link" element={<CaregiverLink />} />
         <Route path="/onboarding/complete" element={<OnboardingComplete />} />
+        <Route path="/confirm-caregiver" element={<ConfirmCaregiver />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
       <FloatingBottomNav />

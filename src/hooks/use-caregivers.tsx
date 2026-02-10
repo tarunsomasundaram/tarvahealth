@@ -174,38 +174,35 @@ export function useCaregivers() {
         throw new Error('Invalid or expired invite code');
       }
 
-      // Update the link with the actual caregiver
+      // Check if invite has expired
+      if (linkData.invite_expires_at && new Date(linkData.invite_expires_at) < new Date()) {
+        throw new Error('This invite code has expired');
+      }
+
+      // Update the link with the actual caregiver, set to pending_confirmation
       const { error: updateError } = await supabase
         .from('caregiver_links')
         .update({
           caregiver_user_id: user.id,
-          status: 'active',
-          invite_code: null,
+          status: 'pending_confirmation',
         })
         .eq('id', linkData.id);
 
       if (updateError) throw updateError;
 
-      // Create default permissions
-      const { error: permError } = await supabase
-        .from('caregiver_permissions')
-        .insert({
-          patient_user_id: linkData.patient_user_id,
-          caregiver_user_id: user.id,
-          can_view_calendar: true,
-          can_view_stats: true,
-          can_view_medications: true,
-          can_receive_missed_alerts: true,
-          can_receive_late_alerts: false,
-          can_receive_refill_alerts: false,
-          can_receive_low_battery_alerts: false,
-          can_receive_dose_taken: false,
-        });
+      // Trigger confirmation email to the patient
+      const { error: emailError } = await supabase.functions.invoke(
+        'send-caregiver-confirmation',
+        { body: { linkId: linkData.id } }
+      );
 
-      if (permError) throw permError;
+      if (emailError) {
+        console.error('Failed to send confirmation email:', emailError);
+        // Don't throw - the link is already pending, patient can still confirm
+      }
 
       await fetchCaregiverData();
-      return { error: null };
+      return { error: null, pendingConfirmation: true };
     } catch (err) {
       return { error: err as Error };
     }
