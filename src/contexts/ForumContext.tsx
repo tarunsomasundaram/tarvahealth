@@ -155,7 +155,7 @@ const generateMockComments = (posts: ForumPost[]): ForumComment[] => {
 
 export function ForumProvider({ children }: { children: ReactNode }) {
   const [hasAcknowledgedGuidelines, setHasAcknowledgedGuidelines] = useState(() => {
-    return localStorage.getItem('tarva-forum-guidelines-acknowledged') === 'true';
+    return sessionStorage.getItem('tarva-forum-guidelines-acknowledged') === 'true';
   });
 
   const [groups] = useState<ForumGroup[]>(() => generateMockGroups());
@@ -163,36 +163,36 @@ export function ForumProvider({ children }: { children: ReactNode }) {
   const [comments, setComments] = useState<ForumComment[]>(() => generateMockComments(posts));
   const [reports, setReports] = useState<ForumReport[]>([]);
   const [userPosts, setUserPosts] = useState<string[]>(() => {
-    const saved = localStorage.getItem('tarva-forum-user-posts');
+    const saved = sessionStorage.getItem('tarva-forum-user-posts');
     return saved ? JSON.parse(saved) : [];
   });
   const [userComments, setUserComments] = useState<string[]>(() => {
-    const saved = localStorage.getItem('tarva-forum-user-comments');
+    const saved = sessionStorage.getItem('tarva-forum-user-comments');
     return saved ? JSON.parse(saved) : [];
   });
   const [userVotes, setUserVotes] = useState<Record<string, 'up' | 'down'>>(() => {
-    const saved = localStorage.getItem('tarva-forum-user-votes');
+    const saved = sessionStorage.getItem('tarva-forum-user-votes');
     return saved ? JSON.parse(saved) : {};
   });
 
-  // Save user posts to localStorage
+  // Save user posts to sessionStorage
   useEffect(() => {
-    localStorage.setItem('tarva-forum-user-posts', JSON.stringify(userPosts));
+    sessionStorage.setItem('tarva-forum-user-posts', JSON.stringify(userPosts));
   }, [userPosts]);
 
-  // Save user comments to localStorage
+  // Save user comments to sessionStorage
   useEffect(() => {
-    localStorage.setItem('tarva-forum-user-comments', JSON.stringify(userComments));
+    sessionStorage.setItem('tarva-forum-user-comments', JSON.stringify(userComments));
   }, [userComments]);
 
-  // Save user votes to localStorage
+  // Save user votes to sessionStorage
   useEffect(() => {
-    localStorage.setItem('tarva-forum-user-votes', JSON.stringify(userVotes));
+    sessionStorage.setItem('tarva-forum-user-votes', JSON.stringify(userVotes));
   }, [userVotes]);
 
   const acknowledgeGuidelines = () => {
     setHasAcknowledgedGuidelines(true);
-    localStorage.setItem('tarva-forum-guidelines-acknowledged', 'true');
+    sessionStorage.setItem('tarva-forum-guidelines-acknowledged', 'true');
   };
 
   const getGroupsForConditions = (conditionIds: string[]): ForumGroup[] => {

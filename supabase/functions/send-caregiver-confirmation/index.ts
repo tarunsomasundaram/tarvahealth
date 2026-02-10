@@ -44,8 +44,13 @@ serve(async (req) => {
     }
 
     const { linkId } = await req.json();
-    if (!linkId || typeof linkId !== "string") {
-      throw new Error("Missing linkId");
+    // Validate linkId as UUID format
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+    if (!linkId || typeof linkId !== "string" || !uuidRegex.test(linkId)) {
+      return new Response(JSON.stringify({ error: "Invalid request" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
     // Use service role to read/update the link and get patient email
@@ -138,9 +143,8 @@ serve(async (req) => {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (error: unknown) {
-    console.error("Error:", error);
-    const message = error instanceof Error ? error.message : "Unknown error";
-    return new Response(JSON.stringify({ error: message }), {
+    console.error("Send caregiver confirmation error:", error);
+    return new Response(JSON.stringify({ error: "Failed to process request" }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });

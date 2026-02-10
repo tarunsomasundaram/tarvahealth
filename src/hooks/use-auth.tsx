@@ -64,6 +64,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const signOut = async () => {
+    // Clear all sensitive session data
+    sessionStorage.removeItem('tarva-medications');
+    sessionStorage.removeItem('tarva-health-profile');
+    sessionStorage.removeItem('tarva-forum-user-posts');
+    sessionStorage.removeItem('tarva-forum-user-comments');
+    sessionStorage.removeItem('tarva-forum-user-votes');
+    sessionStorage.removeItem('tarva-forum-guidelines-acknowledged');
     await supabase.auth.signOut();
   };
 
