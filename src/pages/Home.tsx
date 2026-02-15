@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { AnimatedPage } from "@/components/layout/AnimatedPage";
@@ -9,13 +9,15 @@ import { PullToRefresh } from "@/components/common/PullToRefresh";
 import { SnoozeSheet } from "@/components/dose/SnoozeSheet";
 import { CaseSelectionSheet } from "@/components/dose/CaseSelectionSheet";
 import { FinishProfileCard } from "@/components/profile/FinishProfileCard";
+import { AlarmOverlay } from "@/components/alarm/AlarmOverlay";
 import { triggerHaptic } from "@/hooks/use-haptics";
+import { useAlarm } from "@/hooks/use-alarm";
 import { useNotifications } from "@/hooks/use-notifications";
 import { useCaseDevice } from "@/hooks/use-case-device";
 import { format } from "date-fns";
 import { useData, ScheduledDose } from "@/contexts/DataContext";
 import { useOnboarding } from "@/contexts/OnboardingContext";
-import { Pill, Check, X, Smartphone, Clock, Bell, MoreVertical, MapPin } from "lucide-react";
+import { Pill, Check, X, Smartphone, Clock, Bell, MoreVertical, MapPin, Volume2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
   DropdownMenu,
@@ -246,6 +248,13 @@ export default function Home() {
     confirmCaseSelection, 
     cancelCaseSelection 
   } = useCaseDevice();
+  const {
+    alarmDose,
+    isAlarmActive,
+    triggerAlarm,
+    dismissAlarm,
+    checkForDueAlarms,
+  } = useAlarm();
   
   const firstName = profile?.full_name?.split(' ')[0] || patientProfile?.fullName?.split(' ')[0] || 'User';
   const profileCompletion = getProfileCompletionPercentage();
@@ -279,6 +288,57 @@ export default function Home() {
   
   const takenCount = scheduledDoses.filter(d => d.status === 'taken').length;
   const totalCount = scheduledDoses.filter(d => d.status !== 'skipped').length;
+
+  // Check for due alarms every 10 seconds
+  useEffect(() => {
+    const interval = setInterval(() => {
+      checkForDueAlarms(upcomingDoses);
+    }, 10000);
+    // Check immediately too
+    checkForDueAlarms(upcomingDoses);
+    return () => clearInterval(interval);
+  }, [upcomingDoses, checkForDueAlarms]);
+
+  // Alarm action handlers
+  const handleAlarmTaken = async () => {
+    if (!alarmDose) return;
+    await handleMarkTaken(alarmDose as DoseCardDose);
+    dismissAlarm();
+  };
+
+  const handleAlarmSkip = async () => {
+    if (!alarmDose) return;
+    await handleSkip(alarmDose as DoseCardDose);
+    dismissAlarm();
+  };
+
+  const handleAlarmSnooze = () => {
+    if (!alarmDose) return;
+    setSelectedDoseForSnooze(alarmDose as DoseCardDose);
+    dismissAlarm();
+    setSnoozeSheetOpen(true);
+  };
+
+  const handleAlarmTakenElsewhere = async () => {
+    if (!alarmDose) return;
+    await handleTakenElsewhere(alarmDose as DoseCardDose);
+    dismissAlarm();
+  };
+
+  // Test alarm trigger (for preview testing)
+  const handleTestAlarm = () => {
+    const testDose = upcomingDoses[0] || {
+      id: 'test',
+      medicationId: 'test',
+      medicationName: 'Test Medication',
+      strengthValue: 500,
+      strengthUnit: 'mg',
+      form: 'Tablet',
+      scheduledTime: new Date(),
+      displayTime: format(new Date(), 'h:mm a'),
+    };
+    triggerAlarm(testDose);
+  };
 
   const handleRefresh = useCallback(async () => {
     await refreshMedications();
@@ -404,6 +464,18 @@ export default function Home() {
               <ProgressCard taken={takenCount} total={totalCount} />
             </FadeIn>
 
+            {/* Test Alarm Button */}
+            <FadeIn delay={0.22}>
+              <motion.button
+                onClick={handleTestAlarm}
+                className="btn-secondary w-full py-3 gap-2"
+                whileTap={{ scale: 0.96 }}
+              >
+                <Volume2 className="h-4 w-4" />
+                Test Alarm
+              </motion.button>
+            </FadeIn>
+
             {showProfileCard && (
               <FadeIn delay={0.25}>
                 <FinishProfileCard onDismiss={() => setShowFinishProfile(false)} />
@@ -475,6 +547,16 @@ export default function Home() {
         onOpenChange={(open) => !open && cancelCaseSelection()}
         doses={pendingCaseSelection || []}
         onSelect={confirmCaseSelection}
+      />
+
+      {/* Alarm Overlay */}
+      <AlarmOverlay
+        isActive={isAlarmActive}
+        dose={alarmDose}
+        onMarkTaken={handleAlarmTaken}
+        onSkip={handleAlarmSkip}
+        onSnooze={handleAlarmSnooze}
+        onTakenElsewhere={handleAlarmTakenElsewhere}
       />
     </AnimatedPage>
   );

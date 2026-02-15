@@ -1,0 +1,164 @@
+import { useState, useEffect, useCallback, useRef } from 'react';
+import { triggerHaptic } from '@/hooks/use-haptics';
+
+interface AlarmDose {
+  id: string;
+  medicationId: string;
+  medicationName: string;
+  strengthValue: number | null;
+  strengthUnit: string | null;
+  form: string;
+  scheduledTime: Date;
+  displayTime: string;
+}
+
+export function useAlarm() {
+  const [alarmDose, setAlarmDose] = useState<AlarmDose | null>(null);
+  const [isAlarmActive, setIsAlarmActive] = useState(false);
+  const vibrationInterval = useRef<ReturnType<typeof setInterval> | null>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const checkedTimesRef = useRef<Set<string>>(new Set());
+
+  // Start continuous vibration loop
+  const startVibration = useCallback(() => {
+    if (vibrationInterval.current) return;
+    // Vibrate every 1.5s in a strong pattern
+    const vibrate = () => {
+      if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
+        try {
+          navigator.vibrate([200, 100, 200, 100, 300]);
+        } catch { /* ignore */ }
+      }
+    };
+    vibrate();
+    vibrationInterval.current = setInterval(vibrate, 2000);
+  }, []);
+
+  const stopVibration = useCallback(() => {
+    if (vibrationInterval.current) {
+      clearInterval(vibrationInterval.current);
+      vibrationInterval.current = null;
+    }
+    if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
+      try { navigator.vibrate(0); } catch { /* ignore */ }
+    }
+  }, []);
+
+  // Start alarm sound using Web Audio API for a repeating tone
+  const startSound = useCallback(() => {
+    try {
+      // Use oscillator-based alarm sound
+      const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
+      if (!AudioContext) return;
+      
+      const ctx = new AudioContext();
+      const gainNode = ctx.createGain();
+      gainNode.connect(ctx.destination);
+      gainNode.gain.value = 0.3;
+
+      let playing = true;
+
+      const playTone = async () => {
+        if (!playing) return;
+        // Three-tone alarm pattern
+        const frequencies = [880, 1100, 880];
+        for (const freq of frequencies) {
+          if (!playing) break;
+          const osc = ctx.createOscillator();
+          osc.type = 'sine';
+          osc.frequency.value = freq;
+          osc.connect(gainNode);
+          osc.start();
+          await new Promise(r => setTimeout(r, 200));
+          osc.stop();
+          osc.disconnect();
+          await new Promise(r => setTimeout(r, 80));
+        }
+        // Pause between alarm cycles
+        if (playing) {
+          setTimeout(playTone, 1500);
+        }
+      };
+
+      playTone();
+
+      // Store cleanup ref
+      (audioRef as any)._cleanup = () => {
+        playing = false;
+        try { ctx.close(); } catch { /* ignore */ }
+      };
+    } catch {
+      console.log('Web Audio not supported');
+    }
+  }, []);
+
+  const stopSound = useCallback(() => {
+    if ((audioRef as any)?._cleanup) {
+      (audioRef as any)._cleanup();
+      (audioRef as any)._cleanup = null;
+    }
+  }, []);
+
+  // Trigger alarm for a dose
+  const triggerAlarm = useCallback((dose: AlarmDose) => {
+    setAlarmDose(dose);
+    setIsAlarmActive(true);
+    startVibration();
+    startSound();
+  }, [startVibration, startSound]);
+
+  // Dismiss alarm (called by taken/skip/snooze actions)
+  const dismissAlarm = useCallback(() => {
+    setIsAlarmActive(false);
+    setAlarmDose(null);
+    stopVibration();
+    stopSound();
+    triggerHaptic('success');
+  }, [stopVibration, stopSound]);
+
+  // Check scheduled doses and auto-trigger alarm
+  const checkForDueAlarms = useCallback((doses: Array<{
+    id: string;
+    medicationId: string;
+    medicationName: string;
+    strengthValue: number | null;
+    strengthUnit: string | null;
+    form: string;
+    scheduledTime: Date;
+    displayTime: string;
+    status: string;
+  }>) => {
+    if (isAlarmActive) return; // Don't interrupt active alarm
+
+    const now = new Date();
+    for (const dose of doses) {
+      if (dose.status !== 'pending') continue;
+      const key = `${dose.medicationId}_${dose.scheduledTime.toISOString()}`;
+      if (checkedTimesRef.current.has(key)) continue;
+
+      const diffMs = now.getTime() - dose.scheduledTime.getTime();
+      // Trigger if dose is due (within 0-60s window)
+      if (diffMs >= 0 && diffMs < 60000) {
+        checkedTimesRef.current.add(key);
+        triggerAlarm(dose);
+        break;
+      }
+    }
+  }, [isAlarmActive, triggerAlarm]);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      stopVibration();
+      stopSound();
+    };
+  }, [stopVibration, stopSound]);
+
+  return {
+    alarmDose,
+    isAlarmActive,
+    triggerAlarm,
+    dismissAlarm,
+    checkForDueAlarms,
+  };
+}
