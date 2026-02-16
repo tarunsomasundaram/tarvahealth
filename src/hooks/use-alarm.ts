@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { triggerHaptic } from '@/hooks/use-haptics';
+import { getSelectedAlarmId, getAlarmSound } from '@/data/alarmSounds';
 
 // Force full reload on HMR to prevent React hook queue corruption
 if (import.meta.hot) {
@@ -51,39 +52,40 @@ export function useAlarm() {
     }
   }, []);
 
-  // Start alarm sound using Web Audio API for a repeating tone
+  // Start alarm sound using Web Audio API with selected alarm pattern
   const startSound = useCallback(() => {
     try {
-      // Use oscillator-based alarm sound
+      const sound = getAlarmSound(getSelectedAlarmId());
+      const { frequencies, type, noteDuration, noteGap, cyclePause, gain: vol } = sound.pattern;
+
       const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
       if (!AudioContext) return;
       
       const ctx = new AudioContext();
       const gainNode = ctx.createGain();
       gainNode.connect(ctx.destination);
-      gainNode.gain.value = 0.3;
+      gainNode.gain.value = vol;
 
       let playing = true;
 
       const playTone = async () => {
         if (!playing) return;
-        // Fast three-tone alarm pattern
-        const frequencies = [880, 1100, 880];
         for (const freq of frequencies) {
           if (!playing) break;
           const osc = ctx.createOscillator();
-          osc.type = 'sine';
+          osc.type = type;
           osc.frequency.value = freq;
           osc.connect(gainNode);
           osc.start();
-          await new Promise(r => setTimeout(r, 120));
+          await new Promise(r => setTimeout(r, noteDuration));
           osc.stop();
           osc.disconnect();
-          await new Promise(r => setTimeout(r, 50));
+          if (noteGap > 0) {
+            await new Promise(r => setTimeout(r, noteGap));
+          }
         }
-        // Short pause between alarm cycles
         if (playing) {
-          setTimeout(playTone, 600);
+          setTimeout(playTone, cyclePause);
         }
       };
 
