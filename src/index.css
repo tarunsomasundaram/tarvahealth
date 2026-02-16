@@ -329,7 +329,7 @@
 
   /* More Menu Sheet */
   .more-menu-sheet {
-    @apply rounded-t-[28px] border-0 pb-8;
+    @apply rounded-t-[28px] !border-t-0 border-0 pb-8;
     background: hsl(var(--card));
     max-height: 70vh;
   }
