@@ -27,7 +27,6 @@ export function InventoryCard({
 
   return (
     <div className="card-tarva relative overflow-hidden">
-      <div className={cn("absolute top-0 left-0 right-0 h-[3px] rounded-t-[18px]", accentColor)} />
       <div className="flex items-start gap-4">
         <div className={cn(
           "flex h-11 w-11 shrink-0 items-center justify-center rounded-xl",
@@ -35,13 +34,13 @@ export function InventoryCard({
         )}>
           <Pill className={cn("h-5 w-5", isCritical ? "text-destructive" : isLow ? "text-warning" : "text-success")} />
         </div>
-        <div className="flex-1">
-          <div className="flex items-start justify-between">
-            <div>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center justify-between gap-2">
+            <div className="min-w-0">
               <div className="flex items-center gap-2">
-                <h4 className="font-semibold text-foreground">{medicationName}</h4>
+                <h4 className="font-semibold text-foreground truncate">{medicationName}</h4>
                 {compartment && (
-                  <span className="badge-pill text-xs">
+                  <span className="badge-pill text-xs shrink-0">
                     <Package className="h-3 w-3" />
                     Slot {compartment}
                   </span>
@@ -49,7 +48,7 @@ export function InventoryCard({
               </div>
               <p className="text-caption">{strength}</p>
             </div>
-            <div className="text-right">
+            <div className="text-right shrink-0">
               <span className={cn(
                 "text-lg font-bold",
                 isCritical ? "text-destructive" : isLow ? "text-warning" : "text-success"
