@@ -1,8 +1,8 @@
 import { useState, useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
-import { Check, Play, Square } from 'lucide-react';
-import { alarmSounds, getSelectedAlarmId, setSelectedAlarmId, previewAlarmSound } from '@/data/alarmSounds';
+import { Check, Play, Square, Clock } from 'lucide-react';
+import { alarmSounds, getSelectedAlarmId, setSelectedAlarmId, previewAlarmSound, EARLY_ALARM_OPTIONS, getEarlyAlarmMinutes, setEarlyAlarmMinutes, type EarlyAlarmMinutes } from '@/data/alarmSounds';
 import { triggerHaptic } from '@/hooks/use-haptics';
 import { cn } from '@/lib/utils';
 
@@ -13,6 +13,7 @@ interface AlarmSoundSelectorProps {
 
 export function AlarmSoundSelector({ open, onOpenChange }: AlarmSoundSelectorProps) {
   const [selected, setSelected] = useState(getSelectedAlarmId);
+  const [earlyMinutes, setEarlyMinutes] = useState<EarlyAlarmMinutes>(getEarlyAlarmMinutes);
   const [playingId, setPlayingId] = useState<string | null>(null);
   const stopRef = useRef<(() => void) | null>(null);
 
@@ -55,6 +56,11 @@ export function AlarmSoundSelector({ open, onOpenChange }: AlarmSoundSelectorPro
     setSelected(id);
     setSelectedAlarmId(id);
   };
+  const handleEarlyChange = (min: EarlyAlarmMinutes) => {
+    triggerHaptic('light');
+    setEarlyMinutes(min);
+    setEarlyAlarmMinutes(min);
+  };
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -63,7 +69,37 @@ export function AlarmSoundSelector({ open, onOpenChange }: AlarmSoundSelectorPro
           <SheetTitle className="text-center">Alarm Sound</SheetTitle>
         </SheetHeader>
 
-        <div className="overflow-y-auto max-h-[65vh] -mx-2 px-2 space-y-2 pb-6">
+        <div className="overflow-y-auto max-h-[60vh] -mx-2 px-2 space-y-4 pb-6">
+          {/* Early Alarm Setting */}
+          <div>
+            <div className="flex items-center gap-2 mb-2">
+              <Clock className="h-4 w-4 text-muted-foreground" />
+              <p className="text-sm font-medium text-foreground">Early Alarm</p>
+            </div>
+            <p className="text-xs text-muted-foreground mb-3">Alert before the scheduled dose time</p>
+            <div className="flex flex-wrap gap-2">
+              {EARLY_ALARM_OPTIONS.map((min) => (
+                <motion.button
+                  key={min}
+                  onClick={() => handleEarlyChange(min)}
+                  className={cn(
+                    "px-3 py-1.5 rounded-xl text-sm font-medium transition-colors",
+                    earlyMinutes === min
+                      ? "bg-primary text-primary-foreground"
+                      : "bg-secondary text-secondary-foreground"
+                  )}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  {min === 0 ? 'At time' : `${min} min`}
+                </motion.button>
+              ))}
+            </div>
+          </div>
+
+          <div className="border-t border-border pt-3">
+            <p className="text-sm font-medium text-foreground mb-2">Alarm Sound</p>
+          </div>
+
           {alarmSounds.map((sound) => {
             const isSelected = selected === sound.id;
             const isPlaying = playingId === sound.id;

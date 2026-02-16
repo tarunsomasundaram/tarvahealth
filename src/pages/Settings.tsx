@@ -10,7 +10,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { triggerHaptic } from "@/hooks/use-haptics";
 import { PinSetup } from "@/components/security/PinSetup";
 import { AlarmSoundSelector } from "@/components/settings/AlarmSoundSelector";
-import { getSelectedAlarmId, alarmSounds } from "@/data/alarmSounds";
+import { getSelectedAlarmId, alarmSounds, getEarlyAlarmMinutes } from "@/data/alarmSounds";
 import { format } from "date-fns";
 import { 
   Bell, Download, Link, 
@@ -107,6 +107,8 @@ export default function Settings() {
   const [showAlarmSelector, setShowAlarmSelector] = useState(false);
 
   const selectedAlarmName = alarmSounds.find(s => s.id === getSelectedAlarmId())?.name || 'Gentle Chime';
+  const earlyMin = getEarlyAlarmMinutes();
+  const alarmDescription = earlyMin > 0 ? `${selectedAlarmName} · ${earlyMin} min early` : selectedAlarmName;
 
   // Count enabled notification categories
   const enabledNotificationCount = [
@@ -170,7 +172,7 @@ export default function Settings() {
                 />
                 <SettingLink
                   label="Alarm Sound"
-                  description={selectedAlarmName}
+                  description={alarmDescription}
                   icon={<Volume2 className="h-5 w-5 text-primary" />}
                   onClick={() => setShowAlarmSelector(true)}
                 />

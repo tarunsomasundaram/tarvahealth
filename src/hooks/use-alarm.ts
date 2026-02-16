@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { triggerHaptic } from '@/hooks/use-haptics';
-import { getSelectedAlarmId, getAlarmSound } from '@/data/alarmSounds';
+import { getSelectedAlarmId, getAlarmSound, getEarlyAlarmMinutes } from '@/data/alarmSounds';
 
 // Force full reload on HMR to prevent React hook queue corruption
 if (import.meta.hot) {
@@ -34,12 +34,12 @@ export function useAlarm() {
     const vibrate = () => {
       if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
         try {
-          navigator.vibrate([200, 100, 200, 100, 300]);
+          navigator.vibrate([300, 100, 300, 100, 400, 150, 300, 100, 300]);
         } catch { /* ignore */ }
       }
     };
     vibrate();
-    vibrationInterval.current = setInterval(vibrate, 2000);
+    vibrationInterval.current = setInterval(vibrate, 1500);
   }, []);
 
   const stopVibration = useCallback(() => {
@@ -145,9 +145,10 @@ export function useAlarm() {
       const key = `${dose.medicationId}_${dose.scheduledTime.toISOString()}`;
       if (checkedTimesRef.current.has(key)) continue;
 
+      const earlyMs = getEarlyAlarmMinutes() * 60000;
       const diffMs = now.getTime() - dose.scheduledTime.getTime();
-      // Trigger if dose is due (within 0-60s window)
-      if (diffMs >= 0 && diffMs < 60000) {
+      // Trigger if dose is due (within early-alarm window to 60s after)
+      if (diffMs >= -earlyMs && diffMs < 60000) {
         checkedTimesRef.current.add(key);
         triggerAlarm(dose);
         break;
