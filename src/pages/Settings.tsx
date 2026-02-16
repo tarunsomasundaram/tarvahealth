@@ -9,10 +9,12 @@ import { useHealthProfile } from "@/contexts/HealthProfileContext";
 import { useAuth } from "@/hooks/use-auth";
 import { triggerHaptic } from "@/hooks/use-haptics";
 import { PinSetup } from "@/components/security/PinSetup";
+import { AlarmSoundSelector } from "@/components/settings/AlarmSoundSelector";
+import { getSelectedAlarmId, alarmSounds } from "@/data/alarmSounds";
 import { format } from "date-fns";
 import { 
   Bell, Download, Link, 
-  Bluetooth, 
+  Bluetooth, Volume2,
   FileText, Calendar, Lock, Moon, Sun, Monitor,
   ChevronRight, Fingerprint, Users, LogOut, Mail, CalendarDays
 } from "lucide-react";
@@ -102,6 +104,9 @@ export default function Settings() {
   
   const [pinModalOpen, setPinModalOpen] = useState(false);
   const [pinMode, setPinMode] = useState<"setup" | "change" | "disable">("setup");
+  const [showAlarmSelector, setShowAlarmSelector] = useState(false);
+
+  const selectedAlarmName = alarmSounds.find(s => s.id === getSelectedAlarmId())?.name || 'Gentle Chime';
 
   // Count enabled notification categories
   const enabledNotificationCount = [
@@ -162,6 +167,12 @@ export default function Settings() {
                   description={enabledNotificationCount > 0 ? `${enabledNotificationCount} categories enabled` : 'Configure alerts'}
                   icon={<Bell className="h-5 w-5 text-warning" />}
                   onClick={() => navigate('/reminder-preferences')}
+                />
+                <SettingLink
+                  label="Alarm Sound"
+                  description={selectedAlarmName}
+                  icon={<Volume2 className="h-5 w-5 text-primary" />}
+                  onClick={() => setShowAlarmSelector(true)}
                 />
               </div>
             </section>
@@ -321,6 +332,11 @@ export default function Settings() {
         isOpen={pinModalOpen}
         onClose={() => setPinModalOpen(false)}
         mode={pinMode}
+      />
+
+      <AlarmSoundSelector
+        open={showAlarmSelector}
+        onOpenChange={setShowAlarmSelector}
       />
 
       {/* Logout Confirmation Dialog */}
