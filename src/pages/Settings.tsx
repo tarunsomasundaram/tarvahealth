@@ -15,7 +15,7 @@ import { format } from "date-fns";
 import { 
   Bell, Download, Link, 
   Bluetooth, Volume2,
-  FileText, Calendar, Lock, Moon, Sun, Monitor,
+  FileText, Lock, Moon, Sun, Monitor,
   ChevronRight, Fingerprint, Users, LogOut, Mail, CalendarDays
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -201,29 +201,8 @@ export default function Settings() {
             </section>
           </FadeIn>
 
-          {/* Integrations */}
-          <FadeIn delay={0.25}>
-            <section className="card-tarva">
-              <h3 className="text-section text-foreground mb-2">Integrations</h3>
-              <div className="divide-y divide-border">
-                <SettingLink
-                  label="Apple Health"
-                  description="Connected"
-                  icon={<Link className="h-5 w-5 text-success" />}
-                  onClick={() => console.log("Apple Health")}
-                />
-                <SettingLink
-                  label="Calendar Sync"
-                  description="iOS Calendar"
-                  icon={<Calendar className="h-5 w-5 text-primary" />}
-                  onClick={() => console.log("Calendar")}
-                />
-              </div>
-            </section>
-          </FadeIn>
-
           {/* Privacy & Security */}
-          <FadeIn delay={0.3}>
+          <FadeIn delay={0.25}>
             <section className="card-tarva">
               <h3 className="text-section text-foreground mb-2">Privacy & Security</h3>
               <div className="divide-y divide-border">
@@ -252,7 +231,7 @@ export default function Settings() {
           </FadeIn>
 
           {/* Appearance */}
-          <FadeIn delay={0.35}>
+          <FadeIn delay={0.3}>
             <section className="card-tarva">
               <h3 className="text-section text-foreground mb-4">Appearance</h3>
               <div className="flex gap-2">
@@ -285,7 +264,7 @@ export default function Settings() {
           </FadeIn>
 
           {/* Account Info */}
-          <FadeIn delay={0.4}>
+          <FadeIn delay={0.35}>
             <section className="card-tarva">
               <h3 className="text-section text-foreground mb-2">Account</h3>
               <div className="space-y-3">
@@ -317,7 +296,7 @@ export default function Settings() {
           </FadeIn>
 
           {/* Log Out */}
-          <FadeIn delay={0.45}>
+          <FadeIn delay={0.4}>
             <motion.button
               onClick={() => setShowLogoutDialog(true)}
               className="w-full flex items-center justify-center gap-2 p-4 rounded-2xl bg-destructive/10 text-destructive font-medium"
