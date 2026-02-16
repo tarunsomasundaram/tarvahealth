@@ -97,16 +97,29 @@ export default function Stats() {
             />
           </FadeIn>
 
-          {/* Whoop-style adherence ring */}
+          {/* Centered mini adherence ring */}
           <FadeIn delay={0.15}>
-            <AdherenceRing
-              percentage={adherenceRate}
-              label={adherenceLabel}
-              sublabel={`${timeFilter === '7d' ? 'Last 7 days' : timeFilter === '30d' ? 'Last 30 days' : timeFilter === '90d' ? 'Last 90 days' : 'Last year'} adherence rate`}
-            />
+            <div className="flex justify-center">
+              <AdherenceRing
+                percentage={adherenceRate}
+                label={adherenceLabel}
+              />
+            </div>
           </FadeIn>
 
           <StaggerContainer className="grid grid-cols-2 gap-3">
+            <StaggerItem>
+              <StatCard
+                title="Adherence"
+                value={`${adherenceRate}%`}
+                subtitle="doses taken"
+                icon={<Target className="h-5 w-5 text-success" />}
+                iconBgClassName="bg-success/15"
+                trend={adherenceRate >= 80 ? "up" : "down"}
+                trendValue={adherenceRate >= 80 ? "Good" : "Needs work"}
+                accentColor="success"
+              />
+            </StaggerItem>
             <StaggerItem>
               <StatCard
                 title="On-time"
