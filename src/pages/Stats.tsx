@@ -97,16 +97,6 @@ export default function Stats() {
             />
           </FadeIn>
 
-          {/* Centered mini adherence ring */}
-          <FadeIn delay={0.15}>
-            <div className="flex justify-center">
-              <AdherenceRing
-                percentage={adherenceRate}
-                label={adherenceLabel}
-              />
-            </div>
-          </FadeIn>
-
           <StaggerContainer className="grid grid-cols-2 gap-3">
             <StaggerItem>
               <StatCard
@@ -154,16 +144,6 @@ export default function Stats() {
                 trend={avgDelay <= 10 ? "down" : "up"}
                 trendValue={avgDelay <= 10 ? "On track" : "Late"}
                 accentColor="destructive"
-              />
-            </StaggerItem>
-            <StaggerItem>
-              <StatCard
-                title="Case Detect"
-                value={`${caseDetectionRate}%`}
-                subtitle="auto-detected"
-                icon={<Smartphone className="h-5 w-5 text-success" />}
-                iconBgClassName="bg-success/15"
-                accentColor="success"
               />
             </StaggerItem>
           </StaggerContainer>
