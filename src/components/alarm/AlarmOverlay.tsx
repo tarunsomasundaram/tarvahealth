@@ -101,14 +101,15 @@ export function AlarmOverlay({
               {dose.medicationName}
             </motion.h1>
 
-            {/* Strength / form */}
+            {/* Strength / form / pill count */}
             <motion.p
               className="text-body text-muted-foreground text-center mb-2"
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.4 }}
             >
-              {dose.strengthValue}{dose.strengthUnit} {dose.form}
+              {dose.strengthValue && `${dose.strengthValue}${dose.strengthUnit} `}{dose.form}
+              {dose.instructions && /^\d/.test(dose.instructions) && ` · ${dose.instructions.split(' ').slice(0, 2).join(' ')}`}
             </motion.p>
 
             {/* Instructions */}
