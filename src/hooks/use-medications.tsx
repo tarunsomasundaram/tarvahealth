@@ -29,6 +29,8 @@ export interface MedicationSchedule {
   times_of_day: string[];
   days_of_week: number[] | null;
   on_time_window_minutes: number;
+  auto_mark_window_minutes: number;
+  escalation_delay_minutes: number | null;
   start_date: string;
   end_date: string | null;
   created_at: string;
@@ -45,6 +47,7 @@ export interface DoseLog {
   status: 'on_time' | 'late' | null;
   source: 'case' | 'manual';
   notes: string | null;
+  caregiver_alert_sent_at: string | null;
   created_at: string;
 }
 

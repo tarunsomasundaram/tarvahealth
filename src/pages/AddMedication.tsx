@@ -439,6 +439,8 @@ export default function AddMedication() {
         frequency_type: frequency,
         times_of_day: times,
         on_time_window_minutes: parseInt(reminderWindow) || 30,
+        auto_mark_window_minutes: 30,
+        escalation_delay_minutes: null,
         start_date: new Date().toISOString().split('T')[0],
         days_of_week: null,
         end_date: null,
