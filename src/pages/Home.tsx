@@ -65,10 +65,14 @@ function DoseCard({
 
   return (
     <motion.div 
-      className="card-tarva"
+      className="card-tarva relative overflow-hidden"
       whileTap={{ scale: 0.98 }}
       layout
     >
+      {/* Status accent bar */}
+      {isTaken && <div className="absolute top-0 left-0 right-0 h-[3px] bg-success rounded-t-[18px]" />}
+      {isSkipped && <div className="absolute top-0 left-0 right-0 h-[3px] bg-muted-foreground rounded-t-[18px]" />}
+      {isSnoozed && <div className="absolute top-0 left-0 right-0 h-[3px] bg-primary rounded-t-[18px]" />}
       <div className="flex items-start gap-4">
         <motion.div 
           className={cn(

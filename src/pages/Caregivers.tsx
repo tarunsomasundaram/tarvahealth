@@ -105,7 +105,7 @@ export default function Caregivers() {
                             <motion.span 
                               className={cn(
                                 "badge-pill text-xs",
-                                caregiver.permissions.stats ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"
+                                caregiver.permissions.stats ? "bg-success/10 text-success" : "bg-muted text-muted-foreground"
                               )}
                             >
                               <BarChart3 className="h-3 w-3" />
@@ -114,7 +114,7 @@ export default function Caregivers() {
                             <motion.span 
                               className={cn(
                                 "badge-pill text-xs",
-                                caregiver.permissions.missedAlerts ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"
+                                caregiver.permissions.missedAlerts ? "bg-destructive/10 text-destructive" : "bg-muted text-muted-foreground"
                               )}
                             >
                               <AlertTriangle className="h-3 w-3" />
@@ -123,7 +123,7 @@ export default function Caregivers() {
                             <motion.span 
                               className={cn(
                                 "badge-pill text-xs",
-                                caregiver.permissions.refillAlerts ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"
+                                caregiver.permissions.refillAlerts ? "bg-warning/10 text-warning" : "bg-muted text-muted-foreground"
                               )}
                             >
                               <RefreshCw className="h-3 w-3" />
@@ -132,7 +132,7 @@ export default function Caregivers() {
                             <motion.span 
                               className={cn(
                                 "badge-pill text-xs",
-                                caregiver.permissions.lowBattery ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"
+                                caregiver.permissions.lowBattery ? "bg-warning/10 text-warning" : "bg-muted text-muted-foreground"
                               )}
                             >
                               <Battery className="h-3 w-3" />
@@ -141,7 +141,7 @@ export default function Caregivers() {
                             <motion.span 
                               className={cn(
                                 "badge-pill text-xs",
-                                caregiver.permissions.doseTaken ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"
+                                caregiver.permissions.doseTaken ? "bg-success/10 text-success" : "bg-muted text-muted-foreground"
                               )}
                             >
                               <Check className="h-3 w-3" />

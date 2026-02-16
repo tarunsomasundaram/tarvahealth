@@ -129,7 +129,7 @@ export default function Case() {
                   whileTap={{ scale: 0.98 }}
                 >
                   <div className="flex items-center gap-4">
-                    <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-accent">
+                    <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-primary/15">
                       <Settings className="h-5 w-5 text-primary" />
                     </div>
                     <div>
@@ -143,7 +143,8 @@ export default function Case() {
           </section>
 
           <FadeIn delay={0.35}>
-            <div className="card-tarva bg-accent/50">
+            <div className="card-tarva relative overflow-hidden bg-accent/50">
+              <div className="absolute top-0 left-0 right-0 h-[3px] bg-primary rounded-t-[18px]" />
               <p className="text-sm text-muted-foreground">
                 <span className="font-medium text-foreground">Tip:</span> Dose detected when compartment opens. 
                 If a dose was taken outside the case, record it on Home.

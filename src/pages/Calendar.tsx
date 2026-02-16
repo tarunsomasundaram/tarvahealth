@@ -6,6 +6,7 @@ import { AnimatedPage } from "@/components/layout/AnimatedPage";
 import { FadeIn, StaggerContainer, StaggerItem } from "@/components/animations";
 import { CalendarGrid } from "@/components/calendar/CalendarGrid";
 import { Download, Check, X, Clock, Loader2 } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { useData } from "@/contexts/DataContext";
 import { toast } from "sonner";
 import { generateAdherencePDF } from "@/lib/pdfExport";
@@ -171,11 +172,19 @@ export default function Calendar() {
                 {doses.map((dose) => (
                   <StaggerItem key={dose.id}>
                     <motion.div 
-                      className="card-tarva"
+                       className="card-tarva relative overflow-hidden"
                       whileTap={{ scale: 0.98 }}
                     >
+                      {dose.status === "taken" && <div className="absolute top-0 left-0 right-0 h-[3px] bg-success rounded-t-[18px]" />}
+                      {dose.status === "missed" && <div className="absolute top-0 left-0 right-0 h-[3px] bg-destructive rounded-t-[18px]" />}
                       <div className="flex items-center gap-4">
-                        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-accent">
+                        <div className={cn(
+                          "flex h-10 w-10 items-center justify-center rounded-xl",
+                          dose.status === "taken" ? "bg-success/15" :
+                          dose.status === "missed" ? "bg-destructive/15" :
+                          dose.status === "skipped" ? "bg-muted" :
+                          "bg-primary/15"
+                        )}>
                           <span className={`badge-status ${
                             dose.status === "taken" ? "badge-taken" :
                             dose.status === "missed" ? "badge-missed" :

@@ -47,7 +47,7 @@ function getNotificationIcon(type: Notification['type']) {
     case 'forum_comment':
       return <MessageCircle className="h-5 w-5 text-primary" />;
     case 'forum_like':
-      return <Heart className="h-5 w-5 text-pink-500" />;
+      return <Heart className="h-5 w-5 text-accent-pink" />;
     default:
       return <Bell className="h-5 w-5 text-primary" />;
   }
@@ -154,7 +154,11 @@ export default function Notifications() {
                     <div className="flex items-start gap-4">
                       <div className={cn(
                         "flex h-10 w-10 shrink-0 items-center justify-center rounded-xl",
-                        notification.read ? "bg-muted" : "bg-accent"
+                        notification.read ? "bg-muted" : 
+                          notification.type === 'dose_taken' || notification.type === 'caregiver_approved' ? "bg-success/15" :
+                          notification.type === 'dose_missed' || notification.type === 'caregiver_declined' ? "bg-destructive/15" :
+                          notification.type === 'dose_late' || notification.type === 'refill' || notification.type === 'low_battery' ? "bg-warning/15" :
+                          "bg-primary/15"
                       )}>
                         {getNotificationIcon(notification.type)}
                       </div>
