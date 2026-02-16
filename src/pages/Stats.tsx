@@ -7,7 +7,7 @@ import { FilterChips } from "@/components/common/FilterChips";
 import { StatCard } from "@/components/stats/StatCard";
 import { AdherenceChart } from "@/components/stats/AdherenceChart";
 import { AdherenceRing } from "@/components/stats/AdherenceRing";
-import { Target, Clock, Zap, AlertTriangle, Smartphone, RefreshCw, Moon, Watch } from "lucide-react";
+import { Target, Clock, Zap, AlertTriangle, Moon } from "lucide-react";
 import { useData } from "@/contexts/DataContext";
 import { subDays, subMonths, subYears, format, eachDayOfInterval } from "date-fns";
 
@@ -182,44 +182,6 @@ export default function Stats() {
             </div>
           </FadeIn>
 
-          <section>
-            <FadeIn delay={0.5}>
-              <h3 className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground mb-3">Connect Health Trackers</h3>
-            </FadeIn>
-            <StaggerContainer className="grid grid-cols-2 gap-3">
-              {[
-                { name: "Apple Health", connected: true },
-                { name: "Apple Watch", connected: false },
-                { name: "Fitbit", connected: false },
-                { name: "Whoop", connected: false },
-              ].map((tracker) => (
-                <StaggerItem key={tracker.name}>
-                  <motion.button
-                    className="card-tarva-interactive flex items-center gap-3 w-full relative overflow-hidden"
-                    whileTap={{ scale: 0.97 }}
-                  >
-                    {tracker.connected && (
-                      <div className="absolute top-0 left-0 right-0 h-[3px] bg-success rounded-t-[18px]" />
-                    )}
-                    <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-accent">
-                      <Watch className="h-4 w-4 text-primary" />
-                    </div>
-                    <div className="text-left">
-                      <p className="text-sm font-medium text-foreground">{tracker.name}</p>
-                      <p className={`text-xs ${tracker.connected ? 'text-success font-medium' : 'text-muted-foreground'}`}>
-                        {tracker.connected ? "Connected" : "Tap to connect"}
-                      </p>
-                    </div>
-                  </motion.button>
-                </StaggerItem>
-              ))}
-            </StaggerContainer>
-            <FadeIn delay={0.6}>
-              <p className="mt-3 text-caption text-center">
-                Use activity/sleep context to improve reminders
-              </p>
-            </FadeIn>
-          </section>
         </div>
       </div>
     </AnimatedPage>
