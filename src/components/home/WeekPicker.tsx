@@ -5,13 +5,18 @@ import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence, PanInfo } from "framer-motion";
 import { useHaptics } from "@/hooks/use-haptics";
 
+interface DoseStatus {
+  status: "taken" | "missed" | "pending" | "skipped" | "snoozed";
+}
+
 interface WeekPickerProps {
   selectedDate: Date;
   onSelectDate: (date: Date) => void;
   navigateToCalendar?: boolean;
+  getDosesForDate?: (date: Date) => DoseStatus[];
 }
 
-export function WeekPicker({ selectedDate, onSelectDate, navigateToCalendar }: WeekPickerProps) {
+export function WeekPicker({ selectedDate, onSelectDate, navigateToCalendar, getDosesForDate }: WeekPickerProps) {
   const navigate = useNavigate();
   const { trigger } = useHaptics();
   const [direction, setDirection] = useState(0);
@@ -30,13 +35,11 @@ export function WeekPicker({ selectedDate, onSelectDate, navigateToCalendar }: W
     if (Math.abs(info.offset.x) < threshold) return;
 
     if (info.offset.x > 0) {
-      // Swipe right → previous week
       setDirection(-1);
       const newDate = addWeeks(selectedDate, -1);
       onSelectDate(newDate);
       trigger("light");
     } else {
-      // Swipe left → next week
       setDirection(1);
       const newDate = addWeeks(selectedDate, 1);
       onSelectDate(newDate);
@@ -48,6 +51,16 @@ export function WeekPicker({ selectedDate, onSelectDate, navigateToCalendar }: W
     enter: (dir: number) => ({ x: dir > 0 ? 80 : -80, opacity: 0 }),
     center: { x: 0, opacity: 1 },
     exit: (dir: number) => ({ x: dir > 0 ? -80 : 80, opacity: 0 }),
+  };
+
+  const getDotColor = (status: string, isSelected: boolean) => {
+    switch (status) {
+      case "taken": return isSelected ? "bg-primary-foreground" : "bg-success";
+      case "missed": return isSelected ? "bg-primary-foreground/70" : "bg-destructive";
+      case "skipped": return isSelected ? "bg-primary-foreground/50" : "bg-muted-foreground";
+      case "pending": return isSelected ? "bg-primary-foreground/40" : "bg-primary/40";
+      default: return isSelected ? "bg-primary-foreground/40" : "bg-muted-foreground/40";
+    }
   };
 
   return (
@@ -70,6 +83,9 @@ export function WeekPicker({ selectedDate, onSelectDate, navigateToCalendar }: W
           {days.map((day) => {
             const isSelected = isSameDay(day, selectedDate);
             const isToday = isSameDay(day, new Date());
+            const doses = getDosesForDate ? getDosesForDate(day) : [];
+            // Show up to 3 dots max
+            const displayDoses = doses.slice(0, 3);
 
             return (
               <button
@@ -90,6 +106,19 @@ export function WeekPicker({ selectedDate, onSelectDate, navigateToCalendar }: W
                 <span className={cn("text-lg font-semibold", isSelected && "text-primary-foreground")}>
                   {format(day, "d")}
                 </span>
+                {displayDoses.length > 0 && (
+                  <div className="flex items-center gap-[3px] mt-0.5">
+                    {displayDoses.map((dose, i) => (
+                      <span
+                        key={i}
+                        className={cn(
+                          "h-[5px] w-[5px] rounded-full transition-colors",
+                          getDotColor(dose.status, isSelected)
+                        )}
+                      />
+                    ))}
+                  </div>
+                )}
               </button>
             );
           })}
