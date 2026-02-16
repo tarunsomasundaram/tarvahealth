@@ -1,6 +1,13 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { triggerHaptic } from '@/hooks/use-haptics';
 
+// Force full reload on HMR to prevent React hook queue corruption
+if (import.meta.hot) {
+  import.meta.hot.accept(() => {
+    window.location.reload();
+  });
+}
+
 interface AlarmDose {
   id: string;
   medicationId: string;
