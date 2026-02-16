@@ -148,12 +148,24 @@ export const alarmSounds: AlarmSound[] = [
 
 export const DEFAULT_ALARM_ID = 'gentle-chime';
 
+export const EARLY_ALARM_OPTIONS = [0, 1, 2, 3, 5, 10, 15] as const;
+export type EarlyAlarmMinutes = typeof EARLY_ALARM_OPTIONS[number];
+
 export function getSelectedAlarmId(): string {
   return localStorage.getItem('tarva-alarm-sound') || DEFAULT_ALARM_ID;
 }
 
 export function setSelectedAlarmId(id: string): void {
   localStorage.setItem('tarva-alarm-sound', id);
+}
+
+export function getEarlyAlarmMinutes(): EarlyAlarmMinutes {
+  const val = localStorage.getItem('tarva-early-alarm');
+  return val ? (Number(val) as EarlyAlarmMinutes) : 0;
+}
+
+export function setEarlyAlarmMinutes(minutes: EarlyAlarmMinutes): void {
+  localStorage.setItem('tarva-early-alarm', String(minutes));
 }
 
 export function getAlarmSound(id: string): AlarmSound {
