@@ -83,6 +83,16 @@ export default function Stats() {
 
   const adherenceLabel = adherenceRate >= 90 ? "Excellent" : adherenceRate >= 70 ? "Good" : adherenceRate >= 50 ? "Fair" : "Needs Work";
 
+  // Quality color logic: green=good, yellow=medium, red=bad
+  const adherenceQuality: "success" | "warning" | "destructive" = 
+    adherenceRate >= 80 ? "success" : adherenceRate >= 50 ? "warning" : "destructive";
+  const onTimeQuality: "success" | "warning" | "destructive" = 
+    onTimeRate >= 80 ? "success" : onTimeRate >= 50 ? "warning" : "destructive";
+  const streakQuality: "success" | "warning" | "destructive" = 
+    currentStreak >= 7 ? "success" : currentStreak >= 3 ? "warning" : "destructive";
+  const delayQuality: "success" | "warning" | "destructive" = 
+    avgDelay <= 5 ? "success" : avgDelay <= 15 ? "warning" : "destructive";
+
   return (
     <AnimatedPage>
       <div className="page-padding">
@@ -108,6 +118,7 @@ export default function Stats() {
                 trend={adherenceRate >= 80 ? "up" : "down"}
                 trendValue={adherenceRate >= 80 ? "Good" : "Needs work"}
                 accentColor="success"
+                qualityColor={adherenceQuality}
               />
             </StaggerItem>
             <StaggerItem>
@@ -120,6 +131,7 @@ export default function Stats() {
                 trend={onTimeRate >= 70 ? "up" : "neutral"}
                 trendValue={onTimeRate >= 70 ? "Great" : "Improve"}
                 accentColor="primary"
+                qualityColor={onTimeQuality}
               />
             </StaggerItem>
             <StaggerItem>
@@ -132,6 +144,7 @@ export default function Stats() {
                 trend="up"
                 trendValue={currentStreak > 7 ? "Best yet!" : "Keep going"}
                 accentColor="warning"
+                qualityColor={streakQuality}
               />
             </StaggerItem>
             <StaggerItem>
@@ -144,6 +157,7 @@ export default function Stats() {
                 trend={avgDelay <= 10 ? "down" : "up"}
                 trendValue={avgDelay <= 10 ? "On track" : "Late"}
                 accentColor="destructive"
+                qualityColor={delayQuality}
               />
             </StaggerItem>
           </StaggerContainer>

@@ -11,6 +11,7 @@ interface StatCardProps {
   trendValue?: string;
   className?: string;
   accentColor?: "success" | "primary" | "warning" | "destructive";
+  qualityColor?: "success" | "warning" | "destructive";
 }
 
 export function StatCard({
@@ -23,7 +24,10 @@ export function StatCard({
   trendValue,
   className,
   accentColor,
+  qualityColor,
 }: StatCardProps) {
+  // Use qualityColor for card chrome (accent bar, glow, value text), keep icon colors unchanged
+  const cardColor = qualityColor || accentColor;
   return (
     <div
       className={cn(
@@ -32,26 +36,26 @@ export function StatCard({
       )}
     >
       {/* Top accent bar */}
-      {accentColor && (
+      {cardColor && (
         <div
           className={cn(
             "absolute top-0 left-0 right-0 h-[3px] rounded-t-[18px]",
-            accentColor === "success" && "bg-success",
-            accentColor === "primary" && "bg-primary",
-            accentColor === "warning" && "bg-warning",
-            accentColor === "destructive" && "bg-destructive",
+            cardColor === "success" && "bg-success",
+            cardColor === "primary" && "bg-primary",
+            cardColor === "warning" && "bg-warning",
+            cardColor === "destructive" && "bg-destructive",
           )}
         />
       )}
       {/* Subtle background glow */}
-      {accentColor && (
+      {cardColor && (
         <div
           className={cn(
             "absolute top-0 left-0 right-0 h-16 opacity-[0.07] pointer-events-none",
-            accentColor === "success" && "bg-gradient-to-b from-success to-transparent",
-            accentColor === "primary" && "bg-gradient-to-b from-primary to-transparent",
-            accentColor === "warning" && "bg-gradient-to-b from-warning to-transparent",
-            accentColor === "destructive" && "bg-gradient-to-b from-destructive to-transparent",
+            cardColor === "success" && "bg-gradient-to-b from-success to-transparent",
+            cardColor === "primary" && "bg-gradient-to-b from-primary to-transparent",
+            cardColor === "warning" && "bg-gradient-to-b from-warning to-transparent",
+            cardColor === "destructive" && "bg-gradient-to-b from-destructive to-transparent",
           )}
         />
       )}
@@ -60,11 +64,11 @@ export function StatCard({
           <p className="text-caption uppercase tracking-wider text-[11px] font-semibold">{title}</p>
           <p className={cn(
             "mt-1.5 text-[28px] font-bold leading-none",
-            accentColor === "success" && "text-success",
-            accentColor === "primary" && "text-primary",
-            accentColor === "warning" && "text-warning",
-            accentColor === "destructive" && "text-destructive",
-            !accentColor && "text-foreground",
+            cardColor === "success" && "text-success",
+            cardColor === "primary" && "text-primary",
+            cardColor === "warning" && "text-warning",
+            cardColor === "destructive" && "text-destructive",
+            !cardColor && "text-foreground",
           )}>{value}</p>
           {subtitle && <p className="mt-1 text-small">{subtitle}</p>}
           {trend && trendValue && (
