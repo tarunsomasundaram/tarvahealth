@@ -1,14 +1,24 @@
 import { cn } from "@/lib/utils";
 import { format, startOfWeek, addDays, isSameDay } from "date-fns";
+import { useNavigate } from "react-router-dom";
 
 interface WeekPickerProps {
   selectedDate: Date;
   onSelectDate: (date: Date) => void;
+  navigateToCalendar?: boolean;
 }
 
-export function WeekPicker({ selectedDate, onSelectDate }: WeekPickerProps) {
+export function WeekPicker({ selectedDate, onSelectDate, navigateToCalendar }: WeekPickerProps) {
+  const navigate = useNavigate();
   const weekStart = startOfWeek(selectedDate, { weekStartsOn: 1 });
   const days = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
+
+  const handleDayClick = (day: Date) => {
+    onSelectDate(day);
+    if (navigateToCalendar) {
+      navigate(`/calendar?date=${format(day, 'yyyy-MM-dd')}`);
+    }
+  };
 
   return (
     <div className="flex items-center justify-between gap-1">
@@ -19,7 +29,7 @@ export function WeekPicker({ selectedDate, onSelectDate }: WeekPickerProps) {
         return (
           <button
             key={day.toISOString()}
-            onClick={() => onSelectDate(day)}
+            onClick={() => handleDayClick(day)}
             className={cn(
               "flex flex-1 flex-col items-center gap-1 rounded-2xl py-3 transition-all",
               isSelected

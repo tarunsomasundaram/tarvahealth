@@ -1,6 +1,7 @@
 import { useState, useMemo, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { format, subMonths, startOfDay, endOfDay } from "date-fns";
+import { format, subMonths, startOfDay, endOfDay, parseISO } from "date-fns";
+import { useSearchParams } from "react-router-dom";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { AnimatedPage } from "@/components/layout/AnimatedPage";
 import { FadeIn, StaggerContainer, StaggerItem } from "@/components/animations";
@@ -12,7 +13,9 @@ import { toast } from "sonner";
 import { generateAdherencePDF } from "@/lib/pdfExport";
 
 export default function Calendar() {
-  const [selectedDate, setSelectedDate] = useState(new Date());
+  const [searchParams] = useSearchParams();
+  const initialDate = searchParams.get('date') ? parseISO(searchParams.get('date')!) : new Date();
+  const [selectedDate, setSelectedDate] = useState(initialDate);
   const [showExportMenu, setShowExportMenu] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   

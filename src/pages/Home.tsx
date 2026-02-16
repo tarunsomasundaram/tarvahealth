@@ -461,7 +461,7 @@ export default function Home() {
             </FadeIn>
 
             <FadeIn delay={0.15}>
-              <WeekPicker selectedDate={selectedDate} onSelectDate={setSelectedDate} />
+              <WeekPicker selectedDate={selectedDate} onSelectDate={setSelectedDate} navigateToCalendar />
             </FadeIn>
 
             <FadeIn delay={0.2}>
