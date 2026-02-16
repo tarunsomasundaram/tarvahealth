@@ -27,7 +27,7 @@ export function StatCard({
   return (
     <div
       className={cn(
-        "card-tarva relative overflow-hidden",
+        "card-tarva relative overflow-hidden h-full",
         className
       )}
     >
