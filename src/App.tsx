@@ -12,6 +12,7 @@ import { CaregiverProvider } from "@/contexts/CaregiverContext";
 import { FloatingBottomNav } from "@/components/layout/FloatingBottomNav";
 import { CaregiverTabBar } from "@/components/layout/CaregiverTabBar";
 import { supabase } from "@/integrations/supabase/client";
+import { useEscalationCheck } from "@/hooks/use-escalation-check";
 // Main app pages
 import Home from "./pages/Home";
 import Case from "./pages/Case";
@@ -59,6 +60,9 @@ const queryClient = new QueryClient();
 function AppRoutes() {
   const { hasCompletedOnboarding, userRole, setUserRole } = useOnboarding();
   const { user } = useAuth();
+
+  // Run caregiver escalation checks periodically
+  useEscalationCheck();
 
   // Sync role from database to prevent client-side role tampering
   useEffect(() => {

@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { AnimatedPage } from "@/components/layout/AnimatedPage";
 import { FadeIn, StaggerContainer, StaggerItem } from "@/components/animations";
-import { Pill, Clock, Box, Check, Trash2, X } from "lucide-react";
+import { Pill, Clock, Box, Check, Trash2, X, ShieldAlert, Timer } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useData } from "@/contexts/DataContext";
 import { triggerHaptic } from "@/hooks/use-haptics";
@@ -35,6 +35,8 @@ export default function EditMedication() {
   const [frequency, setFrequency] = useState<"daily" | "weekly" | "custom" | "as-needed">("daily");
   const [times, setTimes] = useState<string[]>(["08:00"]);
   const [reminderWindow, setReminderWindow] = useState("30");
+  const [autoMarkWindow, setAutoMarkWindow] = useState("30");
+  const [escalationDelay, setEscalationDelay] = useState<string | null>(null);
   const [storeInCase, setStoreInCase] = useState(false);
   const [compartment, setCompartment] = useState("1");
   const [refillQuantity, setRefillQuantity] = useState("30");
@@ -50,6 +52,8 @@ export default function EditMedication() {
       setFrequency((schedule.frequency_type as typeof frequency) || "daily");
       setTimes(schedule.times_of_day || ["08:00"]);
       setReminderWindow(String(schedule.on_time_window_minutes || 30));
+      setAutoMarkWindow(String(schedule.auto_mark_window_minutes || 30));
+      setEscalationDelay(schedule.escalation_delay_minutes != null ? String(schedule.escalation_delay_minutes) : null);
       setStoreInCase(medication.stored_in_case || false);
       setCompartment(String(medication.compartment || "1"));
       setRefillQuantity(String(medication.refill_quantity_doses || 30));
@@ -100,6 +104,8 @@ export default function EditMedication() {
         frequency_type: frequency,
         times_of_day: times,
         on_time_window_minutes: parseInt(reminderWindow) || 30,
+        auto_mark_window_minutes: parseInt(autoMarkWindow) || 30,
+        escalation_delay_minutes: escalationDelay ? parseInt(escalationDelay) : null,
       });
     }
 
@@ -284,6 +290,64 @@ export default function EditMedication() {
                         whileTap={{ scale: 0.95 }}
                       >
                         {w} min
+                      </motion.button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Auto-mark Window (case open) */}
+                <div>
+                  <label className="text-sm font-medium text-foreground flex items-center gap-2">
+                    <Timer className="h-4 w-4 text-primary" />
+                    Auto-mark Window (Case)
+                  </label>
+                  <p className="text-small mb-2">Case open within this window auto-marks dose as taken</p>
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    {["15", "30", "60", "90"].map((w) => (
+                      <motion.button
+                        key={w}
+                        onClick={() => setAutoMarkWindow(w)}
+                        className={cn(
+                          "flex-1 rounded-xl px-3 py-2 text-sm font-medium transition-all",
+                          autoMarkWindow === w
+                            ? "bg-gradient-primary text-primary-foreground"
+                            : "bg-secondary text-secondary-foreground"
+                        )}
+                        whileTap={{ scale: 0.95 }}
+                      >
+                        {parseInt(w) >= 60 ? `${parseInt(w) / 60}h` : `${w}m`}
+                      </motion.button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Caregiver Escalation Delay */}
+                <div>
+                  <label className="text-sm font-medium text-foreground flex items-center gap-2">
+                    <ShieldAlert className="h-4 w-4 text-primary" />
+                    Caregiver Alert Delay
+                  </label>
+                  <p className="text-small mb-2">Alert caregiver if dose not taken after this delay</p>
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    {[
+                      { value: null, label: "Off" },
+                      { value: "30", label: "30m" },
+                      { value: "60", label: "1h" },
+                      { value: "90", label: "1.5h" },
+                      { value: "120", label: "2h" },
+                    ].map((opt) => (
+                      <motion.button
+                        key={opt.label}
+                        onClick={() => setEscalationDelay(opt.value)}
+                        className={cn(
+                          "flex-1 rounded-xl px-3 py-2 text-sm font-medium transition-all",
+                          escalationDelay === opt.value
+                            ? "bg-gradient-primary text-primary-foreground"
+                            : "bg-secondary text-secondary-foreground"
+                        )}
+                        whileTap={{ scale: 0.95 }}
+                      >
+                        {opt.label}
                       </motion.button>
                     ))}
                   </div>

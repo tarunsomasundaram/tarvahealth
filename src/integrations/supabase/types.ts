@@ -293,6 +293,7 @@ export type Database = {
       }
       dose_logs: {
         Row: {
+          caregiver_alert_sent_at: string | null
           created_at: string
           event_datetime: string
           event_type: string
@@ -305,6 +306,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          caregiver_alert_sent_at?: string | null
           created_at?: string
           event_datetime?: string
           event_type: string
@@ -317,6 +319,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          caregiver_alert_sent_at?: string | null
           created_at?: string
           event_datetime?: string
           event_type?: string
@@ -340,9 +343,11 @@ export type Database = {
       }
       medication_schedules: {
         Row: {
+          auto_mark_window_minutes: number
           created_at: string
           days_of_week: number[] | null
           end_date: string | null
+          escalation_delay_minutes: number | null
           frequency_type: string | null
           id: string
           medication_id: string
@@ -353,9 +358,11 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          auto_mark_window_minutes?: number
           created_at?: string
           days_of_week?: number[] | null
           end_date?: string | null
+          escalation_delay_minutes?: number | null
           frequency_type?: string | null
           id?: string
           medication_id: string
@@ -366,9 +373,11 @@ export type Database = {
           user_id: string
         }
         Update: {
+          auto_mark_window_minutes?: number
           created_at?: string
           days_of_week?: number[] | null
           end_date?: string | null
+          escalation_delay_minutes?: number | null
           frequency_type?: string | null
           id?: string
           medication_id?: string
