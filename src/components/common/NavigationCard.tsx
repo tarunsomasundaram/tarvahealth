@@ -1,15 +1,17 @@
 import { ChevronRight } from "lucide-react";
 import { ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
+import { cn } from "@/lib/utils";
 
 interface NavigationCardProps {
   title: string;
   subtitle?: string;
   icon: ReactNode;
   to: string;
+  iconBg?: string;
 }
 
-export function NavigationCard({ title, subtitle, icon, to }: NavigationCardProps) {
+export function NavigationCard({ title, subtitle, icon, to, iconBg }: NavigationCardProps) {
   const navigate = useNavigate();
 
   return (
@@ -18,7 +20,10 @@ export function NavigationCard({ title, subtitle, icon, to }: NavigationCardProp
       className="card-tarva-interactive w-full text-left"
     >
       <div className="flex items-center gap-4">
-        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-accent">
+        <div className={cn(
+          "flex h-11 w-11 shrink-0 items-center justify-center rounded-xl",
+          iconBg || "bg-accent"
+        )}>
           {icon}
         </div>
         <div className="flex-1">

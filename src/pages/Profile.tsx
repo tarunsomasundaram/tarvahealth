@@ -112,7 +112,7 @@ export default function Profile() {
                 whileTap={{ scale: 0.98 }}
               >
                 <div className="flex items-center gap-4">
-                  <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-accent">
+                  <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-primary/15">
                     <Pill className="h-5 w-5 text-primary" />
                   </div>
                   <div className="flex-1">
@@ -128,7 +128,8 @@ export default function Profile() {
               <NavigationCard
                 title="Caregivers"
                 subtitle="Manage who can view your data"
-                icon={<Users className="h-5 w-5 text-primary" />}
+                icon={<Users className="h-5 w-5 text-warning" />}
+                iconBg="bg-warning/15"
                 to="/caregivers"
               />
             </StaggerItem>
@@ -137,7 +138,8 @@ export default function Profile() {
               <NavigationCard
                 title="Settings"
                 subtitle="Notifications, privacy, appearance"
-                icon={<Settings className="h-5 w-5 text-primary" />}
+                icon={<Settings className="h-5 w-5 text-muted-foreground" />}
+                iconBg="bg-secondary"
                 to="/settings"
               />
             </StaggerItem>

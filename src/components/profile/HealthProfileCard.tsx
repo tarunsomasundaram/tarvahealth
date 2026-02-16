@@ -82,41 +82,41 @@ export function HealthProfileCard() {
           {/* Age */}
           <button
             onClick={() => setIsEditing(true)}
-            className="flex flex-col items-center rounded-xl bg-accent p-2.5 hover:bg-accent/80 transition-colors"
+            className="flex flex-col items-center rounded-xl bg-primary/10 p-2.5 hover:bg-primary/15 transition-colors"
           >
             <Calendar className="h-4 w-4 text-primary" />
             <span className="mt-1 text-[10px] text-muted-foreground">Age</span>
-            <span className="font-semibold text-foreground text-sm">{age || '—'}</span>
+            <span className="font-semibold text-primary text-sm">{age || '—'}</span>
           </button>
 
           {/* Height */}
           <button
             onClick={() => setIsEditing(true)}
-            className="flex flex-col items-center rounded-xl bg-accent p-2.5 hover:bg-accent/80 transition-colors"
+            className="flex flex-col items-center rounded-xl bg-success/10 p-2.5 hover:bg-success/15 transition-colors"
           >
-            <Ruler className="h-4 w-4 text-primary" />
+            <Ruler className="h-4 w-4 text-success" />
             <span className="mt-1 text-[10px] text-muted-foreground">Height</span>
-            <span className="font-semibold text-foreground text-sm">{formatHeight() || '—'}</span>
+            <span className="font-semibold text-success text-sm">{formatHeight() || '—'}</span>
           </button>
 
           {/* Weight */}
           <button
             onClick={() => setIsEditing(true)}
-            className="flex flex-col items-center rounded-xl bg-accent p-2.5 hover:bg-accent/80 transition-colors"
+            className="flex flex-col items-center rounded-xl bg-warning/10 p-2.5 hover:bg-warning/15 transition-colors"
           >
-            <Scale className="h-4 w-4 text-primary" />
+            <Scale className="h-4 w-4 text-warning" />
             <span className="mt-1 text-[10px] text-muted-foreground">Weight</span>
-            <span className="font-semibold text-foreground text-sm">{formatWeight() || '—'}</span>
+            <span className="font-semibold text-warning text-sm">{formatWeight() || '—'}</span>
           </button>
 
           {/* Blood Group */}
           <button
             onClick={() => setIsEditing(true)}
-            className="flex flex-col items-center rounded-xl bg-accent p-2.5 hover:bg-accent/80 transition-colors"
+            className="flex flex-col items-center rounded-xl bg-destructive/10 p-2.5 hover:bg-destructive/15 transition-colors"
           >
-            <Droplets className="h-4 w-4 text-primary" />
+            <Droplets className="h-4 w-4 text-destructive" />
             <span className="mt-1 text-[10px] text-muted-foreground">Blood</span>
-            <span className="font-semibold text-foreground text-sm">{bloodGroup || '—'}</span>
+            <span className="font-semibold text-destructive text-sm">{bloodGroup || '—'}</span>
           </button>
         </div>
 

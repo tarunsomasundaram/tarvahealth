@@ -39,7 +39,7 @@ function SettingToggle({ label, description, icon, enabled, onToggle }: SettingT
       className="flex w-full items-center gap-4 py-3"
       whileTap={{ scale: 0.99 }}
     >
-      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-accent">
+      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/15">
         {icon}
       </div>
       <div className="flex-1 text-left">
@@ -79,7 +79,7 @@ function SettingLink({ label, description, icon, onClick }: SettingLinkProps) {
       className="flex w-full items-center gap-4 py-3"
       whileTap={{ scale: 0.99 }}
     >
-      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-accent">
+      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/15">
         {icon}
       </div>
       <div className="flex-1 text-left">
@@ -160,7 +160,7 @@ export default function Settings() {
                 <SettingLink
                   label="Reminder Preferences"
                   description={enabledNotificationCount > 0 ? `${enabledNotificationCount} categories enabled` : 'Configure alerts'}
-                  icon={<Bell className="h-5 w-5 text-primary" />}
+                  icon={<Bell className="h-5 w-5 text-warning" />}
                   onClick={() => navigate('/reminder-preferences')}
                 />
               </div>
@@ -175,13 +175,13 @@ export default function Settings() {
                 <SettingLink
                   label="Export History"
                   description="Download PDF reports"
-                  icon={<Download className="h-5 w-5 text-primary" />}
+                  icon={<Download className="h-5 w-5 text-success" />}
                   onClick={() => console.log("Export")}
                 />
                 <SettingLink
                   label="PDF Preferences"
                   description="Customize export format"
-                  icon={<FileText className="h-5 w-5 text-primary" />}
+                  icon={<FileText className="h-5 w-5 text-success" />}
                   onClick={() => console.log("PDF preferences")}
                 />
               </div>
@@ -196,7 +196,7 @@ export default function Settings() {
                 <SettingLink
                   label="Apple Health"
                   description="Connected"
-                  icon={<Link className="h-5 w-5 text-primary" />}
+                  icon={<Link className="h-5 w-5 text-success" />}
                   onClick={() => console.log("Apple Health")}
                 />
                 <SettingLink
@@ -224,14 +224,14 @@ export default function Settings() {
                 <SettingToggle
                   label="Face ID / Touch ID"
                   description={faceIdEnabled ? "Enabled" : "Unlock with biometrics"}
-                  icon={<Fingerprint className="h-5 w-5 text-primary" />}
+                  icon={<Fingerprint className="h-5 w-5 text-success" />}
                   enabled={faceIdEnabled}
                   onToggle={handleFaceIdToggle}
                 />
                 <SettingLink
                   label={pinEnabled ? "Change PIN" : "Set up PIN"}
                   description={pinEnabled ? "Update your 4-digit PIN" : "Lock your app with a PIN"}
-                  icon={<Lock className="h-5 w-5 text-primary" />}
+                  icon={<Lock className="h-5 w-5 text-destructive" />}
                   onClick={handlePinSetup}
                 />
               </div>
@@ -277,7 +277,7 @@ export default function Settings() {
               <h3 className="text-section text-foreground mb-2">Account</h3>
               <div className="space-y-3">
                 <div className="flex items-center gap-3">
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-accent">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/15">
                     <Mail className="h-5 w-5 text-primary" />
                   </div>
                   <div className="flex-1">
@@ -286,8 +286,8 @@ export default function Settings() {
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-accent">
-                    <CalendarDays className="h-5 w-5 text-primary" />
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-warning/15">
+                    <CalendarDays className="h-5 w-5 text-warning" />
                   </div>
                   <div className="flex-1">
                     <p className="text-sm text-muted-foreground">Member since</p>
