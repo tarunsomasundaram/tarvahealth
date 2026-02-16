@@ -38,6 +38,7 @@ export interface ForumGroup {
   description: string;
   memberCount: number;
   postCount: number;
+  isGeneral?: boolean;
 }
 
 export interface ForumReport {
@@ -80,7 +81,7 @@ const ForumContext = createContext<ForumContextType | undefined>(undefined);
 
 // Generate mock groups based on conditions
 const generateMockGroups = (): ForumGroup[] => {
-  return conditions.slice(0, 30).map((condition) => ({
+  const conditionGroups = conditions.slice(0, 30).map((condition) => ({
     id: `group-${condition.id}`,
     conditionId: condition.id,
     name: condition.name,
@@ -88,6 +89,18 @@ const generateMockGroups = (): ForumGroup[] => {
     memberCount: Math.floor(Math.random() * 500) + 50,
     postCount: Math.floor(Math.random() * 100) + 10,
   }));
+
+  const generalGroup: ForumGroup = {
+    id: 'group-general',
+    conditionId: 'general',
+    name: 'General',
+    description: 'An open space for everyone. Share general thoughts, tips, and connect with the wider community.',
+    memberCount: Math.floor(Math.random() * 1000) + 200,
+    postCount: Math.floor(Math.random() * 200) + 30,
+    isGeneral: true,
+  };
+
+  return [generalGroup, ...conditionGroups];
 };
 
 // Generate mock posts
