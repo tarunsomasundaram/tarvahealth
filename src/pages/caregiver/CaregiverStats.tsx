@@ -81,35 +81,38 @@ export default function CaregiverStats() {
           <StaggerContainer className="grid grid-cols-2 gap-3">
             <StaggerItem>
               <StatCard
-                title="Adherence Rate"
+                title="Adherence"
                 value="89%"
                 subtitle="doses taken"
                 icon={<Target className="h-5 w-5 text-success" />}
                 iconBgClassName="bg-success/15"
                 trend="up"
                 trendValue="+5%"
+                accentColor="success"
               />
             </StaggerItem>
             <StaggerItem>
               <StatCard
-                title="On-time Rate"
+                title="On-time"
                 value="76%"
                 subtitle="within window"
                 icon={<Clock className="h-5 w-5 text-primary" />}
                 iconBgClassName="bg-primary/15"
                 trend="neutral"
                 trendValue="same"
+                accentColor="primary"
               />
             </StaggerItem>
             <StaggerItem>
               <StatCard
-                title="Current Streak"
+                title="Streak"
                 value="12"
                 subtitle="days"
                 icon={<Zap className="h-5 w-5 text-warning" />}
                 iconBgClassName="bg-warning/15"
                 trend="up"
                 trendValue="best yet!"
+                accentColor="warning"
               />
             </StaggerItem>
             <StaggerItem>
@@ -121,6 +124,7 @@ export default function CaregiverStats() {
                 iconBgClassName="bg-destructive/15"
                 trend="down"
                 trendValue="-3m"
+                accentColor="destructive"
               />
             </StaggerItem>
           </StaggerContainer>

@@ -6,6 +6,7 @@ import { FadeIn, StaggerContainer, StaggerItem } from "@/components/animations";
 import { FilterChips } from "@/components/common/FilterChips";
 import { StatCard } from "@/components/stats/StatCard";
 import { AdherenceChart } from "@/components/stats/AdherenceChart";
+import { AdherenceRing } from "@/components/stats/AdherenceRing";
 import { Target, Clock, Zap, AlertTriangle, Smartphone, RefreshCw, Moon, Watch } from "lucide-react";
 import { useData } from "@/contexts/DataContext";
 import { subDays, subMonths, subYears, format, eachDayOfInterval } from "date-fns";
@@ -24,98 +25,63 @@ export default function Stats() {
   const dateRange = useMemo(() => {
     const endDate = new Date();
     let startDate: Date;
-    
     switch (timeFilter) {
-      case "7d":
-        startDate = subDays(endDate, 7);
-        break;
-      case "30d":
-        startDate = subDays(endDate, 30);
-        break;
-      case "90d":
-        startDate = subMonths(endDate, 3);
-        break;
-      case "1y":
-        startDate = subYears(endDate, 1);
-        break;
-      default:
-        startDate = subDays(endDate, 7);
+      case "7d": startDate = subDays(endDate, 7); break;
+      case "30d": startDate = subDays(endDate, 30); break;
+      case "90d": startDate = subMonths(endDate, 3); break;
+      case "1y": startDate = subYears(endDate, 1); break;
+      default: startDate = subDays(endDate, 7);
     }
-    
     return { startDate, endDate };
   }, [timeFilter]);
 
   const adherenceRate = getAdherenceRate(dateRange.startDate, dateRange.endDate);
   const onTimeRate = getOnTimeRate(dateRange.startDate, dateRange.endDate);
-  
-  // Calculate current streak
+
   const currentStreak = useMemo(() => {
     let streak = 0;
     let date = new Date();
-    
     for (let i = 0; i < 365; i++) {
       const doses = getScheduledDosesForDate(date);
       const hasDoses = doses.length > 0;
       const allTaken = doses.every(d => d.status === 'taken');
-      
-      if (hasDoses && allTaken) {
-        streak++;
-        date = subDays(date, 1);
-      } else if (hasDoses) {
-        break;
-      } else {
-        date = subDays(date, 1);
-      }
+      if (hasDoses && allTaken) { streak++; date = subDays(date, 1); }
+      else if (hasDoses) { break; }
+      else { date = subDays(date, 1); }
     }
-    
     return streak;
   }, [getScheduledDosesForDate]);
 
-  // Calculate average delay
   const avgDelay = useMemo(() => {
-    const takenLogs = doseLogs.filter(l => 
-      l.event_type === 'taken' && 
-      l.status === 'late'
-    );
-    
+    const takenLogs = doseLogs.filter(l => l.event_type === 'taken' && l.status === 'late');
     if (takenLogs.length === 0) return 0;
-    
     const totalDelay = takenLogs.reduce((sum, log) => {
       const scheduled = new Date(log.scheduled_datetime);
       const actual = new Date(log.event_datetime);
       return sum + (actual.getTime() - scheduled.getTime()) / (1000 * 60);
     }, 0);
-    
     return Math.round(totalDelay / takenLogs.length);
   }, [doseLogs]);
 
-  // Calculate weekly chart data
   const weeklyData = useMemo(() => {
-    const days = eachDayOfInterval({ 
-      start: subDays(new Date(), 6), 
-      end: new Date() 
-    });
-    
+    const days = eachDayOfInterval({ start: subDays(new Date(), 6), end: new Date() });
     return days.map(day => {
       const doses = getScheduledDosesForDate(day);
       const takenCount = doses.filter(d => d.status === 'taken').length;
       const totalCount = doses.filter(d => d.status !== 'pending').length;
       const adherence = totalCount > 0 ? Math.round((takenCount / totalCount) * 100) : 100;
-      
-      return {
-        day: format(day, 'EEE'),
-        adherence,
-      };
+      return { day: format(day, 'EEE'), adherence };
     });
   }, [getScheduledDosesForDate]);
 
-  // Calculate case detection rate
   const caseDetectionRate = useMemo(() => {
     const takenLogs = doseLogs.filter(l => l.event_type === 'taken');
     if (takenLogs.length === 0) return 0;
     const caseCount = takenLogs.filter(l => l.source === 'case').length;
     return Math.round((caseCount / takenLogs.length) * 100);
   }, [doseLogs]);
+
+  const adherenceLabel = adherenceRate >= 90 ? "Excellent" : adherenceRate >= 70 ? "Good" : adherenceRate >= 50 ? "Fair" : "Needs Work";
 
   return (
     <AnimatedPage>
@@ -131,38 +97,38 @@ export default function Stats() {
             />
           </FadeIn>
 
+          {/* Whoop-style adherence ring */}
+          <FadeIn delay={0.15}>
+            <AdherenceRing
+              percentage={adherenceRate}
+              label={adherenceLabel}
+              sublabel={`${timeFilter === '7d' ? 'Last 7 days' : timeFilter === '30d' ? 'Last 30 days' : timeFilter === '90d' ? 'Last 90 days' : 'Last year'} adherence rate`}
+            />
+          </FadeIn>
+
           <StaggerContainer className="grid grid-cols-2 gap-3">
             <StaggerItem>
               <StatCard
-                title="Adherence Rate"
-                value={`${adherenceRate}%`}
-                subtitle="doses taken"
-                icon={<Target className="h-5 w-5 text-success" />}
-                iconBgClassName="bg-success/15"
-                trend={adherenceRate >= 80 ? "up" : "down"}
-                trendValue={adherenceRate >= 80 ? "Good" : "Needs work"}
-              />
-            </StaggerItem>
-            <StaggerItem>
-              <StatCard
-                title="On-time Rate"
+                title="On-time"
                 value={`${onTimeRate}%`}
                 subtitle="within window"
                 icon={<Clock className="h-5 w-5 text-primary" />}
                 iconBgClassName="bg-primary/15"
                 trend={onTimeRate >= 70 ? "up" : "neutral"}
                 trendValue={onTimeRate >= 70 ? "Great" : "Improve"}
+                accentColor="primary"
               />
             </StaggerItem>
             <StaggerItem>
               <StatCard
-                title="Current Streak"
+                title="Streak"
                 value={`${currentStreak}`}
                 subtitle="days"
                 icon={<Zap className="h-5 w-5 text-warning" />}
                 iconBgClassName="bg-warning/15"
                 trend="up"
                 trendValue={currentStreak > 7 ? "Best yet!" : "Keep going"}
+                accentColor="warning"
               />
             </StaggerItem>
             <StaggerItem>
@@ -174,6 +140,17 @@ export default function Stats() {
                 iconBgClassName="bg-destructive/15"
                 trend={avgDelay <= 10 ? "down" : "up"}
                 trendValue={avgDelay <= 10 ? "On track" : "Late"}
+                accentColor="destructive"
+              />
+            </StaggerItem>
+            <StaggerItem>
+              <StatCard
+                title="Case Detect"
+                value={`${caseDetectionRate}%`}
+                subtitle="auto-detected"
+                icon={<Smartphone className="h-5 w-5 text-success" />}
+                iconBgClassName="bg-success/15"
+                accentColor="success"
               />
             </StaggerItem>
           </StaggerContainer>
@@ -182,28 +159,10 @@ export default function Stats() {
             <AdherenceChart data={weeklyData} />
           </FadeIn>
 
-          <StaggerContainer className="grid grid-cols-2 gap-3">
-            <StaggerItem>
-              <StatCard
-                title="Case Detection"
-                value={`${caseDetectionRate}%`}
-                subtitle="auto-detected"
-                icon={<Smartphone className="h-5 w-5 text-primary" />}
-              />
-            </StaggerItem>
-            <StaggerItem>
-              <StatCard
-                title="Refill Rate"
-                value="100%"
-                subtitle="on time"
-                icon={<RefreshCw className="h-5 w-5 text-primary" />}
-              />
-            </StaggerItem>
-          </StaggerContainer>
-
           <FadeIn delay={0.45}>
-            <div className="card-tarva">
-              <h3 className="text-section text-foreground mb-2">Most Missed Time</h3>
+            <div className="card-tarva relative overflow-hidden">
+              <div className="absolute top-0 left-0 right-0 h-[3px] bg-warning rounded-t-[18px]" />
+              <h3 className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground mb-2">Most Missed Time</h3>
               <div className="flex items-center gap-3">
                 <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-warning/15">
                   <Moon className="h-5 w-5 text-warning" />
@@ -218,7 +177,7 @@ export default function Stats() {
 
           <section>
             <FadeIn delay={0.5}>
-              <h3 className="text-section text-foreground mb-3">Connect Health Trackers</h3>
+              <h3 className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground mb-3">Connect Health Trackers</h3>
             </FadeIn>
             <StaggerContainer className="grid grid-cols-2 gap-3">
               {[
@@ -229,15 +188,18 @@ export default function Stats() {
               ].map((tracker) => (
                 <StaggerItem key={tracker.name}>
                   <motion.button
-                    className="card-tarva-interactive flex items-center gap-3 w-full"
+                    className="card-tarva-interactive flex items-center gap-3 w-full relative overflow-hidden"
                     whileTap={{ scale: 0.97 }}
                   >
+                    {tracker.connected && (
+                      <div className="absolute top-0 left-0 right-0 h-[3px] bg-success rounded-t-[18px]" />
+                    )}
                     <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-accent">
                       <Watch className="h-4 w-4 text-primary" />
                     </div>
                     <div className="text-left">
                       <p className="text-sm font-medium text-foreground">{tracker.name}</p>
-                      <p className="text-xs text-muted-foreground">
+                      <p className={`text-xs ${tracker.connected ? 'text-success font-medium' : 'text-muted-foreground'}`}>
                         {tracker.connected ? "Connected" : "Tap to connect"}
                       </p>
                     </div>
