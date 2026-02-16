@@ -18,6 +18,7 @@ interface AlarmDose {
   form: string;
   scheduledTime: Date;
   displayTime: string;
+  instructions?: string;
 }
 
 export function useAlarm() {
@@ -136,6 +137,7 @@ export function useAlarm() {
     scheduledTime: Date;
     displayTime: string;
     status: string;
+    instructions?: string;
   }>) => {
     if (isAlarmActive) return; // Don't interrupt active alarm
 

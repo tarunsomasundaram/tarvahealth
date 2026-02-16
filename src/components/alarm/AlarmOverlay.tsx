@@ -12,6 +12,7 @@ interface AlarmDose {
   form: string;
   scheduledTime: Date;
   displayTime: string;
+  instructions?: string;
 }
 
 interface AlarmOverlayProps {
@@ -109,6 +110,18 @@ export function AlarmOverlay({
             >
               {dose.strengthValue}{dose.strengthUnit} {dose.form}
             </motion.p>
+
+            {/* Instructions */}
+            {dose.instructions && (
+              <motion.p
+                className="text-sm text-primary font-medium text-center mb-2 px-4 py-2 rounded-xl bg-primary/10"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.45 }}
+              >
+                {dose.instructions}
+              </motion.p>
+            )}
 
             {/* Scheduled time badge */}
             <motion.div
