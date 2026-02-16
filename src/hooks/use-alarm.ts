@@ -67,7 +67,7 @@ export function useAlarm() {
 
       const playTone = async () => {
         if (!playing) return;
-        // Three-tone alarm pattern
+        // Fast three-tone alarm pattern
         const frequencies = [880, 1100, 880];
         for (const freq of frequencies) {
           if (!playing) break;
@@ -76,14 +76,14 @@ export function useAlarm() {
           osc.frequency.value = freq;
           osc.connect(gainNode);
           osc.start();
-          await new Promise(r => setTimeout(r, 200));
+          await new Promise(r => setTimeout(r, 120));
           osc.stop();
           osc.disconnect();
-          await new Promise(r => setTimeout(r, 80));
+          await new Promise(r => setTimeout(r, 50));
         }
-        // Pause between alarm cycles
+        // Short pause between alarm cycles
         if (playing) {
-          setTimeout(playTone, 1500);
+          setTimeout(playTone, 600);
         }
       };
 
