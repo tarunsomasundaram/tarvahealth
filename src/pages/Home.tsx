@@ -14,9 +14,13 @@ import { triggerHaptic } from "@/hooks/use-haptics";
 import { useAlarm } from "@/hooks/use-alarm";
 import { useNotifications } from "@/hooks/use-notifications";
 import { useCaseDevice } from "@/hooks/use-case-device";
+import { useOfflineSync } from "@/hooks/use-offline-sync";
+import { useCatchUpAlarms } from "@/hooks/use-catch-up-alarms";
+import { queueDoseAction } from "@/lib/offlineDoseQueue";
 import { format } from "date-fns";
 import { useData, ScheduledDose } from "@/contexts/DataContext";
 import { useOnboarding } from "@/contexts/OnboardingContext";
+import { LocalNotifications } from "@capacitor/local-notifications";
 import { Pill, Check, X, Smartphone, Clock, Bell, MoreVertical, MapPin, Volume2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
@@ -259,6 +263,81 @@ export default function Home() {
     dismissAlarm,
     checkForDueAlarms,
   } = useAlarm();
+
+  // Offline sync — syncs queued dose actions when connectivity returns
+  const { syncQueuedActions } = useOfflineSync(() => {
+    refreshMedications();
+  });
+
+  // Catch-up alarms — triggers alarm for missed doses on app resume
+  useCatchUpAlarms({
+    lookbackHours: 4,
+    onCatchUpDose: (dose) => {
+      triggerAlarm(dose);
+    },
+  });
+
+  // Notification quick action listener (Capacitor "Taken" from notification)
+  useEffect(() => {
+    let cleanup: (() => void) | undefined;
+
+    const setup = async () => {
+      try {
+        const listener = await LocalNotifications.addListener(
+          'localNotificationActionPerformed',
+          async (notification) => {
+            const actionId = notification.actionId;
+            const extra = notification.notification?.extra;
+            if (!extra?.medicationId || !extra?.scheduledDatetime) return;
+
+            const scheduledTime = new Date(extra.scheduledDatetime);
+            const now = new Date();
+            const diffMinutes = (now.getTime() - scheduledTime.getTime()) / (1000 * 60);
+            const isLate = diffMinutes > 30;
+
+            if (actionId === 'mark_taken' || actionId === 'tap') {
+              // Queue offline-first, then try cloud
+              await queueDoseAction({
+                medication_id: extra.medicationId,
+                scheduled_datetime: extra.scheduledDatetime,
+                event_type: 'taken',
+                event_datetime: now.toISOString(),
+                status: isLate ? 'late' : 'on_time',
+                source: 'manual',
+                notes: 'Marked from notification',
+              });
+
+              // Try cloud sync immediately if online
+              if (navigator.onLine) {
+                await logDose(extra.medicationId, scheduledTime, 'taken', {
+                  status: isLate ? 'late' : 'on_time',
+                  source: 'manual',
+                  notes: 'Marked from notification',
+                });
+              }
+              triggerHaptic('success');
+            } else if (actionId === 'snooze_5' || actionId === 'snooze_10' || actionId === 'snooze_15') {
+              const minutes = parseInt(actionId.split('_')[1]);
+              const med = medications.find(m => m.id === extra.medicationId);
+              if (med) {
+                await scheduleSnoozeReminder(
+                  { genericName: med.generic_name, id: med.id } as any,
+                  extra.scheduledDatetime,
+                  minutes
+                );
+              }
+            }
+          }
+        );
+        cleanup = () => listener.remove();
+      } catch {
+        // Not in Capacitor environment
+      }
+    };
+
+    setup();
+    return () => cleanup?.();
+  }, [logDose, medications, scheduleSnoozeReminder]);
   
   const firstName = profile?.full_name?.split(' ')[0] || patientProfile?.fullName?.split(' ')[0] || 'User';
   const profileCompletion = getProfileCompletionPercentage();
@@ -298,7 +377,6 @@ export default function Home() {
     const interval = setInterval(() => {
       checkForDueAlarms(upcomingDoses);
     }, 10000);
-    // Check immediately too
     checkForDueAlarms(upcomingDoses);
     return () => clearInterval(interval);
   }, [upcomingDoses, checkForDueAlarms]);
@@ -353,22 +431,38 @@ export default function Home() {
     const now = new Date();
     const scheduledTime = new Date(dose.scheduledTime);
     const diffMinutes = (now.getTime() - scheduledTime.getTime()) / (1000 * 60);
-    const isLate = diffMinutes > 30; // 30 min window
+    const isLate = diffMinutes > 30;
     
-    await logDose(
-      dose.medicationId,
-      dose.scheduledTime,
-      'taken',
-      { status: isLate ? 'late' : 'on_time', source: 'manual' }
-    );
+    // Always queue locally first (offline-first)
+    await queueDoseAction({
+      medication_id: dose.medicationId,
+      scheduled_datetime: dose.scheduledTime.toISOString(),
+      event_type: 'taken',
+      event_datetime: now.toISOString(),
+      status: isLate ? 'late' : 'on_time',
+      source: 'manual',
+      notes: null,
+    });
+
+    // Try cloud sync if online
+    if (navigator.onLine) {
+      await logDose(
+        dose.medicationId,
+        dose.scheduledTime,
+        'taken',
+        { status: isLate ? 'late' : 'on_time', source: 'manual' }
+      );
+    }
     
     await cancelNotification(dose.medicationId, dose.scheduledTime.toISOString());
     
-    await createNotification('dose_taken', {
-      medication_id: dose.medicationId,
-      scheduled_datetime: dose.scheduledTime,
-      metadata: { medicationName: dose.medicationName, source: 'manual' }
-    });
+    if (navigator.onLine) {
+      await createNotification('dose_taken', {
+        medication_id: dose.medicationId,
+        scheduled_datetime: dose.scheduledTime,
+        metadata: { medicationName: dose.medicationName, source: 'manual' }
+      });
+    }
     
     triggerHaptic('success');
   };
@@ -379,30 +473,53 @@ export default function Home() {
     const diffMinutes = (now.getTime() - scheduledTime.getTime()) / (1000 * 60);
     const isLate = diffMinutes > 30;
     
-    await logDose(
-      dose.medicationId,
-      dose.scheduledTime,
-      'taken',
-      { status: isLate ? 'late' : 'on_time', source: 'manual' }
-    );
+    await queueDoseAction({
+      medication_id: dose.medicationId,
+      scheduled_datetime: dose.scheduledTime.toISOString(),
+      event_type: 'taken',
+      event_datetime: now.toISOString(),
+      status: isLate ? 'late' : 'on_time',
+      source: 'manual',
+      notes: 'Taken elsewhere',
+    });
+
+    if (navigator.onLine) {
+      await logDose(
+        dose.medicationId,
+        dose.scheduledTime,
+        'taken',
+        { status: isLate ? 'late' : 'on_time', source: 'manual' }
+      );
+      
+      await createNotification('dose_taken', {
+        medication_id: dose.medicationId,
+        scheduled_datetime: dose.scheduledTime,
+        metadata: { medicationName: dose.medicationName, source: 'manual', takenElsewhere: true }
+      });
+    }
     
     await cancelNotification(dose.medicationId, dose.scheduledTime.toISOString());
-    
-    await createNotification('dose_taken', {
-      medication_id: dose.medicationId,
-      scheduled_datetime: dose.scheduledTime,
-      metadata: { medicationName: dose.medicationName, source: 'manual', takenElsewhere: true }
-    });
-    
     triggerHaptic('success');
   };
 
   const handleSkip = async (dose: DoseCardDose) => {
-    await logDose(
-      dose.medicationId,
-      dose.scheduledTime,
-      'skipped'
-    );
+    await queueDoseAction({
+      medication_id: dose.medicationId,
+      scheduled_datetime: dose.scheduledTime.toISOString(),
+      event_type: 'skipped',
+      event_datetime: new Date().toISOString(),
+      status: null,
+      source: 'manual',
+      notes: null,
+    });
+
+    if (navigator.onLine) {
+      await logDose(
+        dose.medicationId,
+        dose.scheduledTime,
+        'skipped'
+      );
+    }
     triggerHaptic('light');
   };
 
