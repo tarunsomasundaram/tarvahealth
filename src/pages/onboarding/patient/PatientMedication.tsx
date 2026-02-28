@@ -28,12 +28,12 @@ export default function PatientMedication() {
 
   const handleContinue = () => {
     triggerHaptic('medium');
-    navigate("/onboarding/patient/caregiver");
+    navigate("/onboarding/complete");
   };
 
   const handleSkip = () => {
     triggerHaptic('light');
-    navigate("/onboarding/patient/caregiver");
+    navigate("/onboarding/complete");
   };
 
   const hasMedications = activeMedications.length > 0;
