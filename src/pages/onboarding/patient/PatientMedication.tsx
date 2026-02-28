@@ -140,21 +140,13 @@ export default function PatientMedication() {
 
         {/* Bottom buttons */}
         <div className="relative z-50 px-6 pb-12 pt-4 bg-background" style={{ paddingBottom: 'max(3rem, env(safe-area-inset-bottom))' }}>
-          {hasMedications ? (
-            <motion.button
-              onClick={handleContinue}
-              className="btn-primary w-full mb-3"
-              whileTap={{ scale: 0.98 }}
-            >
-              Continue
-            </motion.button>
-          ) : null}
-          <button
-            onClick={handleSkip}
-            className="w-full text-center text-sm font-medium text-muted-foreground"
+          <motion.button
+            onClick={handleContinue}
+            className="btn-primary w-full mb-3"
+            whileTap={{ scale: 0.98 }}
           >
-            {hasMedications ? "Skip adding more" : "Do this later"}
-          </button>
+            {hasMedications ? "Continue" : "Skip & Continue"}
+          </motion.button>
         </div>
       </div>
     </OnboardingPageWrapper>
