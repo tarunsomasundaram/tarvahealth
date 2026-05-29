@@ -6,6 +6,7 @@ import { useNavigate } from "react-router-dom";
 import { Plus, Pill, Clock, ChevronRight, Package } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useData } from "@/contexts/DataContext";
+import { EmptyMedicationsState } from "@/components/home/EmptyMedicationsState";
 
 export default function MyMedications() {
   const navigate = useNavigate();
