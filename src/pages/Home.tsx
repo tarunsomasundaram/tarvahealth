@@ -373,9 +373,27 @@ export default function Home() {
 
   const upcomingDoses = scheduledDoses.filter(d => d.status === 'pending' || d.status === 'snoozed');
   const completedDoses = scheduledDoses.filter(d => d.status === 'taken' || d.status === 'skipped');
-  
+
   const takenCount = scheduledDoses.filter(d => d.status === 'taken').length;
   const totalCount = scheduledDoses.filter(d => d.status !== 'skipped').length;
+
+  // Group upcoming doses by HH:mm (stack meds due at the same time)
+  const upcomingGroups = useMemo(() => {
+    const map = new Map<string, DoseCardDose[]>();
+    for (const d of upcomingDoses) {
+      const key = format(d.scheduledTime, 'yyyy-MM-dd HH:mm');
+      const arr = map.get(key) ?? [];
+      arr.push(d);
+      map.set(key, arr);
+    }
+    return Array.from(map.entries())
+      .map(([key, doses]) => ({ key, doses }))
+      .sort((a, b) => a.doses[0].scheduledTime.getTime() - b.doses[0].scheduledTime.getTime());
+  }, [upcomingDoses]);
+
+  // Next dose (for hero card) — only on today's view
+  const nextGroup = isToday(selectedDate) ? upcomingGroups[0] : null;
+
 
   // Check for due alarms every 10 seconds
   useEffect(() => {
