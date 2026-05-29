@@ -5,6 +5,9 @@ import { AnimatedPage } from "@/components/layout/AnimatedPage";
 import { FadeIn, StaggerContainer, StaggerItem } from "@/components/animations";
 import { WeekPicker } from "@/components/home/WeekPicker";
 import { ProgressCard } from "@/components/home/ProgressCard";
+import { NextDoseCard } from "@/components/home/NextDoseCard";
+import { StackedDoseCard } from "@/components/home/StackedDoseCard";
+import { EmptyMedicationsState } from "@/components/home/EmptyMedicationsState";
 import { PullToRefresh } from "@/components/common/PullToRefresh";
 import { SnoozeSheet } from "@/components/dose/SnoozeSheet";
 import { CaseSelectionSheet } from "@/components/dose/CaseSelectionSheet";
@@ -17,9 +20,10 @@ import { useCaseDevice } from "@/hooks/use-case-device";
 import { useOfflineSync } from "@/hooks/use-offline-sync";
 import { useCatchUpAlarms } from "@/hooks/use-catch-up-alarms";
 import { queueDoseAction } from "@/lib/offlineDoseQueue";
-import { format } from "date-fns";
+import { format, isToday } from "date-fns";
 import { useData, ScheduledDose } from "@/contexts/DataContext";
 import { useOnboarding } from "@/contexts/OnboardingContext";
+import { useNavigate } from "react-router-dom";
 import { LocalNotifications } from "@capacitor/local-notifications";
 import { Pill, Check, X, Smartphone, Clock, Bell, MoreVertical, MapPin, Volume2 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -234,6 +238,7 @@ function DoseCard({
 }
 
 export default function Home() {
+  const navigate = useNavigate();
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [snoozeSheetOpen, setSnoozeSheetOpen] = useState(false);
   const [selectedDoseForSnooze, setSelectedDoseForSnooze] = useState<DoseCardDose | null>(null);
@@ -368,9 +373,27 @@ export default function Home() {
 
   const upcomingDoses = scheduledDoses.filter(d => d.status === 'pending' || d.status === 'snoozed');
   const completedDoses = scheduledDoses.filter(d => d.status === 'taken' || d.status === 'skipped');
-  
+
   const takenCount = scheduledDoses.filter(d => d.status === 'taken').length;
   const totalCount = scheduledDoses.filter(d => d.status !== 'skipped').length;
+
+  // Group upcoming doses by HH:mm (stack meds due at the same time)
+  const upcomingGroups = useMemo(() => {
+    const map = new Map<string, DoseCardDose[]>();
+    for (const d of upcomingDoses) {
+      const key = format(d.scheduledTime, 'yyyy-MM-dd HH:mm');
+      const arr = map.get(key) ?? [];
+      arr.push(d);
+      map.set(key, arr);
+    }
+    return Array.from(map.entries())
+      .map(([key, doses]) => ({ key, doses }))
+      .sort((a, b) => a.doses[0].scheduledTime.getTime() - b.doses[0].scheduledTime.getTime());
+  }, [upcomingDoses]);
+
+  // Next dose (for hero card) — only on today's view
+  const nextGroup = isToday(selectedDate) ? upcomingGroups[0] : null;
+
 
   // Check for due alarms every 10 seconds
   useEffect(() => {
@@ -585,8 +608,24 @@ export default function Home() {
               <ProgressCard taken={takenCount} total={totalCount} />
             </FadeIn>
 
+            {/* Next Dose hero — today's view, one-tap Taken */}
+            {nextGroup && (
+              <FadeIn delay={0.22}>
+                <NextDoseCard
+                  medicationName={nextGroup.doses[0].medicationName}
+                  strength={`${nextGroup.doses[0].strengthValue ?? ''}${nextGroup.doses[0].strengthUnit ?? ''} ${nextGroup.doses[0].form}`.trim()}
+                  scheduledTime={nextGroup.doses[0].scheduledTime}
+                  displayTime={nextGroup.doses[0].displayTime}
+                  count={nextGroup.doses.length}
+                  onMarkTaken={async () => {
+                    for (const d of nextGroup.doses) await handleMarkTaken(d);
+                  }}
+                />
+              </FadeIn>
+            )}
+
             {/* Test Alarm Button */}
-            <FadeIn delay={0.22}>
+            <FadeIn delay={0.24}>
               <motion.button
                 onClick={handleTestAlarm}
                 className="btn-secondary w-full py-3 gap-2"
@@ -598,28 +637,44 @@ export default function Home() {
             </FadeIn>
 
             {showProfileCard && (
-              <FadeIn delay={0.25}>
+              <FadeIn delay={0.26}>
                 <FinishProfileCard onDismiss={() => setShowFinishProfile(false)} />
               </FadeIn>
             )}
 
-
-            {upcomingDoses.length > 0 && (
+            {upcomingGroups.length > 0 && (
               <section>
-                <FadeIn delay={0.25}>
+                <FadeIn delay={0.28}>
                   <h2 className="text-section text-foreground mb-3">Upcoming</h2>
                 </FadeIn>
                 <StaggerContainer className="space-y-3">
                   <AnimatePresence mode="popLayout">
-                    {upcomingDoses.map((dose) => (
-                      <StaggerItem key={dose.id}>
-                        <DoseCard
-                          dose={dose}
-                          onMarkTaken={() => handleMarkTaken(dose)}
-                          onSkip={() => handleSkip(dose)}
-                          onSnooze={() => handleOpenSnooze(dose)}
-                          onTakenElsewhere={() => handleTakenElsewhere(dose)}
-                        />
+                    {upcomingGroups.map((group) => (
+                      <StaggerItem key={group.key}>
+                        {group.doses.length > 1 ? (
+                          <StackedDoseCard
+                            displayTime={group.doses[0].displayTime}
+                            items={group.doses.map((d) => ({
+                              id: d.id,
+                              medicationName: d.medicationName,
+                              strength: `${d.strengthValue ?? ''}${d.strengthUnit ?? ''}`.trim(),
+                            }))}
+                            onMarkAllTaken={async () => {
+                              for (const d of group.doses) await handleMarkTaken(d);
+                            }}
+                            onSkipAll={async () => {
+                              for (const d of group.doses) await handleSkip(d);
+                            }}
+                          />
+                        ) : (
+                          <DoseCard
+                            dose={group.doses[0]}
+                            onMarkTaken={() => handleMarkTaken(group.doses[0])}
+                            onSkip={() => handleSkip(group.doses[0])}
+                            onSnooze={() => handleOpenSnooze(group.doses[0])}
+                            onTakenElsewhere={() => handleTakenElsewhere(group.doses[0])}
+                          />
+                        )}
                       </StaggerItem>
                     ))}
                   </AnimatePresence>
@@ -642,7 +697,13 @@ export default function Home() {
               </section>
             )}
 
-            {scheduledDoses.length === 0 && (
+            {scheduledDoses.length === 0 && medications.length === 0 && (
+              <FadeIn delay={0.25}>
+                <EmptyMedicationsState onAdd={() => navigate('/add')} />
+              </FadeIn>
+            )}
+
+            {scheduledDoses.length === 0 && medications.length > 0 && (
               <FadeIn delay={0.25}>
                 <div className="card-tarva text-center py-8">
                   <Pill className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
