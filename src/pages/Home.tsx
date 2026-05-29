@@ -608,8 +608,24 @@ export default function Home() {
               <ProgressCard taken={takenCount} total={totalCount} />
             </FadeIn>
 
+            {/* Next Dose hero — today's view, one-tap Taken */}
+            {nextGroup && (
+              <FadeIn delay={0.22}>
+                <NextDoseCard
+                  medicationName={nextGroup.doses[0].medicationName}
+                  strength={`${nextGroup.doses[0].strengthValue ?? ''}${nextGroup.doses[0].strengthUnit ?? ''} ${nextGroup.doses[0].form}`.trim()}
+                  scheduledTime={nextGroup.doses[0].scheduledTime}
+                  displayTime={nextGroup.doses[0].displayTime}
+                  count={nextGroup.doses.length}
+                  onMarkTaken={async () => {
+                    for (const d of nextGroup.doses) await handleMarkTaken(d);
+                  }}
+                />
+              </FadeIn>
+            )}
+
             {/* Test Alarm Button */}
-            <FadeIn delay={0.22}>
+            <FadeIn delay={0.24}>
               <motion.button
                 onClick={handleTestAlarm}
                 className="btn-secondary w-full py-3 gap-2"
@@ -621,28 +637,44 @@ export default function Home() {
             </FadeIn>
 
             {showProfileCard && (
-              <FadeIn delay={0.25}>
+              <FadeIn delay={0.26}>
                 <FinishProfileCard onDismiss={() => setShowFinishProfile(false)} />
               </FadeIn>
             )}
 
-
-            {upcomingDoses.length > 0 && (
+            {upcomingGroups.length > 0 && (
               <section>
-                <FadeIn delay={0.25}>
+                <FadeIn delay={0.28}>
                   <h2 className="text-section text-foreground mb-3">Upcoming</h2>
                 </FadeIn>
                 <StaggerContainer className="space-y-3">
                   <AnimatePresence mode="popLayout">
-                    {upcomingDoses.map((dose) => (
-                      <StaggerItem key={dose.id}>
-                        <DoseCard
-                          dose={dose}
-                          onMarkTaken={() => handleMarkTaken(dose)}
-                          onSkip={() => handleSkip(dose)}
-                          onSnooze={() => handleOpenSnooze(dose)}
-                          onTakenElsewhere={() => handleTakenElsewhere(dose)}
-                        />
+                    {upcomingGroups.map((group) => (
+                      <StaggerItem key={group.key}>
+                        {group.doses.length > 1 ? (
+                          <StackedDoseCard
+                            displayTime={group.doses[0].displayTime}
+                            items={group.doses.map((d) => ({
+                              id: d.id,
+                              medicationName: d.medicationName,
+                              strength: `${d.strengthValue ?? ''}${d.strengthUnit ?? ''}`.trim(),
+                            }))}
+                            onMarkAllTaken={async () => {
+                              for (const d of group.doses) await handleMarkTaken(d);
+                            }}
+                            onSkipAll={async () => {
+                              for (const d of group.doses) await handleSkip(d);
+                            }}
+                          />
+                        ) : (
+                          <DoseCard
+                            dose={group.doses[0]}
+                            onMarkTaken={() => handleMarkTaken(group.doses[0])}
+                            onSkip={() => handleSkip(group.doses[0])}
+                            onSnooze={() => handleOpenSnooze(group.doses[0])}
+                            onTakenElsewhere={() => handleTakenElsewhere(group.doses[0])}
+                          />
+                        )}
                       </StaggerItem>
                     ))}
                   </AnimatePresence>
@@ -665,7 +697,13 @@ export default function Home() {
               </section>
             )}
 
-            {scheduledDoses.length === 0 && (
+            {scheduledDoses.length === 0 && medications.length === 0 && (
+              <FadeIn delay={0.25}>
+                <EmptyMedicationsState onAdd={() => navigate('/add')} />
+              </FadeIn>
+            )}
+
+            {scheduledDoses.length === 0 && medications.length > 0 && (
               <FadeIn delay={0.25}>
                 <div className="card-tarva text-center py-8">
                   <Pill className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
