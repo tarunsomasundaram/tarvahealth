@@ -238,6 +238,7 @@ function DoseCard({
 }
 
 export default function Home() {
+  const navigate = useNavigate();
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [snoozeSheetOpen, setSnoozeSheetOpen] = useState(false);
   const [selectedDoseForSnooze, setSelectedDoseForSnooze] = useState<DoseCardDose | null>(null);
