@@ -93,6 +93,7 @@ export async function markActionSynced(id: string): Promise<void> {
 
 /** Get all local actions for a medication+datetime (to check if already logged offline) */
 export async function hasLocalAction(medicationId: string, scheduledDatetime: string): Promise<boolean> {
+  if (!medicationId || !scheduledDatetime) return false;
   const db = await openDB();
   return new Promise((resolve, reject) => {
     const tx = db.transaction(STORE_NAME, 'readonly');
