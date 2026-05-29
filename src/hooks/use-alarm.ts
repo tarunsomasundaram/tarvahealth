@@ -111,11 +111,19 @@ export function useAlarm() {
 
   // Trigger alarm for a dose
   const triggerAlarm = useCallback((dose: AlarmDose) => {
+    // Record key so periodic checkForDueAlarms won't re-fire this dose
+    const key = `${dose.medicationId}_${dose.scheduledTime.toISOString()}`;
+    checkedTimesRef.current.add(key);
+
+    // Guard against double-start (avoid leaking a second AudioContext)
+    stopSound();
+    stopVibration();
+
     setAlarmDose(dose);
     setIsAlarmActive(true);
     startVibration();
     startSound();
-  }, [startVibration, startSound]);
+  }, [startVibration, startSound, stopVibration, stopSound]);
 
   // Dismiss alarm (called by taken/skip/snooze actions)
   const dismissAlarm = useCallback(() => {
