@@ -134,23 +134,7 @@ export default function MyMedications() {
 
           {activeMedications.length === 0 && (
             <FadeIn delay={0.2}>
-              <div className="flex flex-col items-center justify-center py-16 text-center">
-                <div className="flex h-16 w-16 items-center justify-center rounded-full bg-muted">
-                  <Pill className="h-8 w-8 text-muted-foreground" />
-                </div>
-                <h3 className="mt-4 font-semibold text-foreground">No medications yet</h3>
-                <p className="mt-1 text-sm text-muted-foreground">
-                  Add your first medication to start tracking
-                </p>
-                <motion.button 
-                  onClick={() => navigate("/add")} 
-                  className="btn-primary mt-6"
-                  whileTap={{ scale: 0.97 }}
-                >
-                  <Plus className="h-4 w-4" />
-                  Add Medication
-                </motion.button>
-              </div>
+              <EmptyMedicationsState onAdd={() => navigate('/add')} />
             </FadeIn>
           )}
         </div>
