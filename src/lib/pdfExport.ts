@@ -35,6 +35,17 @@ function getDisplayStatus(dose: ScheduledDose): DoseStatus {
   return dose.status as DoseStatus;
 }
 
+// Escape user-controlled strings before injecting into innerHTML to prevent XSS.
+function esc(unsafe: unknown): string {
+  if (unsafe === null || unsafe === undefined) return '';
+  return String(unsafe)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
 export async function generateAdherencePDF(data: ExportData): Promise<Blob> {
   const { patientName, startDate, endDate, getDosesForDate, medications } = data;
   
