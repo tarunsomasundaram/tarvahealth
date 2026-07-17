@@ -278,10 +278,10 @@ export async function generateAdherencePDF(data: ExportData): Promise<Blob> {
       ${medications.map(med => `
         <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; background: white; border-radius: 8px;">
           <div>
-            <span style="font-weight: 500; font-size: 13px;">${med.generic_name}</span>
-            <span style="color: #6b7280; font-size: 12px; margin-left: 8px;">${med.strength_value || ''}${med.strength_unit || ''}</span>
+            <span style="font-weight: 500; font-size: 13px;">${esc(med.generic_name)}</span>
+            <span style="color: #6b7280; font-size: 12px; margin-left: 8px;">${esc(med.strength_value || '')}${esc(med.strength_unit || '')}</span>
           </div>
-          <span style="font-size: 11px; color: #8b5cf6; background: #f3e8ff; padding: 2px 8px; border-radius: 10px;">${med.form || 'tablet'}</span>
+          <span style="font-size: 11px; color: #8b5cf6; background: #f3e8ff; padding: 2px 8px; border-radius: 10px;">${esc(med.form || 'tablet')}</span>
         </div>
       `).join('')}
     </div>
