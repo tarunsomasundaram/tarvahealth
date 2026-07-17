@@ -701,14 +701,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      can_caregiver_access: {
-        Args: {
-          _caregiver_id: string
-          _patient_id: string
-          _permission: string
-        }
-        Returns: boolean
-      }
+      [_ in never]: never
     }
     Enums: {
       [_ in never]: never
