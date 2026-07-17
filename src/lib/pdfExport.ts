@@ -297,7 +297,7 @@ export async function generateAdherencePDF(data: ExportData): Promise<Blob> {
       <img src="${tarvaLogoBase64}" alt="TARVA" style="height: 48px; object-fit: contain; filter: invert(1);" />
     </div>
     <p style="font-size: 11px; color: #9ca3af; margin: 0;">
-      Generated for ${patientName} on ${format(new Date(), 'MMMM d, yyyy \'at\' h:mm a')}
+      Generated for ${esc(patientName)} on ${format(new Date(), 'MMMM d, yyyy \'at\' h:mm a')}
     </p>
   `;
   doc.appendChild(footer);
