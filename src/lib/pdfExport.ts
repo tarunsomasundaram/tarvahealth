@@ -68,7 +68,7 @@ export async function generateAdherencePDF(data: ExportData): Promise<Blob> {
       <img src="${tarvaLogoBase64}" alt="TARVA" style="height: 80px; object-fit: contain; filter: invert(1);" />
     </div>
     <div style="text-align: right;">
-      <p style="font-weight: 600; font-size: 16px; margin: 0;">${patientName}</p>
+      <p style="font-weight: 600; font-size: 16px; margin: 0;">${esc(patientName)}</p>
       <p style="color: #6b7280; font-size: 14px; margin: 4px 0 0 0;">
         ${format(startDate, 'MMM d, yyyy')} – ${format(endDate, 'MMM d, yyyy')}
       </p>
