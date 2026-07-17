@@ -11,22 +11,30 @@ interface ProfileShareData {
   medications: Medication[];
 }
 
+// Escape user-controlled strings before injecting into innerHTML to prevent XSS.
+function esc(unsafe: unknown): string {
+  if (unsafe === null || unsafe === undefined) return '';
+  return String(unsafe)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
 export async function generateProfilePDF(data: ProfileShareData): Promise<void> {
   const { patientProfile, healthProfile, medications } = data;
-  
+
   const name = patientProfile?.fullName || 'Patient';
-  
-  // Get condition names from IDs
+
   const conditionNames = healthProfile.conditions
     .map(id => conditions.find(c => c.id === id)?.name || id)
     .filter(Boolean);
-  
-  // Get behavior names from IDs
+
   const behaviorNames = healthProfile.selectedBehaviors
     .map(id => behaviors.find(b => b.id === id)?.name || id)
     .filter(Boolean);
-  
-  // Create the document
+
   const doc = document.createElement('div');
   doc.style.cssText = `
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -36,20 +44,19 @@ export async function generateProfilePDF(data: ProfileShareData): Promise<void> 
     max-width: 800px;
     margin: 0 auto;
   `;
-  
-  // Header with avatar and branding
+
   const header = document.createElement('div');
   header.style.cssText = 'display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; background: linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%); padding: 20px; border-radius: 16px;';
-  
-  const avatarHtml = patientProfile?.avatarUrl 
-    ? `<img src="${patientProfile.avatarUrl}" alt="${name}" style="width: 70px; height: 70px; border-radius: 50%; object-fit: cover; border: 3px solid white;" />`
-    : `<div style="width: 70px; height: 70px; border-radius: 50%; background: white; display: flex; align-items: center; justify-content: center; font-size: 28px; font-weight: bold; color: #8b5cf6;">${name.charAt(0).toUpperCase()}</div>`;
-  
+
+  const avatarHtml = patientProfile?.avatarUrl
+    ? `<img src="${esc(patientProfile.avatarUrl)}" alt="${esc(name)}" style="width: 70px; height: 70px; border-radius: 50%; object-fit: cover; border: 3px solid white;" />`
+    : `<div style="width: 70px; height: 70px; border-radius: 50%; background: white; display: flex; align-items: center; justify-content: center; font-size: 28px; font-weight: bold; color: #8b5cf6;">${esc(name.charAt(0).toUpperCase())}</div>`;
+
   header.innerHTML = `
     <div style="display: flex; align-items: center; gap: 16px;">
       ${avatarHtml}
       <div>
-        <p style="font-weight: 600; font-size: 20px; margin: 0; color: white;">${name}</p>
+        <p style="font-weight: 600; font-size: 20px; margin: 0; color: white;">${esc(name)}</p>
         <p style="color: rgba(255,255,255,0.8); font-size: 13px; margin: 4px 0 0 0;">Health Profile Report</p>
       </div>
     </div>
@@ -62,44 +69,42 @@ export async function generateProfilePDF(data: ProfileShareData): Promise<void> 
   `;
   doc.appendChild(header);
 
-  // Quick Stats Row
   const statsRow = document.createElement('div');
   statsRow.style.cssText = 'display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 20px;';
-  
+
   const statBoxStyle = 'background: #f8fafc; border: 1px solid #e2e8f0; padding: 14px; border-radius: 12px; text-align: center;';
   const statLabelStyle = 'font-size: 10px; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; margin: 0;';
   const statValueStyle = 'font-size: 18px; font-weight: 600; color: #1e293b; margin: 4px 0 0 0;';
-  
+
   statsRow.innerHTML = `
     <div style="${statBoxStyle}">
       <p style="${statLabelStyle}">Age</p>
-      <p style="${statValueStyle}">${healthProfile.age || '—'}</p>
+      <p style="${statValueStyle}">${esc(healthProfile.age || '—')}</p>
     </div>
     <div style="${statBoxStyle}">
       <p style="${statLabelStyle}">Height</p>
-      <p style="${statValueStyle}">${healthProfile.heightValue ? `${healthProfile.heightValue} ${healthProfile.heightUnit}` : '—'}</p>
+      <p style="${statValueStyle}">${healthProfile.heightValue ? `${esc(healthProfile.heightValue)} ${esc(healthProfile.heightUnit)}` : '—'}</p>
     </div>
     <div style="${statBoxStyle}">
       <p style="${statLabelStyle}">Weight</p>
-      <p style="${statValueStyle}">${healthProfile.weightValue ? `${healthProfile.weightValue} ${healthProfile.weightUnit}` : '—'}</p>
+      <p style="${statValueStyle}">${healthProfile.weightValue ? `${esc(healthProfile.weightValue)} ${esc(healthProfile.weightUnit)}` : '—'}</p>
     </div>
     <div style="${statBoxStyle}">
       <p style="${statLabelStyle}">Blood</p>
-      <p style="${statValueStyle}">${healthProfile.bloodGroup || '—'}</p>
+      <p style="${statValueStyle}">${esc(healthProfile.bloodGroup || '—')}</p>
     </div>
   `;
   doc.appendChild(statsRow);
 
-  // Personal Info Section
   const personalSection = document.createElement('div');
   personalSection.style.cssText = 'margin-bottom: 20px;';
-  
+
   let personalInfo = '';
   if (patientProfile?.dateOfBirth) {
     personalInfo += `
       <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #f1f5f9;">
         <span style="color: #64748b; font-size: 13px;">Date of Birth</span>
-        <span style="font-weight: 500; font-size: 13px;">${format(new Date(patientProfile.dateOfBirth), 'MMMM d, yyyy')}</span>
+        <span style="font-weight: 500; font-size: 13px;">${esc(format(new Date(patientProfile.dateOfBirth), 'MMMM d, yyyy'))}</span>
       </div>
     `;
   }
@@ -107,11 +112,11 @@ export async function generateProfilePDF(data: ProfileShareData): Promise<void> 
     personalInfo += `
       <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #f1f5f9;">
         <span style="color: #64748b; font-size: 13px;">Allergies</span>
-        <span style="font-weight: 500; font-size: 13px; color: #dc2626;">${patientProfile.allergies}</span>
+        <span style="font-weight: 500; font-size: 13px; color: #dc2626;">${esc(patientProfile.allergies)}</span>
       </div>
     `;
   }
-  
+
   if (personalInfo) {
     personalSection.innerHTML = `
       <div style="background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 4px 16px;">
@@ -121,7 +126,6 @@ export async function generateProfilePDF(data: ProfileShareData): Promise<void> 
     doc.appendChild(personalSection);
   }
 
-  // Medical Conditions Section
   if (conditionNames.length > 0) {
     const conditionsSection = document.createElement('div');
     conditionsSection.style.cssText = 'margin-bottom: 20px;';
@@ -132,19 +136,18 @@ export async function generateProfilePDF(data: ProfileShareData): Promise<void> 
       </h2>
       <div style="background: linear-gradient(135deg, #fef3c7 0%, #fef9c3 100%); padding: 14px; border-radius: 12px; border: 1px solid #fde68a;">
         <div style="display: flex; flex-wrap: wrap; gap: 6px;">
-          ${conditionNames.map(name => `
-            <span style="background: #f59e0b; color: white; padding: 5px 12px; border-radius: 20px; font-size: 11px; font-weight: 500;">${name}</span>
+          ${conditionNames.map(n => `
+            <span style="background: #f59e0b; color: white; padding: 5px 12px; border-radius: 20px; font-size: 11px; font-weight: 500;">${esc(n)}</span>
           `).join('')}
         </div>
         ${healthProfile.conditionOtherText ? `
-          <p style="font-size: 12px; color: #92400e; margin: 10px 0 0 0;"><strong>Note:</strong> ${healthProfile.conditionOtherText}</p>
+          <p style="font-size: 12px; color: #92400e; margin: 10px 0 0 0;"><strong>Note:</strong> ${esc(healthProfile.conditionOtherText)}</p>
         ` : ''}
       </div>
     `;
     doc.appendChild(conditionsSection);
   }
 
-  // Behaviors Section
   if (behaviorNames.length > 0) {
     const behaviorsSection = document.createElement('div');
     behaviorsSection.style.cssText = 'margin-bottom: 20px;';
@@ -155,8 +158,8 @@ export async function generateProfilePDF(data: ProfileShareData): Promise<void> 
       </h2>
       <div style="background: linear-gradient(135deg, #cffafe 0%, #e0f2fe 100%); padding: 14px; border-radius: 12px; border: 1px solid #a5f3fc;">
         <div style="display: flex; flex-wrap: wrap; gap: 6px;">
-          ${behaviorNames.map(name => `
-            <span style="background: #0891b2; color: white; padding: 5px 12px; border-radius: 20px; font-size: 11px; font-weight: 500;">${name}</span>
+          ${behaviorNames.map(n => `
+            <span style="background: #0891b2; color: white; padding: 5px 12px; border-radius: 20px; font-size: 11px; font-weight: 500;">${esc(n)}</span>
           `).join('')}
         </div>
       </div>
@@ -164,7 +167,6 @@ export async function generateProfilePDF(data: ProfileShareData): Promise<void> 
     doc.appendChild(behaviorsSection);
   }
 
-  // Medications Section
   if (medications.length > 0) {
     const medsSection = document.createElement('div');
     medsSection.style.cssText = 'margin-bottom: 20px;';
@@ -187,11 +189,11 @@ export async function generateProfilePDF(data: ProfileShareData): Promise<void> 
           <tbody>
             ${medications.map((med, i) => `
               <tr style="background: ${i % 2 === 0 ? 'white' : '#faf5ff'};">
-                <td style="padding: 10px 14px; font-weight: 500; color: #1e293b;">${med.name}</td>
-                <td style="padding: 10px 14px; color: #64748b;">${med.strength}</td>
-                <td style="padding: 10px 14px; color: #64748b;">${med.form}</td>
-                <td style="padding: 10px 14px; color: #64748b;">${med.frequency}</td>
-                <td style="padding: 10px 14px; color: #8b5cf6; font-weight: 500;">${med.times?.join(', ') || '—'}</td>
+                <td style="padding: 10px 14px; font-weight: 500; color: #1e293b;">${esc(med.name)}</td>
+                <td style="padding: 10px 14px; color: #64748b;">${esc(med.strength)}</td>
+                <td style="padding: 10px 14px; color: #64748b;">${esc(med.form)}</td>
+                <td style="padding: 10px 14px; color: #64748b;">${esc(med.frequency)}</td>
+                <td style="padding: 10px 14px; color: #8b5cf6; font-weight: 500;">${esc(med.times?.join(', ') || '—')}</td>
               </tr>
             `).join('')}
           </tbody>
@@ -200,7 +202,7 @@ export async function generateProfilePDF(data: ProfileShareData): Promise<void> 
           <div style="padding: 12px 14px; border-top: 1px solid #ddd6fe; background: white;">
             <p style="font-size: 11px; font-weight: 600; color: #374151; margin: 0 0 6px 0;">Special Instructions:</p>
             ${medications.filter(m => m.instructions).map(med => `
-              <p style="font-size: 11px; color: #64748b; margin: 4px 0;"><strong>${med.name}:</strong> ${med.instructions}</p>
+              <p style="font-size: 11px; color: #64748b; margin: 4px 0;"><strong>${esc(med.name)}:</strong> ${esc(med.instructions)}</p>
             `).join('')}
           </div>
         ` : ''}
@@ -209,7 +211,6 @@ export async function generateProfilePDF(data: ProfileShareData): Promise<void> 
     doc.appendChild(medsSection);
   }
 
-  // Footer
   const footer = document.createElement('div');
   footer.style.cssText = 'margin-top: 24px; padding-top: 16px; border-top: 2px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center;';
   footer.innerHTML = `
@@ -222,17 +223,16 @@ export async function generateProfilePDF(data: ProfileShareData): Promise<void> 
   `;
   doc.appendChild(footer);
 
-  // Open print window
   const printWindow = window.open('', '_blank');
   if (!printWindow) {
     throw new Error('Could not open print window. Please allow popups.');
   }
-  
+
   printWindow.document.write(`
     <!DOCTYPE html>
     <html>
       <head>
-        <title>TARVA Health Profile - ${name}</title>
+        <title>TARVA Health Profile - ${esc(name)}</title>
         <style>
           @media print {
             body { margin: 0; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
@@ -246,52 +246,16 @@ export async function generateProfilePDF(data: ProfileShareData): Promise<void> 
     </html>
   `);
   printWindow.document.close();
-  
+
   setTimeout(() => {
     printWindow.print();
   }, 500);
 }
 
-export function generateProfileLink(data: ProfileShareData): string {
-  const { patientProfile, healthProfile, medications } = data;
-  
-  const shareData = {
-    name: patientProfile?.fullName || 'Patient',
-    age: healthProfile.age,
-    height: healthProfile.heightValue ? `${healthProfile.heightValue} ${healthProfile.heightUnit}` : undefined,
-    weight: healthProfile.weightValue ? `${healthProfile.weightValue} ${healthProfile.weightUnit}` : undefined,
-    bloodGroup: healthProfile.bloodGroup,
-    conditions: healthProfile.conditions,
-    behaviors: healthProfile.selectedBehaviors,
-    medications: medications.map(m => ({ 
-      name: m.name, 
-      strength: m.strength, 
-      frequency: m.frequency,
-      times: m.times 
-    })),
-  };
-  
-  // Create a base64 encoded string of the data
-  const encoded = btoa(JSON.stringify(shareData));
-  
-  // Return a shareable URL (in production this would be a real shareable link)
-  return `${window.location.origin}/shared-profile?data=${encoded}`;
-}
-
-export async function shareProfile(data: ProfileShareData, method: 'pdf' | 'link'): Promise<void> {
-  if (method === 'pdf') {
-    await generateProfilePDF(data);
-  } else {
-    const link = generateProfileLink(data);
-    
-    if (navigator.share) {
-      await navigator.share({
-        title: `${data.patientProfile?.fullName || 'Patient'}'s Health Profile`,
-        text: 'View my TARVA health profile',
-        url: link,
-      });
-    } else {
-      await navigator.clipboard.writeText(link);
-    }
-  }
+// Sharing profile data via a URL-encoded blob leaked sensitive health data
+// into browser history, referrer headers, and server logs. Profile sharing is
+// now PDF-only; any future link-based sharing must go through a server-side
+// token store with expiration and access control.
+export async function shareProfile(data: ProfileShareData): Promise<void> {
+  await generateProfilePDF(data);
 }

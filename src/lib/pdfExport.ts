@@ -35,6 +35,17 @@ function getDisplayStatus(dose: ScheduledDose): DoseStatus {
   return dose.status as DoseStatus;
 }
 
+// Escape user-controlled strings before injecting into innerHTML to prevent XSS.
+function esc(unsafe: unknown): string {
+  if (unsafe === null || unsafe === undefined) return '';
+  return String(unsafe)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
 export async function generateAdherencePDF(data: ExportData): Promise<Blob> {
   const { patientName, startDate, endDate, getDosesForDate, medications } = data;
   
@@ -57,7 +68,7 @@ export async function generateAdherencePDF(data: ExportData): Promise<Blob> {
       <img src="${tarvaLogoBase64}" alt="TARVA" style="height: 80px; object-fit: contain; filter: invert(1);" />
     </div>
     <div style="text-align: right;">
-      <p style="font-weight: 600; font-size: 16px; margin: 0;">${patientName}</p>
+      <p style="font-weight: 600; font-size: 16px; margin: 0;">${esc(patientName)}</p>
       <p style="color: #6b7280; font-size: 14px; margin: 4px 0 0 0;">
         ${format(startDate, 'MMM d, yyyy')} – ${format(endDate, 'MMM d, yyyy')}
       </p>
@@ -217,8 +228,8 @@ export async function generateAdherencePDF(data: ExportData): Promise<Blob> {
       row.innerHTML = `
         <td style="padding: 8px 10px; border-bottom: 1px solid #f3f4f6;">${format(day, 'MMM d, yyyy')}</td>
         <td style="padding: 8px 10px; border-bottom: 1px solid #f3f4f6;">
-          ${dose.medicationName}<br>
-          <span style="color: #9ca3af; font-size: 11px;">${dose.strengthValue || ''}${dose.strengthUnit || ''}</span>
+          ${esc(dose.medicationName)}<br>
+          <span style="color: #9ca3af; font-size: 11px;">${esc(dose.strengthValue || '')}${esc(dose.strengthUnit || '')}</span>
         </td>
         <td style="padding: 8px 10px; border-bottom: 1px solid #f3f4f6;">${format(dose.scheduledTime, 'h:mm a')}</td>
         <td style="padding: 8px 10px; border-bottom: 1px solid #f3f4f6;">
@@ -226,7 +237,7 @@ export async function generateAdherencePDF(data: ExportData): Promise<Blob> {
             ${STATUS_LABELS[displayStatus]}
           </span>
         </td>
-        <td style="padding: 8px 10px; border-bottom: 1px solid #f3f4f6;">${actualTime}</td>
+        <td style="padding: 8px 10px; border-bottom: 1px solid #f3f4f6;">${esc(actualTime)}</td>
       `;
       tbody.appendChild(row);
     });
@@ -267,10 +278,10 @@ export async function generateAdherencePDF(data: ExportData): Promise<Blob> {
       ${medications.map(med => `
         <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; background: white; border-radius: 8px;">
           <div>
-            <span style="font-weight: 500; font-size: 13px;">${med.generic_name}</span>
-            <span style="color: #6b7280; font-size: 12px; margin-left: 8px;">${med.strength_value || ''}${med.strength_unit || ''}</span>
+            <span style="font-weight: 500; font-size: 13px;">${esc(med.generic_name)}</span>
+            <span style="color: #6b7280; font-size: 12px; margin-left: 8px;">${esc(med.strength_value || '')}${esc(med.strength_unit || '')}</span>
           </div>
-          <span style="font-size: 11px; color: #8b5cf6; background: #f3e8ff; padding: 2px 8px; border-radius: 10px;">${med.form || 'tablet'}</span>
+          <span style="font-size: 11px; color: #8b5cf6; background: #f3e8ff; padding: 2px 8px; border-radius: 10px;">${esc(med.form || 'tablet')}</span>
         </div>
       `).join('')}
     </div>
@@ -286,7 +297,7 @@ export async function generateAdherencePDF(data: ExportData): Promise<Blob> {
       <img src="${tarvaLogoBase64}" alt="TARVA" style="height: 48px; object-fit: contain; filter: invert(1);" />
     </div>
     <p style="font-size: 11px; color: #9ca3af; margin: 0;">
-      Generated for ${patientName} on ${format(new Date(), 'MMMM d, yyyy \'at\' h:mm a')}
+      Generated for ${esc(patientName)} on ${format(new Date(), 'MMMM d, yyyy \'at\' h:mm a')}
     </p>
   `;
   doc.appendChild(footer);
