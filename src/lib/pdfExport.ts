@@ -228,8 +228,8 @@ export async function generateAdherencePDF(data: ExportData): Promise<Blob> {
       row.innerHTML = `
         <td style="padding: 8px 10px; border-bottom: 1px solid #f3f4f6;">${format(day, 'MMM d, yyyy')}</td>
         <td style="padding: 8px 10px; border-bottom: 1px solid #f3f4f6;">
-          ${dose.medicationName}<br>
-          <span style="color: #9ca3af; font-size: 11px;">${dose.strengthValue || ''}${dose.strengthUnit || ''}</span>
+          ${esc(dose.medicationName)}<br>
+          <span style="color: #9ca3af; font-size: 11px;">${esc(dose.strengthValue || '')}${esc(dose.strengthUnit || '')}</span>
         </td>
         <td style="padding: 8px 10px; border-bottom: 1px solid #f3f4f6;">${format(dose.scheduledTime, 'h:mm a')}</td>
         <td style="padding: 8px 10px; border-bottom: 1px solid #f3f4f6;">
@@ -237,7 +237,7 @@ export async function generateAdherencePDF(data: ExportData): Promise<Blob> {
             ${STATUS_LABELS[displayStatus]}
           </span>
         </td>
-        <td style="padding: 8px 10px; border-bottom: 1px solid #f3f4f6;">${actualTime}</td>
+        <td style="padding: 8px 10px; border-bottom: 1px solid #f3f4f6;">${esc(actualTime)}</td>
       `;
       tbody.appendChild(row);
     });
