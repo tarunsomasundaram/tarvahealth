@@ -6,24 +6,30 @@ import { FadeIn, StaggerContainer, StaggerItem } from "@/components/animations";
 import { CaseStatusCard } from "@/components/case/CaseStatusCard";
 import { InventoryCard } from "@/components/case/InventoryCard";
 import { RefillSheet } from "@/components/case/RefillSheet";
-import { Plus, Settings, Package } from "lucide-react";
+import { Plus, Settings, Package, Bluetooth } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useData, Medication } from "@/contexts/DataContext";
+import { useBleCaseContext } from "@/contexts/BleCaseContext";
+import { formatDistanceToNow } from "date-fns";
 
 export default function Case() {
   const navigate = useNavigate();
   const { activeMedications, getInventoryForMedication } = useData();
-  const [isConnected, setIsConnected] = useState(true);
-  const [batteryLevel] = useState(78);
+  const ble = useBleCaseContext();
   const [refillSheetOpen, setRefillSheetOpen] = useState(false);
   const [selectedMedication, setSelectedMedication] = useState<Medication | null>(null);
+
+  const isConnected = ble.isConnected;
+  const batteryLevel = ble.batteryLevel ?? 0;
 
   // Get medications stored in case
   const caseMedications = activeMedications.filter((m) => !!m.stored_in_case);
 
   const handleSync = () => {
-    console.log("Syncing...");
+    if (ble.deviceId) void ble.connect(ble.deviceId);
+    else void ble.pairCase();
   };
+
 
   const handleRefillClick = (medication?: Medication) => {
     if (medication) {
@@ -51,10 +57,33 @@ export default function Case() {
             <CaseStatusCard
               batteryLevel={batteryLevel}
               isConnected={isConnected}
-              lastSync="12 min ago"
+              lastSync={
+                ble.lastEventAt
+                  ? `${formatDistanceToNow(ble.lastEventAt)} ago`
+                  : isConnected
+                    ? "Just now"
+                    : "Never"
+              }
               onSync={handleSync}
             />
           </FadeIn>
+
+          {!ble.deviceId && (
+            <FadeIn delay={0.12}>
+              <motion.button
+                onClick={() => void ble.pairCase()}
+                className="btn-primary w-full"
+                whileTap={{ scale: 0.97 }}
+              >
+                <Bluetooth className="h-4 w-4" />
+                {ble.state === "connecting" ? "Pairing…" : "Pair smart case"}
+              </motion.button>
+              {ble.error && (
+                <p className="mt-2 text-center text-sm text-destructive">{ble.error}</p>
+              )}
+            </FadeIn>
+          )}
+
 
           <section>
             <FadeIn delay={0.15}>
