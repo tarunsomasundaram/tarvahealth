@@ -58,7 +58,11 @@ export default function Welcome() {
         <img 
           src={tarvaLogo} 
           alt="TARVA" 
-          className="h-24 object-contain"
+          width={240}
+          height={96}
+          fetchPriority="high"
+          decoding="async"
+          className="h-24 w-auto object-contain"
         />
       </div>
 
@@ -93,6 +97,7 @@ export default function Welcome() {
         <div className="mt-12 flex items-center gap-6">
           <motion.button
             onClick={handlePrev}
+            aria-label="Previous slide"
             disabled={currentIndex === 0}
             className="flex h-12 w-12 items-center justify-center rounded-full bg-secondary disabled:opacity-30"
             whileTap={{ scale: 0.9 }}
@@ -117,6 +122,7 @@ export default function Welcome() {
 
           <motion.button
             onClick={handleNext}
+            aria-label="Next slide"
             disabled={currentIndex === carouselData.length - 1}
             className="flex h-12 w-12 items-center justify-center rounded-full bg-secondary disabled:opacity-30"
             whileTap={{ scale: 0.9 }}
@@ -143,7 +149,7 @@ export default function Welcome() {
           I already have an account
         </button>
 
-        <p className="mt-6 text-center text-xs text-muted-foreground/70">
+        <p className="mt-6 text-center text-xs text-muted-foreground">
           You can change settings anytime.
         </p>
       </div>

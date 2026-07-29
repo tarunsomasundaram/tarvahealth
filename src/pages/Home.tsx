@@ -110,6 +110,7 @@ function DoseCard({
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <motion.button 
+                      aria-label="Dose options"
                       className="p-1 rounded-lg hover:bg-secondary"
                       whileTap={{ scale: 0.9 }}
                     >

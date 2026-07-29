@@ -41,9 +41,11 @@ export function PageHeader({
       <div>
         {title === "TARVA" ? (
           <div className="flex flex-col">
+            <h1 className="sr-only">TARVA — Smart Medication Schedule</h1>
             <img 
               src={tarvaLogo} 
               alt="TARVA" 
+              aria-hidden="true"
               className="h-12 object-contain object-left dark:invert-0 invert"
             />
             {subtitle && <p className="text-caption mt-1">{subtitle}</p>}

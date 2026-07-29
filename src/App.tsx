@@ -14,6 +14,7 @@ import { FloatingBottomNav } from "@/components/layout/FloatingBottomNav";
 import { CaregiverTabBar } from "@/components/layout/CaregiverTabBar";
 import { supabase } from "@/integrations/supabase/client";
 import { useEscalationCheck } from "@/hooks/use-escalation-check";
+import { RouteSeo } from "@/components/seo/RouteSeo";
 // Main app pages
 import Home from "./pages/Home";
 import Case from "./pages/Case";
@@ -87,6 +88,7 @@ function AppRoutes() {
   if (!hasCompletedOnboarding) {
     return (
       <div className="app-gradient-bg">
+        <RouteSeo />
         <Routes>
           <Route path="/" element={<Splash />} />
           <Route path="/welcome" element={<Welcome />} />
@@ -116,6 +118,7 @@ function AppRoutes() {
   if (userRole === 'caregiver') {
     return (
       <div className="app-gradient-bg">
+        <RouteSeo />
         <Routes>
           <Route path="/" element={<Navigate to="/caregiver" replace />} />
           <Route path="/caregiver" element={<CaregiverHome />} />
@@ -135,6 +138,7 @@ function AppRoutes() {
   // Patient dashboard routes (default)
   return (
     <div className="app-gradient-bg">
+        <RouteSeo />
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/case" element={<Case />} />
