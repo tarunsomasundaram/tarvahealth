@@ -57,10 +57,33 @@ export default function Case() {
             <CaseStatusCard
               batteryLevel={batteryLevel}
               isConnected={isConnected}
-              lastSync="12 min ago"
+              lastSync={
+                ble.lastEventAt
+                  ? `${formatDistanceToNow(ble.lastEventAt)} ago`
+                  : isConnected
+                    ? "Just now"
+                    : "Never"
+              }
               onSync={handleSync}
             />
           </FadeIn>
+
+          {!ble.deviceId && (
+            <FadeIn delay={0.12}>
+              <motion.button
+                onClick={() => void ble.pairCase()}
+                className="btn-primary w-full"
+                whileTap={{ scale: 0.97 }}
+              >
+                <Bluetooth className="h-4 w-4" />
+                {ble.state === "connecting" ? "Pairing…" : "Pair smart case"}
+              </motion.button>
+              {ble.error && (
+                <p className="mt-2 text-center text-sm text-destructive">{ble.error}</p>
+              )}
+            </FadeIn>
+          )}
+
 
           <section>
             <FadeIn delay={0.15}>
