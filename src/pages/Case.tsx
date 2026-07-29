@@ -6,24 +6,30 @@ import { FadeIn, StaggerContainer, StaggerItem } from "@/components/animations";
 import { CaseStatusCard } from "@/components/case/CaseStatusCard";
 import { InventoryCard } from "@/components/case/InventoryCard";
 import { RefillSheet } from "@/components/case/RefillSheet";
-import { Plus, Settings, Package } from "lucide-react";
+import { Plus, Settings, Package, Bluetooth } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useData, Medication } from "@/contexts/DataContext";
+import { useBleCase } from "@/hooks/use-ble-case";
+import { formatDistanceToNow } from "date-fns";
 
 export default function Case() {
   const navigate = useNavigate();
   const { activeMedications, getInventoryForMedication } = useData();
-  const [isConnected, setIsConnected] = useState(true);
-  const [batteryLevel] = useState(78);
+  const ble = useBleCase();
   const [refillSheetOpen, setRefillSheetOpen] = useState(false);
   const [selectedMedication, setSelectedMedication] = useState<Medication | null>(null);
+
+  const isConnected = ble.isConnected;
+  const batteryLevel = ble.batteryLevel ?? 0;
 
   // Get medications stored in case
   const caseMedications = activeMedications.filter((m) => !!m.stored_in_case);
 
   const handleSync = () => {
-    console.log("Syncing...");
+    if (ble.deviceId) void ble.connect(ble.deviceId);
+    else void ble.pairCase();
   };
+
 
   const handleRefillClick = (medication?: Medication) => {
     if (medication) {
