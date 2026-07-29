@@ -9,6 +9,7 @@ import { OnboardingProvider, useOnboarding } from "@/contexts/OnboardingContext"
 import { AuthProvider, useAuth } from "@/hooks/use-auth";
 import { DataProvider } from "@/contexts/DataContext";
 import { CaregiverProvider } from "@/contexts/CaregiverContext";
+import { BleCaseProvider } from "@/contexts/BleCaseContext";
 import { FloatingBottomNav } from "@/components/layout/FloatingBottomNav";
 import { CaregiverTabBar } from "@/components/layout/CaregiverTabBar";
 import { supabase } from "@/integrations/supabase/client";
@@ -179,6 +180,7 @@ const App = () => (
         <DataProvider>
           <CaregiverProvider>
             <OnboardingProvider>
+              <BleCaseProvider>
               <TooltipProvider>
                 <Toaster />
                 <Sonner />
@@ -188,6 +190,7 @@ const App = () => (
                   </div>
                 </BrowserRouter>
               </TooltipProvider>
+              </BleCaseProvider>
             </OnboardingProvider>
           </CaregiverProvider>
         </DataProvider>

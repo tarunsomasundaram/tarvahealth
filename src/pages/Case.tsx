@@ -9,13 +9,13 @@ import { RefillSheet } from "@/components/case/RefillSheet";
 import { Plus, Settings, Package, Bluetooth } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useData, Medication } from "@/contexts/DataContext";
-import { useBleCase } from "@/hooks/use-ble-case";
+import { useBleCaseContext } from "@/contexts/BleCaseContext";
 import { formatDistanceToNow } from "date-fns";
 
 export default function Case() {
   const navigate = useNavigate();
   const { activeMedications, getInventoryForMedication } = useData();
-  const ble = useBleCase();
+  const ble = useBleCaseContext();
   const [refillSheetOpen, setRefillSheetOpen] = useState(false);
   const [selectedMedication, setSelectedMedication] = useState<Medication | null>(null);
 
