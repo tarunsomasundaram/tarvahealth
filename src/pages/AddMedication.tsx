@@ -925,7 +925,27 @@ export default function AddMedication() {
   return (
     <AnimatedPage>
       <div className="page-padding">
-        <PageHeader title="Add Medication" />
+        <PageHeader
+          title="Add Medication"
+          rightContent={
+            currentStep === 4 ? (
+              <motion.button
+                onClick={handleSave}
+                disabled={isSaving}
+                className="flex items-center gap-1.5 rounded-full bg-gradient-primary px-4 py-2 text-sm font-semibold text-primary-foreground disabled:opacity-50"
+                whileTap={{ scale: 0.95 }}
+                aria-label="Confirm and save medication"
+              >
+                {isSaving ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Check className="h-4 w-4" />
+                )}
+                Confirm
+              </motion.button>
+            ) : undefined
+          }
+        />
 
         <FadeIn delay={0.1}>
           <div className="mb-6">
