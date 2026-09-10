@@ -61,7 +61,7 @@ export function PageHeader({
         {showCalendar && (
           <motion.button
             onClick={handleCalendarClick}
-            className="btn-glass-icon"
+            className="flex h-10 w-10 items-center justify-center rounded-full bg-secondary transition-colors hover:bg-secondary/80"
             aria-label="Calendar"
             whileTap={{ scale: 0.9 }}
           >
@@ -71,7 +71,7 @@ export function PageHeader({
         {showNotification && (
           <motion.button
             onClick={handleNotificationClick}
-            className="btn-glass-icon relative"
+            className="relative flex h-10 w-10 items-center justify-center rounded-full bg-secondary transition-colors hover:bg-secondary/80"
             aria-label="Notifications"
             whileTap={{ scale: 0.9 }}
           >
