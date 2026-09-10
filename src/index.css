@@ -188,73 +188,24 @@
     box-shadow: var(--shadow-button);
   }
 
-  /* Liquid Glass button base (Apple-style) */
-  .liquid-glass {
-    position: relative;
-    overflow: hidden;
-    backdrop-filter: blur(18px) saturate(180%);
-    -webkit-backdrop-filter: blur(18px) saturate(180%);
-    box-shadow:
-      0 8px 24px -6px rgba(0, 0, 0, 0.35),
-      0 0 0 1px rgba(255, 255, 255, 0.14) inset,
-      0 1.5px 0 0 rgba(255, 255, 255, 0.28) inset,
-      0 -8px 16px -8px rgba(255, 255, 255, 0.06) inset;
-  }
-
-  .liquid-glass::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    border-radius: inherit;
-    background: linear-gradient(
-      180deg,
-      rgba(255, 255, 255, 0.22) 0%,
-      rgba(255, 255, 255, 0.06) 40%,
-      rgba(255, 255, 255, 0) 60%,
-      rgba(255, 255, 255, 0.05) 100%
-    );
-    pointer-events: none;
-  }
-
   /* Button styles */
   .btn-primary {
-    @apply liquid-glass inline-flex items-center justify-center gap-2 rounded-2xl px-6 py-3 text-[15px] font-semibold text-white transition-all duration-200;
-    background: linear-gradient(135deg, hsl(258 70% 60% / 0.55) 0%, hsl(320 65% 58% / 0.45) 100%);
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+    @apply inline-flex items-center justify-center gap-2 rounded-xl px-6 py-3 text-[15px] font-semibold text-white transition-all duration-200;
+    background: var(--gradient-primary);
+    box-shadow: var(--shadow-button);
   }
 
   .btn-primary:hover {
-    background: linear-gradient(135deg, hsl(258 70% 62% / 0.65) 0%, hsl(320 65% 60% / 0.55) 100%);
+    background: var(--gradient-primary-hover);
     transform: translateY(-1px);
-    box-shadow:
-      0 12px 28px -6px rgba(0, 0, 0, 0.4),
-      0 0 0 1px rgba(255, 255, 255, 0.18) inset,
-      0 1.5px 0 0 rgba(255, 255, 255, 0.32) inset;
   }
 
   .btn-primary:active {
-    transform: translateY(0) scale(0.98);
+    transform: translateY(0);
   }
 
   .btn-secondary {
-    @apply liquid-glass inline-flex items-center justify-center gap-2 rounded-2xl px-5 py-2.5 text-[15px] font-medium text-foreground transition-all duration-200;
-    background: rgba(255, 255, 255, 0.08);
-  }
-
-  .btn-secondary:hover {
-    background: rgba(255, 255, 255, 0.14);
-    transform: translateY(-1px);
-  }
-
-  .btn-secondary:active {
-    transform: translateY(0) scale(0.98);
-  }
-
-  /* Liquid glass variant for the Button component */
-  .btn-glass-icon {
-    @apply liquid-glass flex h-10 w-10 items-center justify-center rounded-full transition-all duration-200 hover:scale-105 active:scale-95;
-    background: rgba(255, 255, 255, 0.08);
-    color: hsl(var(--foreground));
+    @apply inline-flex items-center justify-center gap-2 rounded-xl bg-secondary px-5 py-2.5 text-[15px] font-medium text-secondary-foreground transition-all duration-200 hover:bg-secondary/80;
   }
 
   .btn-ghost {
